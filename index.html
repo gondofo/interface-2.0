@@ -87,6 +87,7 @@
   .badge-veille { background: rgba(79,169,140,0.15); color: var(--teal); }
   .badge-focus { background: rgba(214,167,86,0.15); color: var(--amber); }
   .badge-source { background: rgba(139,127,209,0.15); color: var(--violet); }
+  .badge-generation { background: rgba(184,89,63,0.18); color: var(--rust); }
   .log-titre { color: var(--parchment); font-weight: 500; }
   .log-extrait { color: var(--muted); }
   .empty-log { font-size: 12px; font-style: italic; color: var(--muted); }
@@ -124,6 +125,8 @@
   <div class="toolbar">
     <button id="btnToggleAjout">+ Ajouter un module</button>
     <button id="btnExporter">💾 Exporter la mémoire (.zip)</button>
+    <button id="btnConnecterDossier">📁 Connecter un dossier (écriture en temps réel)</button>
+    <span class="mono" id="statutDossier" style="font-size:11px;color:var(--muted);align-self:center;"></span>
   </div>
 
   <div class="panel-repliable" id="panelAjout">
@@ -211,12 +214,89 @@ const MODULES_CONFIG = [
 
 const ETAPES_FOCUS = ["Recherche initiale", "Approfondissement", "Recoupement des sources", "Synthèse finale"];
 const HISTORIQUE_MAX = 200; // nombre d'entrées conservées en mémoire par module avant export
+const SEUIL_GENERATION = 12; // nombre minimum de cycles appris avant de pouvoir générer une phrase
 
 // ---------------------------------------------------------------------------
 // État global (en mémoire — perdu au rechargement ; c'est l'export .zip qui
 // permet de garder une trace durable, en attendant une vraie persistance).
 // ---------------------------------------------------------------------------
 const etat = {};
+
+// ---------------------------------------------------------------------------
+// Écriture en temps réel sur disque (File System Access API — Chrome / Edge
+// uniquement). L'utilisateur choisit un dossier une fois ; chaque cycle de
+// veille ou de focus réécrit ensuite le fichier JSON de son module, en direct.
+// La permission ne survit pas au rechargement de la page : il faut recliquer
+// « Connecter un dossier » à chaque nouvelle session.
+// ---------------------------------------------------------------------------
+let dossierHandle = null;
+
+async function connecterDossier() {
+  if (!window.showDirectoryPicker) {
+    ajouterBulleSysteme("⚠ Ton navigateur ne permet pas d'écrire des fichiers locaux depuis une page web (fonctionne sur Chrome ou Edge, pas Firefox/Safari).");
+    return;
+  }
+  try {
+    dossierHandle = await window.showDirectoryPicker();
+    document.getElementById("statutDossier").textContent = "📁 Connecté — écriture en temps réel active";
+    document.getElementById("statutDossier").style.color = "var(--teal)";
+    ajouterBulleSysteme("📁 Dossier connecté. Chaque cycle de chaque module sera désormais écrit sur le disque au fur et à mesure.");
+    await ecrireTousLesFichiers();
+  } catch (e) {
+    // l'utilisateur a annulé la sélection — rien à faire
+  }
+}
+
+async function ecrireFichierModule(cfg) {
+  if (!dossierHandle) return;
+  try {
+    const m = etat[cfg.id];
+    const donnees = {
+      module: cfg.id,
+      nom: cfg.nom,
+      langue: cfg.lang,
+      source_principale: cfg.sourceType,
+      source_alternative: cfg.sourceTypeAlt || null,
+      cycles_completes: m.cycles,
+      derniere_maj: new Date(m.dernierSucces).toISOString(),
+      historique: m.historique,
+    };
+    const fileHandle = await dossierHandle.getFileHandle(`${cfg.id}.json`, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(JSON.stringify(donnees, null, 2));
+    await writable.close();
+  } catch (e) {
+    console.warn("Écriture disque échouée pour", cfg.id, e);
+  }
+}
+
+async function ecrireIndex() {
+  if (!dossierHandle) return;
+  try {
+    const resume = MODULES_CONFIG.map((cfg) => ({
+      id: cfg.id, nom: cfg.nom, cycles: etat[cfg.id].cycles, derniere_maj: new Date(etat[cfg.id].dernierSucces).toISOString(),
+    }));
+    const fileHandle = await dossierHandle.getFileHandle("index.json", { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(JSON.stringify({ mis_a_jour: new Date().toISOString(), modules: resume }, null, 2));
+    await writable.close();
+  } catch (e) {
+    console.warn("Écriture de index.json échouée", e);
+  }
+}
+
+async function ecrireTousLesFichiers() {
+  for (const cfg of MODULES_CONFIG) await ecrireFichierModule(cfg);
+  await ecrireIndex();
+}
+
+// Appelée après chaque cycle réussi (veille ou focus) d'un module donné —
+// n'écrit rien si aucun dossier n'est connecté (fonctionne comme avant).
+function synchroniserDisque(cfg) {
+  if (!dossierHandle) return;
+  ecrireFichierModule(cfg);
+  ecrireIndex();
+}
 function creerEtatModule() {
   return { mode: "veille", stopped: false, cycles: 0, dernierPing: Date.now(), dernierSucces: Date.now(), log: [], historique: [], requeteEnCours: null, etapeIndex: 0, timeoutId: null };
 }
@@ -310,6 +390,7 @@ async function cycleVeille(id) {
     m.log = m.log.slice(0, 4);
     m.historique.unshift(entree);
     m.historique = m.historique.slice(0, HISTORIQUE_MAX);
+    synchroniserDisque(cfg);
     render();
   } catch (e) {
     // échec silencieux, on retentera au prochain cycle
@@ -371,6 +452,7 @@ async function lancerFocusModule(cfg, requete) {
   m.log = m.log.slice(0, 4);
   m.historique.unshift(entree);
   m.historique = m.historique.slice(0, HISTORIQUE_MAX);
+  synchroniserDisque(cfg);
   m.mode = "veille";
   render();
 
@@ -399,27 +481,60 @@ function normaliser(txt) {
   return txt.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
+function auHasard(liste) {
+  return liste[Math.floor(Math.random() * liste.length)];
+}
+
+// Chaque règle : un test sur le texte normalisé, et une liste de réponses
+// possibles (une est tirée au hasard pour éviter l'effet "robot répétitif").
+// Ce n'est pas de l'apprentissage — c'est juste une liste de correspondances
+// texte → réponse, évaluée dans l'ordre, la première qui correspond gagne.
 function reponseSalutation(texte) {
   const t = normaliser(texte);
   const actifs = MODULES_CONFIG.filter((m) => etat[m.id].mode !== "arret").length;
+  const enFocus = MODULES_CONFIG.filter((m) => etat[m.id].mode === "focus").length;
   const cyclesTotal = MODULES_CONFIG.reduce((s, m) => s + etat[m.id].cycles, 0);
 
-  if (/^(bonjour|salut|bonsoir|coucou|hello|hey|yo)\b/.test(t)) {
-    return `Bonjour ! ${actifs} modules sont actifs en ce moment (${cyclesTotal} cycles cumulés). Pose-moi une vraie question et je les mets tous au travail, chacun dans son domaine.`;
+  const regles = [
+    {
+      test: /^(bonjour|salut|bonsoir|coucou|hello|hey|yo|bjr)\b/,
+      reponses: [
+        `Bonjour ! ${actifs} modules sont actifs en ce moment (${cyclesTotal} cycles cumulés). Pose-moi une vraie question et je les mets tous au travail.`,
+        `Salut ! Les modules tournent en arrière-plan depuis un moment — ${cyclesTotal} cycles jusqu'ici. Une question à leur poser ?`,
+      ],
+    },
+    { test: /merci/, reponses: ["Avec plaisir !", "De rien, autre chose ?", "Content d'avoir aidé."] },
+    {
+      test: /(ca va|comment vas tu|comment allez vous|comment tu vas)/,
+      reponses: [
+        `Tout tourne normalement de mon côté — ${cyclesTotal} cycles cumulés jusqu'ici. Et toi ?`,
+        `${enFocus > 0 ? enFocus + " module(s) en plein focus là, ça chauffe un peu" : "Calme plat, tout le monde est en veille"}. Et de ton côté ?`,
+      ],
+    },
+    { test: /(au revoir|a bientot|bye|a plus|a la prochaine)/, reponses: ["À bientôt — les modules continuent d'apprendre même quand tu n'es pas là.", "À plus tard !"] },
+    {
+      test: /^(qui es tu|qui es-tu|tu es qui|c'est quoi ce truc|c'est quoi cette interface)/,
+      reponses: ["Je suis le hub qui supervise les modules — pas une IA générative. Je relaie tes questions à des modules qui cherchent de vraies informations sur Wikipédia, Wikisource, Wiktionnaire et Gutendex."],
+    },
+    {
+      test: /^(aide|aide moi|help|comment ca marche|comment utiliser|mode d'emploi)/,
+      reponses: ["Tape une question et j'interroge tous les modules actifs en même temps, chacun dans son domaine. Tu peux aussi arrêter/relancer un module dans les cartes en dessous, ou en ajouter un nouveau avec le bouton en haut."],
+    },
+    {
+      test: /^(je ne comprends pas|comprend pas|repete|recommence|quoi|hein|pardon)\b/,
+      reponses: ["Pas de souci — reformule ta question ou pose-la autrement, je réessaie avec les modules."],
+    },
+    { test: /(quoi de neuf|des nouvelles|du nouveau)/, reponses: [`Depuis le début : ${cyclesTotal} cycles cumulés sur ${MODULES_CONFIG.length} modules. Rien de spectaculaire, juste de la veille continue.`] },
+    { test: /^(bravo|excellent|super|genial|cool|nice|impressionnant)/, reponses: ["Merci ! Ce sont surtout les modules qui font le travail.", "Content que ça te plaise."] },
+    { test: /(ca marche pas|ca ne marche pas|bug|erreur|probleme|plante)/, reponses: ["Regarde la console du navigateur (F12) pour voir l'erreur exacte, ou vérifie qu'un module n'est pas resté bloqué en focus — un bouton Arrêter/Relancer est disponible sur chaque carte."] },
+    { test: /^(oui|ok|d'accord|daccord|entendu|parfait|top)$/, reponses: ["👍", "C'est noté."] },
+    { test: /^(non|pas vraiment|non merci)$/, reponses: ["D'accord, dis-moi si tu changes d'avis."] },
+  ];
+
+  for (const regle of regles) {
+    if (regle.test.test(t)) return auHasard(regle.reponses);
   }
-  if (/merci/.test(t)) {
-    return "Avec plaisir ! Autre chose ?";
-  }
-  if (/(ca va|comment vas tu|comment allez vous|comment tu vas)/.test(t)) {
-    return `Tout tourne normalement de mon côté — ${cyclesTotal} cycles cumulés jusqu'ici. Et toi ?`;
-  }
-  if (/(au revoir|a bientot|bye|a plus)/.test(t)) {
-    return "À bientôt — les modules continuent d'apprendre même quand tu n'es pas là.";
-  }
-  if (/^(qui es tu|qui es-tu|tu es qui|c'est quoi ce truc)/.test(t)) {
-    return "Je suis le hub qui supervise les modules — je ne suis pas une IA générative, je relaie tes questions à des modules qui vont chercher de vraies informations sur Wikipédia, Wikisource, Wiktionnaire et Gutendex.";
-  }
-  return null; // pas une salutation reconnue → traité comme une vraie question
+  return null; // pas une phrase reconnue → traité comme une vraie question pour les modules
 }
 
 function ajouterBulleUtilisateur(texte) {
@@ -439,6 +554,56 @@ function ajouterBulleHub(texte) {
 
 function ajouterBulleModule(cfg, titre, extrait, source) {
   messagesChat.push({ type: "module", cfg, titre, extrait: tronquer(extrait, 220), source, ts: Date.now() });
+  renderChat();
+}
+
+// ---------------------------------------------------------------------------
+// Génération de phrases par chaîne de Markov — PAS de l'IA, PAS de la
+// compréhension. On découpe en mots tout ce qu'un module a réellement appris
+// (son historique) et on construit une table "après ce mot vient tel autre
+// mot, statistiquement". Générer une phrase = partir d'un mot au hasard et
+// suivre les enchaînements observés. Le résultat est souvent grammaticalement
+// bancal : c'est normal, c'est la limite honnête de la méthode.
+// ---------------------------------------------------------------------------
+function construireChaineMarkov(corpusTexte) {
+  const mots = corpusTexte.split(/\s+/).map((m) => m.trim()).filter((m) => m.length > 0);
+  const chaine = {};
+  for (let i = 0; i < mots.length - 1; i++) {
+    const cle = mots[i];
+    if (!chaine[cle]) chaine[cle] = [];
+    chaine[cle].push(mots[i + 1]);
+  }
+  return { chaine, mots };
+}
+
+function genererPhraseMarkov(chaine, mots, longueur) {
+  if (mots.length === 0) return "";
+  let motCourant = mots[Math.floor(Math.random() * mots.length)];
+  const resultat = [motCourant];
+  for (let i = 0; i < longueur; i++) {
+    const suivants = chaine[motCourant];
+    if (!suivants || suivants.length === 0) break;
+    motCourant = suivants[Math.floor(Math.random() * suivants.length)];
+    resultat.push(motCourant);
+  }
+  return resultat.join(" ");
+}
+
+function genererDepuisModule(id) {
+  const cfg = MODULES_CONFIG.find((m) => m.id === id);
+  const m = etat[id];
+  if (!cfg || !m) return;
+
+  if (m.historique.length < SEUIL_GENERATION) {
+    ajouterBulleSysteme(`⏳ ${cfg.nom} n'a pas encore assez appris pour générer une phrase seul (${m.historique.length}/${SEUIL_GENERATION} cycles). Laisse-le tourner plus longtemps.`);
+    return;
+  }
+
+  const corpus = m.historique.map((e) => e.extrait).join(" ");
+  const { chaine, mots } = construireChaineMarkov(corpus);
+  const phrase = genererPhraseMarkov(chaine, mots, 24);
+
+  messagesChat.push({ type: "generation", cfg, texte: phrase || "(pas assez de matière pour générer quoi que ce soit)", ts: Date.now() });
   renderChat();
 }
 
@@ -473,6 +638,15 @@ function renderChat() {
     }
     if (msg.type === "hub") {
       return `<div class="bulle bulle-module"><div class="bulle-glyphe">◆</div><div class="bulle-corps"><div class="bulle-nom">hub</div><div class="bulle-titre">${echapperHtml(msg.texte)}</div></div></div>`;
+    }
+    if (msg.type === "generation") {
+      return `<div class="bulle bulle-module">
+        <div class="bulle-glyphe" style="font-family:${msg.cfg.police}">${msg.cfg.glyphe}</div>
+        <div class="bulle-corps">
+          <div class="bulle-nom">${echapperHtml(msg.cfg.nom)} <span class="badge badge-generation" style="margin-left:4px">génération libre — non vérifiée</span></div>
+          <div class="bulle-titre" style="font-style:italic">${echapperHtml(msg.texte)}</div>
+        </div>
+      </div>`;
     }
     // type === "module"
     const tag = (SOURCES[msg.source] && SOURCES[msg.source].tag) || "?";
@@ -615,6 +789,10 @@ function render() {
       ? `<button class="action-btn relancer" onclick="relancerModule('${cfg.id}')">▶ Relancer</button>`
       : `<button class="action-btn arreter" onclick="arreterModule('${cfg.id}')" ${m.mode === "focus" ? "disabled" : ""}>■ Arrêter</button>`;
 
+    const boutonGenerer = m.historique.length >= SEUIL_GENERATION
+      ? `<button class="action-btn" style="color:var(--rust)" onclick="genererDepuisModule('${cfg.id}')">🎲 Générer</button>`
+      : "";
+
     return `
       <div class="card">
         <div class="card-head">
@@ -633,7 +811,7 @@ function render() {
           ${corps}
           <div class="card-foot">
             <span class="timestamp">● ${formatRelatif(m.dernierSucces)}</span>
-            ${boutonAction}
+            <div style="display:flex;gap:6px;">${boutonGenerer}${boutonAction}</div>
           </div>
         </div>
       </div>`;
@@ -655,6 +833,7 @@ function init() {
   });
   document.getElementById("btnValiderAjout").addEventListener("click", ajouterModule);
   document.getElementById("btnExporter").addEventListener("click", exporterMemoire);
+  document.getElementById("btnConnecterDossier").addEventListener("click", connecterDossier);
 
   MODULES_CONFIG.forEach((m, i) => {
     etat[m.id].timeoutId = setTimeout(() => cycleVeille(m.id), i * 700);

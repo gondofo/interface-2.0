@@ -93,9 +93,8 @@
   </div>
 
   <div class="bar">
-    <select id="moduleCible"></select>
-    <input type="text" id="requeteTexte" placeholder="Poser une question précise à ce module…" />
-    <button class="focus-btn" id="btnFocus">Lancer le focus</button>
+    <input type="text" id="requeteTexte" placeholder="Poser une question à tous les modules — chacun répond dans son domaine…" />
+    <button class="focus-btn" id="btnFocus">Lancer le focus collectif</button>
   </div>
 
   <div class="grid" id="grid"></div>
@@ -164,24 +163,13 @@ function tronquer(txt, n) {
 // ---------------------------------------------------------------------------
 // Connecteurs réseau vers les sources publiques
 // ---------------------------------------------------------------------------
+// Route unique valable sur tous les projets Wikimedia (wikipedia, wikisource,
+// wiktionary) et toutes les langues : recherche puis extrait en texte brut.
+// On évite volontairement la route REST "/page/summary" et "/page/definition",
+// qui ne sont fiables/déployées que sur certaines éditions (ex: définition
+// structurée = anglais uniquement, d'où les erreurs 501 sur fr.wiktionary.org).
 async function viaProjetWikimedia(projet, lang, motCle) {
   const urlRecherche = `https://${lang}.${projet}.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(motCle)}&srlimit=8&format=json&origin=*`;
-  const res = await fetch(urlRecherche);
-  if (!res.ok) throw new Error("recherche indisponible");
-  const data = await res.json();
-  const resultats = (data && data.query && data.query.search) || [];
-  if (resultats.length === 0) throw new Error("aucun résultat");
-  const titre = resultats[Math.floor(Math.random() * resultats.length)].title;
-
-  const urlResume = `https://${lang}.${projet}.org/api/rest_v1/page/summary/${encodeURIComponent(titre)}`;
-  const res2 = await fetch(urlResume);
-  if (!res2.ok) throw new Error("résumé indisponible");
-  const data2 = await res2.json();
-  return { titre: data2.title || titre, extrait: data2.extract || "(pas de résumé structuré pour cette page)" };
-}
-
-async function viaWiktionnaire(lang, motCle) {
-  const urlRecherche = `https://${lang}.wiktionary.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(motCle)}&srlimit=8&format=json&origin=*`;
   const res = await fetch(urlRecherche);
   if (!res.ok) throw new Error("recherche indisponible");
   const data = await res.json();
@@ -189,14 +177,14 @@ async function viaWiktionnaire(lang, motCle) {
   if (resultats.length === 0) throw new Error("aucun résultat");
   const titre = resultats[Math.floor(Math.random() * resultats.length)].title;
 
-  const urlDef = `https://${lang}.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(titre)}`;
-  const res2 = await fetch(urlDef);
-  if (!res2.ok) throw new Error("définition indisponible");
+  const urlExtrait = `https://${lang}.${projet}.org/w/api.php?action=query&titles=${encodeURIComponent(titre)}&prop=extracts&exintro=1&explaintext=1&format=json&origin=*`;
+  const res2 = await fetch(urlExtrait);
+  if (!res2.ok) throw new Error("extrait indisponible");
   const data2 = await res2.json();
-  const premiereSection = Object.values(data2)[0];
-  const premiereDef = (premiereSection && premiereSection[0] && premiereSection[0].definitions && premiereSection[0].definitions[0] && premiereSection[0].definitions[0].definition) || "";
-  const texteClair = premiereDef.replace(/<[^>]+>/g, "");
-  return { titre, extrait: texteClair || "(pas de définition structurée)" };
+  const pages = (data2 && data2.query && data2.query.pages) || {};
+  const page = Object.values(pages)[0];
+  const extrait = page && page.extract ? page.extract.trim() : "";
+  return { titre, extrait: extrait || "(page trouvée, mais sans extrait exploitable)" };
 }
 
 async function viaGutendex(lang, motCle) {
@@ -218,7 +206,7 @@ async function obtenirConnaissance(cfg, motCleForce) {
   let resultat;
   if (type === "wikipedia") resultat = await viaProjetWikimedia("wikipedia", cfg.lang, motCle);
   else if (type === "wikisource") resultat = await viaProjetWikimedia("wikisource", cfg.lang, motCle);
-  else if (type === "wiktionary") resultat = await viaWiktionnaire(cfg.lang, motCle);
+  else if (type === "wiktionary") resultat = await viaProjetWikimedia("wiktionary", cfg.lang, motCle);
   else if (type === "gutendex") resultat = await viaGutendex(cfg.lang, motCle);
   else throw new Error("source inconnue");
   return Object.assign({}, resultat, { source: type });
@@ -267,17 +255,11 @@ function relancerModule(id) {
   cycleVeille(id);
 }
 
-async function lancerFocus() {
-  const select = document.getElementById("moduleCible");
-  const input = document.getElementById("requeteTexte");
-  const id = select.value;
-  const requete = input.value.trim();
-  if (!requete) return;
-
-  const cfg = MODULES_CONFIG.find((m) => m.id === id);
+// Focus d'UN module sur une requête donnée — chacun l'exécute dans son
+// propre domaine (ses propres thèmes, sa propre langue, sa propre source).
+async function lancerFocusModule(cfg, requete) {
+  const id = cfg.id;
   const m = etat[id];
-  if (m.mode === "arret") return;
-
   clearTimeout(m.timeoutId);
   m.mode = "focus";
   m.requeteEnCours = requete;
@@ -290,13 +272,16 @@ async function lancerFocus() {
     m.etapeIndex = etape;
     render();
     try {
+      // la requête est toujours croisée avec un thème du domaine du module :
+      // c'est ce qui fait que chaque module produit un angle différent sur
+      // la même question, plutôt que de tous chercher exactement la même chose.
       const motCle = etape === 0 ? requete : `${requete} ${cfg.themes[etape % cfg.themes.length]}`;
       const r = await obtenirConnaissance(cfg, motCle);
       dernierTitre = r.titre; dernierExtrait = r.extrait; dernierSource = r.source;
     } catch (e) {
-      // une étape peut échouer sans interrompre le cycle
+      // une étape peut échouer sans interrompre le cycle de ce module
     }
-    await new Promise((res) => setTimeout(res, 500 + Math.random() * 400));
+    await new Promise((res) => setTimeout(res, 400 + Math.random() * 400));
   }
 
   m.cycles += 1;
@@ -305,9 +290,28 @@ async function lancerFocus() {
   m.log.unshift({ origine: "focus", source: dernierSource, titre: dernierTitre, extrait: tronquer(dernierExtrait, 150), requete, ts: Date.now() });
   m.log = m.log.slice(0, 4);
   m.mode = "veille";
-  input.value = "";
   render();
   cycleVeille(id);
+}
+
+// Focus COLLECTIF : tous les modules actifs (non arrêtés) reçoivent la même
+// question et partent en focus simultanément, chacun dans son domaine —
+// un vrai "travail de groupe" plutôt qu'un seul module isolé.
+async function lancerFocus() {
+  const input = document.getElementById("requeteTexte");
+  const requete = input.value.trim();
+  if (!requete) return;
+
+  const btn = document.getElementById("btnFocus");
+  btn.disabled = true;
+  btn.textContent = "Focus collectif en cours…";
+
+  const cibles = MODULES_CONFIG.filter((cfg) => etat[cfg.id].mode !== "arret");
+  await Promise.allSettled(cibles.map((cfg) => lancerFocusModule(cfg, requete)));
+
+  input.value = "";
+  btn.disabled = false;
+  btn.textContent = "Lancer le focus collectif";
 }
 
 // ---------------------------------------------------------------------------
@@ -383,9 +387,6 @@ function render() {
 // Initialisation
 // ---------------------------------------------------------------------------
 function init() {
-  const select = document.getElementById("moduleCible");
-  select.innerHTML = MODULES_CONFIG.map((m) => `<option value="${m.id}">${m.nom}</option>`).join("");
-
   document.getElementById("btnFocus").addEventListener("click", lancerFocus);
   document.getElementById("requeteTexte").addEventListener("keydown", (e) => { if (e.key === "Enter") lancerFocus(); });
 

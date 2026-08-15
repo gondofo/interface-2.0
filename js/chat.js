@@ -84,6 +84,36 @@ export function ajouterBulleModule(cfg, titre, extrait, source) {
   renderChat();
 }
 
+// Une seule bulle de réponse, fondue à partir de plusieurs extraits — sans
+// nom de module, sans badge de source, juste un texte continu. C'est de la
+// concaténation avec de petits connecteurs, pas une vraie synthèse : on
+// prend la première phrase de chaque extrait utile et on les enchaîne.
+export function ajouterBulleReponse(texte) {
+  messagesChat.push({ type: "reponse", texte, ts: Date.now() });
+  renderChat();
+}
+
+function premierePhrase(txt, maxLongueur) {
+  if (!txt) return "";
+  const idx = txt.search(/[.!?](\s|$)/);
+  const phrase = idx > -1 ? txt.slice(0, idx + 1) : txt;
+  return phrase.length > maxLongueur ? phrase.slice(0, maxLongueur).trim() + "…" : phrase;
+}
+
+// Les résultats "vides" (rien trouvé) ont leur titre égal à la requête elle-
+// même et un extrait vide — c'est le signal qu'on utilise pour les écarter
+// de la synthèse plutôt que de citer une source qui n'a rien donné.
+function synthetiserReponse(resultats, requete) {
+  const valides = resultats.filter((r) => r.extrait && r.titre !== requete);
+  if (valides.length === 0) return null;
+
+  const tries = [...valides].sort((a, b) => b.extrait.length - a.extrait.length).slice(0, 3);
+  const connecteurs = ["", "Par ailleurs, ", "De plus, "];
+
+  const phrases = tries.map((r, i) => connecteurs[i] + premierePhrase(r.extrait, 180));
+  return phrases.join(" ");
+}
+
 export async function envoyerMessage() {
   const input = document.getElementById("chatTexte");
   const texte = input.value.trim();
@@ -100,7 +130,19 @@ export async function envoyerMessage() {
 
   const btn = document.getElementById("btnEnvoyer");
   if (btn) btn.disabled = true;
-  await lancerFocusCollectif(texte, ajouterBulleSysteme, ajouterBulleModule);
+
+  const resultats = [];
+  await lancerFocusCollectif(texte, null, (cfg, titre, extrait, source) => {
+    resultats.push({ cfg, titre, extrait, source });
+  });
+
+  const synthese = synthetiserReponse(resultats, texte);
+  if (synthese) {
+    ajouterBulleReponse(synthese);
+  } else {
+    ajouterBulleSysteme("Aucun module n'a trouvé de réponse exploitable cette fois — reformule ou réessaie.");
+  }
+
   if (btn) btn.disabled = false;
 }
 
@@ -116,6 +158,9 @@ export function renderChat() {
     }
     if (msg.type === "hub") {
       return `<div class="bulle bulle-module"><div class="bulle-glyphe">◆</div><div class="bulle-corps"><div class="bulle-nom">hub</div><div class="bulle-titre">${echapperHtml(msg.texte)}</div></div></div>`;
+    }
+    if (msg.type === "reponse") {
+      return `<div class="bulle bulle-reponse">${echapperHtml(msg.texte)}</div>`;
     }
     if (msg.type === "generation") {
       return `<div class="bulle bulle-module">

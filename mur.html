@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1.0,
+               maximum-scale=1.0,
+               user-scalable=no">
+
+<title>Wall Dashboard</title>
+
+<style>
+:root {
+    --bg: #0b0f14;
+    --panel: #121820;
+    --panel2: #18212b;
+    --text: #f1f5f9;
+    --muted: #8b98a8;
+    --accent: #62a8ff;
+    --green: #62d69b;
+    --danger: #ff6b6b;
+    --border: rgba(255,255,255,0.07);
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+/* =========================
+   APP
+========================= */
+
+.app {
+    width: 100%;
+    max-width: 650px;
+    margin: auto;
+    padding: 16px;
+    padding-bottom: 30px;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.header {
+    padding: 15px 5px 20px;
+}
+
+.time {
+    font-size: clamp(48px, 15vw, 88px);
+    font-weight: 300;
+    letter-spacing: -3px;
+    line-height: 0.95;
+}
+
+.date {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 17px;
+    text-transform: capitalize;
+}
+
+.location {
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--accent);
+}
+
+/* =========================
+   PANELS
+========================= */
+
+.panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+
+.panel-title {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 15px;
+}
+
+/* =========================
+   WEATHER
+========================= */
+
+.weather-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.temperature {
+    font-size: 55px;
+    font-weight: 300;
+}
+
+.weather-description {
+    color: var(--muted);
+    margin-top: 4px;
+}
+
+.weather-icon {
+    font-size: 55px;
+}
+
+.weather-extra {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 18px;
+}
+
+.weather-stat {
+    background: var(--panel2);
+    border-radius: 12px;
+    padding: 11px;
+    text-align: center;
+}
+
+.weather-stat small {
+    display: block;
+    color: var(--muted);
+    margin-bottom: 5px;
+}
+
+/* =========================
+   FORECAST
+========================= */
+
+.forecast {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 7px;
+}
+
+.forecast-day {
+    background: var(--panel2);
+    border-radius: 12px;
+    padding: 10px 4px;
+    text-align: center;
+}
+
+.forecast-day-name {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.forecast-icon {
+    font-size: 25px;
+    margin: 7px 0;
+}
+
+.forecast-temp {
+    font-size: 13px;
+}
+
+/* =========================
+   INPUTS
+========================= */
+
+textarea,
+input {
+    width: 100%;
+    background: var(--panel2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    outline: none;
+    font-family: inherit;
+}
+
+textarea {
+    min-height: 150px;
+    padding: 14px;
+    resize: vertical;
+    font-size: 16px;
+}
+
+input {
+    padding: 13px;
+    font-size: 16px;
+}
+
+textarea:focus,
+input:focus {
+    border-color: var(--accent);
+}
+
+/* =========================
+   TASKS
+========================= */
+
+.task-input {
+    display: flex;
+    gap: 8px;
+}
+
+.task-input input {
+    flex: 1;
+}
+
+button {
+    border: 0;
+    border-radius: 12px;
+    padding: 12px 15px;
+    background: var(--accent);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+button:active {
+    transform: scale(0.97);
+}
+
+.tasks {
+    margin-top: 12px;
+}
+
+.task {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--panel2);
+    padding: 12px;
+    margin-bottom: 7px;
+    border-radius: 12px;
+}
+
+.task input[type="checkbox"] {
+    width: 21px;
+    height: 21px;
+}
+
+.task-text {
+    flex: 1;
+    word-break: break-word;
+}
+
+.task.done .task-text {
+    text-decoration: line-through;
+    color: var(--muted);
+}
+
+.delete {
+    background: transparent;
+    color: var(--danger);
+    padding: 5px;
+}
+
+/* =========================
+   REMINDERS
+========================= */
+
+.reminder {
+    display: grid;
+    grid-template-columns: 1fr 130px;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.reminder-list {
+    margin-top: 12px;
+}
+
+.reminder-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 11px;
+    background: var(--panel2);
+    border-radius: 12px;
+    margin-bottom: 7px;
+}
+
+.reminder-time {
+    color: var(--accent);
+    font-weight: bold;
+}
+
+/* =========================
+   FOOTER
+========================= */
+
+.status {
+    text-align: center;
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 18px;
+}
+
+.online {
+    color: var(--green);
+}
+
+/* =========================
+   SMALL TABLETS
+========================= */
+
+@media (max-width: 420px) {
+
+    .app {
+        padding: 12px;
+    }
+
+    .panel {
+        border-radius: 16px;
+        padding: 15px;
+    }
+
+    .weather-extra {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .forecast {
+        grid-template-columns: repeat(5, 1fr);
+    }
+
+}
+
+/* =========================
+   LANDSCAPE SAFETY
+========================= */
+
+@media (orientation: landscape) {
+
+    .app {
+        max-width: 1100px;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+    }
+
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- HEADER -->
+
+    <header class="header">
+
+        <div id="time" class="time">
+            --:--
+        </div>
+
+        <div id="date" class="date">
+            Chargement...
+        </div>
+
+        <div id="location" class="location">
+            📍 Recherche de votre position...
+        </div>
+
+    </header>
+
+
+    <div class="dashboard-grid">
+
+        <!-- WEATHER -->
+
+        <section class="panel">
+
+            <div class="panel-title">
+                Météo actuelle
+            </div>
+
+            <div class="weather-main">
+
+                <div>
+
+                    <div id="temperature"
+                         class="temperature">
+                        --°
+                    </div>
+
+                    <div id="weatherDescription"
+                         class="weather-description">
+                        Chargement...
+                    </div>
+
+                </div>
+
+                <div id="weatherIcon"
+                     class="weather-icon">
+                    🌤️
+                </div>
+
+            </div>
+
+            <div class="weather-extra">
+
+                <div class="weather-stat">
+                    <small>Ressenti</small>
+                    <span id="feels">--°</span>
+                </div>
+
+                <div class="weather-stat">
+                    <small>Humidité</small>
+                    <span id="humidity">--%</span>
+                </div>
+
+                <div class="weather-stat">
+                    <small>Vent</small>
+                    <span id="wind">-- km/h</span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- FORECAST -->
+
+        <section class="panel">
+
+            <div class="panel-title">
+                Prévisions
+            </div>
+
+            <div id="forecast"
+                 class="forecast">
+
+                <div>Chargement...</div>
+
+            </div>
+
+        </section>
+
+
+        <!-- NOTES -->
+
+        <section class="panel">
+
+            <div class="panel-title">
+                📝 Notes
+            </div>
+
+            <textarea
+                id="notes"
+                placeholder="Écrivez vos notes ici..."></textarea>
+
+        </section>
+
+
+        <!-- TASKS -->
+
+        <section class="panel">
+
+            <div class="panel-title">
+                ✅ Tâches
+            </div>
+
+            <div class="task-input">
+
+                <input
+                    id="taskInput"
+                    type="text"
+                    placeholder="Nouvelle tâche...">
+
+                <button onclick="addTask()">
+                    +
+                </button>
+
+            </div>
+
+            <div id="tasks"
+                 class="tasks"></div>
+
+        </section>
+
+
+        <!-- REMINDERS -->
+
+        <section class="panel">
+
+            <div class="panel-title">
+                🔔 Rappels
+            </div>
+
+            <div class="reminder">
+
+                <input
+                    id="reminderText"
+                    type="text"
+                    placeholder="Rappel...">
+
+                <input
+                    id="reminderTime"
+                    type="time">
+
+            </div>
+
+            <button onclick="addReminder()">
+                Ajouter un rappel
+            </button>
+
+            <div id="reminders"
+                 class="reminder-list"></div>
+
+        </section>
+
+    </div>
+
+
+    <div class="status">
+
+        <span class="online">●</span>
+        Dashboard actif ·
+        météo actualisée automatiquement
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   CLOCK
+===================================================== */
+
+function updateClock() {
+
+    const now = new Date();
+
+    document.getElementById("time")
+        .textContent =
+        now.toLocaleTimeString("fr-CA", {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+
+    document.getElementById("date")
+        .textContent =
+        now.toLocaleDateString("fr-CA", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+        });
+}
+
+updateClock();
+
+setInterval(updateClock, 1000);
+
+
+/* =====================================================
+   NOTES
+===================================================== */
+
+const notes = document.getElementById("notes");
+
+notes.value =
+    localStorage.getItem("wall_notes") || "";
+
+notes.addEventListener("input", () => {
+
+    localStorage.setItem(
+        "wall_notes",
+        notes.value
+    );
+
+});
+
+
+/* =====================================================
+   TASKS
+===================================================== */
+
+let tasks =
+    JSON.parse(
+        localStorage.getItem("wall_tasks") || "[]"
+    );
+
+function saveTasks() {
+
+    localStorage.setItem(
+        "wall_tasks",
+        JSON.stringify(tasks)
+    );
+
+}
+
+function renderTasks() {
+
+    const container =
+        document.getElementById("tasks");
+
+    container.innerHTML = "";
+
+    tasks.forEach((task, index) => {
+
+        const div =
+            document.createElement("div");
+
+        div.className =
+            "task " +
+            (task.done ? "done" : "");
+
+        div.innerHTML = `
+
+            <input
+                type="checkbox"
+                ${task.done ? "checked" : ""}
+                onchange="toggleTask(${index})">
+
+            <div class="task-text">
+                ${escapeHTML(task.text)}
+            </div>
+
+            <button
+                class="delete"
+                onclick="deleteTask(${index})">
+                ✕
+            </button>
+
+        `;
+
+        container.appendChild(div);
+
+    });
+
+}
+
+function addTask() {
+
+    const input =
+        document.getElementById("taskInput");
+
+    const text =
+        input.value.trim();
+
+    if (!text) return;
+
+    tasks.push({
+        text: text,
+        done: false
+    });
+
+    input.value = "";
+
+    saveTasks();
+    renderTasks();
+
+}
+
+function toggleTask(index) {
+
+    tasks[index].done =
+        !tasks[index].done;
+
+    saveTasks();
+    renderTasks();
+
+}
+
+function deleteTask(index) {
+
+    tasks.splice(index, 1);
+
+    saveTasks();
+    renderTasks();
+
+}
+
+document
+    .getElementById("taskInput")
+    .addEventListener("keydown", event => {
+
+        if (event.key === "Enter") {
+            addTask();
+        }
+
+    });
+
+renderTasks();
+
+
+/* =====================================================
+   REMINDERS
+===================================================== */
+
+let reminders =
+    JSON.parse(
+        localStorage.getItem("wall_reminders") || "[]"
+    );
+
+function saveReminders() {
+
+    localStorage.setItem(
+        "wall_reminders",
+        JSON.stringify(reminders)
+    );
+
+}
+
+function renderReminders() {
+
+    const container =
+        document.getElementById("reminders");
+
+    container.innerHTML = "";
+
+    reminders.forEach((reminder, index) => {
+
+        const div =
+            document.createElement("div");
+
+        div.className =
+            "reminder-item";
+
+        div.innerHTML = `
+
+            <div>
+                <div>
+                    ${escapeHTML(reminder.text)}
+                </div>
+
+                <div class="reminder-time">
+                    ${reminder.time}
+                </div>
+            </div>
+
+            <button
+                class="delete"
+                onclick="deleteReminder(${index})">
+                ✕
+            </button>
+
+        `;
+
+        container.appendChild(div);
+
+    });
+
+}
+
+function addReminder() {
+
+    const text =
+        document
+            .getElementById("reminderText")
+            .value
+            .trim();
+
+    const time =
+        document
+            .getElementById("reminderTime")
+            .value;
+
+    if (!text || !time) return;
+
+    reminders.push({
+        text: text,
+        time: time,
+        lastTriggered: ""
+    });
+
+    document.getElementById("reminderText").value = "";
+    document.getElementById("reminderTime").value = "";
+
+    saveReminders();
+    renderReminders();
+
+    requestNotificationPermission();
+
+}
+
+function deleteReminder(index) {
+
+    reminders.splice(index, 1);
+
+    saveReminders();
+    renderReminders();
+
+}
+
+renderReminders();
+
+
+/* =====================================================
+   LOCAL NOTIFICATIONS
+===================================================== */
+
+function requestNotificationPermission() {
+
+    if (
+        "Notification" in window &&
+        Notification.permission === "default"
+    ) {
+
+        Notification.requestPermission();
+
+    }
+
+}
+
+function checkReminders() {
+
+    const now =
+        new Date();
+
+    const currentTime =
+        now.toTimeString()
+           .slice(0,5);
+
+    const today =
+        now.toISOString()
+           .slice(0,10);
+
+    reminders.forEach(reminder => {
+
+        if (
+            reminder.time === currentTime &&
+            reminder.lastTriggered !== today
+        ) {
+
+            if (
+                "Notification" in window &&
+                Notification.permission === "granted"
+            ) {
+
+                new Notification(
+                    "🔔 Rappel",
+                    {
+                        body: reminder.text
+                    }
+                );
+
+            } else {
+
+                alert(
+                    "🔔 " +
+                    reminder.text
+                );
+
+            }
+
+            reminder.lastTriggered =
+                today;
+
+            saveReminders();
+
+        }
+
+    });
+
+}
+
+setInterval(checkReminders, 30000);
+
+
+/* =====================================================
+   GEOLOCATION + WEATHER
+===================================================== */
+
+function getLocation() {
+
+    if (!navigator.geolocation) {
+
+        document.getElementById("location")
+            .textContent =
+            "📍 Géolocalisation non disponible";
+
+        return;
+
+    }
+
+    navigator.geolocation.getCurrentPosition(
+
+        position => {
+
+            const lat =
+                position.coords.latitude;
+
+            const lon =
+                position.coords.longitude;
+
+            loadWeather(lat, lon);
+
+        },
+
+        error => {
+
+            document.getElementById("location")
+                .textContent =
+                "📍 Autorisation de localisation nécessaire";
+
+        },
+
+        {
+            enableHighAccuracy: false,
+            timeout: 10000,
+            maximumAge: 600000
+        }
+
+    );
+
+}
+
+
+/* =====================================================
+   WEATHER API
+===================================================== */
+
+async function loadWeather(lat, lon) {
+
+    try {
+
+        const url =
+            "https://api.open-meteo.com/v1/forecast" +
+            "?latitude=" + lat +
+            "&longitude=" + lon +
+            "&current=temperature_2m,relative_humidity_2m," +
+            "apparent_temperature,weather_code,wind_speed_10m" +
+            "&daily=weather_code,temperature_2m_max," +
+            "temperature_2m_min" +
+            "&timezone=auto" +
+            "&forecast_days=5";
+
+        const response =
+            await fetch(url);
+
+        const data =
+            await response.json();
+
+        updateWeather(data);
+
+        getLocationName(lat, lon);
+
+    } catch (error) {
+
+        document.getElementById(
+            "weatherDescription"
+        ).textContent =
+            "Météo indisponible";
+
+    }
+
+}
+
+
+function updateWeather(data) {
+
+    const current =
+        data.current;
+
+    document.getElementById(
+        "temperature"
+    ).textContent =
+        Math.round(current.temperature_2m) + "°";
+
+    document.getElementById(
+        "feels"
+    ).textContent =
+        Math.round(current.apparent_temperature) + "°";
+
+    document.getElementById(
+        "humidity"
+    ).textContent =
+        current.relative_humidity_2m + "%";
+
+    document.getElementById(
+        "wind"
+    ).textContent =
+        Math.round(current.wind_speed_10m)
+        + " km/h";
+
+    document.getElementById(
+        "weatherDescription"
+    ).textContent =
+        weatherDescription(
+            current.weather_code
+        );
+
+    document.getElementById(
+        "weatherIcon"
+    ).textContent =
+        weatherIcon(
+            current.weather_code
+        );
+
+
+    /* FORECAST */
+
+    const forecast =
+        document.getElementById("forecast");
+
+    forecast.innerHTML = "";
+
+    for (
+        let i = 0;
+        i < 5;
+        i++
+    ) {
+
+        const date =
+            new Date(
+                data.daily.time[i]
+            );
+
+        const day =
+            date.toLocaleDateString(
+                "fr-CA",
+                {
+                    weekday: "short"
+                }
+            );
+
+        const icon =
+            weatherIcon(
+                data.daily.weather_code[i]
+            );
+
+        const max =
+            Math.round(
+                data.daily.temperature_2m_max[i]
+            );
+
+        const min =
+            Math.round(
+                data.daily.temperature_2m_min[i]
+            );
+
+        forecast.innerHTML += `
+
+            <div class="forecast-day">
+
+                <div class="forecast-day-name">
+                    ${day}
+                </div>
+
+                <div class="forecast-icon">
+                    ${icon}
+                </div>
+
+                <div class="forecast-temp">
+                    ${max}° / ${min}°
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+}
+
+
+/* =====================================================
+   WEATHER CODES
+===================================================== */
+
+function weatherDescription(code) {
+
+    if (code === 0)
+        return "Ciel dégagé";
+
+    if ([1,2,3].includes(code))
+        return "Partiellement nuageux";
+
+    if ([45,48].includes(code))
+        return "Brouillard";
+
+    if ([51,53,55].includes(code))
+        return "Bruine";
+
+    if ([61,63,65].includes(code))
+        return "Pluie";
+
+    if ([71,73,75,77].includes(code))
+        return "Neige";
+
+    if ([80,81,82].includes(code))
+        return "Averses";
+
+    if ([95,96,99].includes(code))
+        return "Orage";
+
+    return "Conditions variables";
+
+}
+
+
+function weatherIcon(code) {
+
+    if (code === 0)
+        return "☀️";
+
+    if ([1,2].includes(code))
+        return "🌤️";
+
+    if (code === 3)
+        return "☁️";
+
+    if ([45,48].includes(code))
+        return "🌫️";
+
+    if ([51,53,55,61,63,65,80,81,82].includes(code))
+        return "🌧️";
+
+    if ([71,73,75,77].includes(code))
+        return "❄️";
+
+    if ([95,96,99].includes(code))
+        return "⛈️";
+
+    return "🌤️";
+
+}
+
+
+/* =====================================================
+   LOCATION NAME
+===================================================== */
+
+async function getLocationName(lat, lon) {
+
+    try {
+
+        const url =
+            "https://geocoding-api.open-meteo.com/v1/search" +
+            "?name=" +
+            encodeURIComponent(
+                "Montreal"
+            ) +
+            "&count=1" +
+            "&language=fr";
+
+        /*
+         * La météo fonctionne avec les coordonnées.
+         * Le nom de ville peut être récupéré via
+         * reverse-geocoding lorsque disponible.
+         */
+
+        document.getElementById(
+            "location"
+        ).textContent =
+            "📍 Localisation automatique activée";
+
+    } catch (error) {
+
+        document.getElementById(
+            "location"
+        ).textContent =
+            "📍 Position détectée";
+
+    }
+
+}
+
+
+/* =====================================================
+   AUTO REFRESH
+===================================================== */
+
+/*
+   Actualisation météo toutes les 15 minutes.
+*/
+
+setInterval(() => {
+
+    getLocation();
+
+}, 15 * 60 * 1000);
+
+
+/* =====================================================
+   SECURITY
+===================================================== */
+
+function escapeHTML(text) {
+
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+/* =====================================================
+   START
+===================================================== */
+
+getLocation();
+
+</script>
+
+</body>
+</html>

@@ -2,26 +2,52 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+
 <meta name="viewport"
       content="width=device-width,
-               initial-scale=1.0,
-               maximum-scale=1.0,
+               initial-scale=1,
+               maximum-scale=1,
                user-scalable=no">
+
+<meta name="theme-color" content="#0b0f14">
 
 <title>Wall Dashboard</title>
 
 <style>
+
 :root {
-    --bg: #0b0f14;
-    --panel: #121820;
+    --bg: #080c11;
+    --panel: #111820;
     --panel2: #18212b;
-    --text: #f1f5f9;
-    --muted: #8b98a8;
-    --accent: #62a8ff;
-    --green: #62d69b;
-    --danger: #ff6b6b;
-    --border: rgba(255,255,255,0.07);
+    --text: #f4f7fb;
+    --muted: #8996a6;
+    --accent: #65a9ff;
+    --green: #61d59b;
+    --red: #ff7070;
+    --border: rgba(255,255,255,.07);
+    --shadow: 0 8px 30px rgba(0,0,0,.20);
 }
+
+/* =========================
+   LIGHT THEME
+========================= */
+
+body.light {
+    --bg: #eef2f6;
+    --panel: #ffffff;
+    --panel2: #f1f4f7;
+    --text: #17202a;
+    --muted: #66717d;
+    --accent: #2878d7;
+    --green: #269b68;
+    --red: #d94b4b;
+    --border: rgba(0,0,0,.08);
+    --shadow: 0 8px 25px rgba(0,0,0,.08);
+}
+
+/* =========================
+   GLOBAL
+========================= */
 
 * {
     box-sizing: border-box;
@@ -36,11 +62,24 @@ body {
     min-height: 100%;
     background: var(--bg);
     color: var(--text);
-    font-family: Arial, Helvetica, sans-serif;
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
 }
 
 body {
     overflow-x: hidden;
+    transition:
+        background .25s,
+        color .25s;
+}
+
+button,
+input,
+textarea,
+select {
+    font-family: inherit;
 }
 
 /* =========================
@@ -49,29 +88,51 @@ body {
 
 .app {
     width: 100%;
-    max-width: 650px;
+    max-width: 680px;
     margin: auto;
-    padding: 16px;
+    padding: 14px;
     padding-bottom: 30px;
 }
 
 /* =========================
-   HEADER
+   TOP BAR
+========================= */
+
+.topbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    height: 42px;
+}
+
+.top-button {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border-radius: 50%;
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+    font-size: 19px;
+}
+
+/* =========================
+   CLOCK
 ========================= */
 
 .header {
-    padding: 15px 5px 20px;
+    padding: 4px 4px 20px;
 }
 
 .time {
-    font-size: clamp(48px, 15vw, 88px);
+    font-size: clamp(52px, 16vw, 92px);
     font-weight: 300;
-    letter-spacing: -3px;
-    line-height: 0.95;
+    letter-spacing: -4px;
+    line-height: .95;
 }
 
 .date {
-    margin-top: 8px;
+    margin-top: 10px;
     color: var(--muted);
     font-size: 17px;
     text-transform: capitalize;
@@ -79,8 +140,8 @@ body {
 
 .location {
     margin-top: 12px;
-    font-size: 14px;
     color: var(--accent);
+    font-size: 14px;
 }
 
 /* =========================
@@ -91,16 +152,20 @@ body {
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 20px;
-    padding: 18px;
-    margin-bottom: 14px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    padding: 17px;
+    margin-bottom: 13px;
+    box-shadow: var(--shadow);
+    transition:
+        background .25s,
+        color .25s;
 }
 
 .panel-title {
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
     color: var(--muted);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
     margin-bottom: 15px;
 }
 
@@ -115,7 +180,7 @@ body {
 }
 
 .temperature {
-    font-size: 55px;
+    font-size: 58px;
     font-weight: 300;
 }
 
@@ -125,26 +190,27 @@ body {
 }
 
 .weather-icon {
-    font-size: 55px;
+    font-size: 58px;
 }
 
 .weather-extra {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3,1fr);
     gap: 8px;
     margin-top: 18px;
 }
 
 .weather-stat {
     background: var(--panel2);
-    border-radius: 12px;
-    padding: 11px;
+    border-radius: 13px;
+    padding: 11px 5px;
     text-align: center;
 }
 
 .weather-stat small {
     display: block;
     color: var(--muted);
+    font-size: 11px;
     margin-bottom: 5px;
 }
 
@@ -154,20 +220,21 @@ body {
 
 .forecast {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 7px;
+    grid-template-columns:
+        repeat(5,1fr);
+    gap: 6px;
 }
 
 .forecast-day {
     background: var(--panel2);
     border-radius: 12px;
-    padding: 10px 4px;
+    padding: 9px 3px;
     text-align: center;
 }
 
 .forecast-day-name {
     color: var(--muted);
-    font-size: 12px;
+    font-size: 11px;
 }
 
 .forecast-icon {
@@ -176,38 +243,34 @@ body {
 }
 
 .forecast-temp {
-    font-size: 13px;
+    font-size: 12px;
 }
 
 /* =========================
-   INPUTS
+   NOTES
 ========================= */
 
-textarea,
-input {
+textarea {
     width: 100%;
+    min-height: 145px;
+    resize: vertical;
+    padding: 14px;
+
     background: var(--panel2);
     color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 12px;
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 13px;
     outline: none;
-    font-family: inherit;
-}
 
-textarea {
-    min-height: 150px;
-    padding: 14px;
-    resize: vertical;
-    font-size: 16px;
-}
-
-input {
-    padding: 13px;
     font-size: 16px;
 }
 
 textarea:focus,
-input:focus {
+input:focus,
+select:focus {
     border-color: var(--accent);
 }
 
@@ -218,6 +281,18 @@ input:focus {
 .task-input {
     display: flex;
     gap: 8px;
+}
+
+input,
+select {
+    background: var(--panel2);
+    color: var(--text);
+    border:
+        1px solid var(--border);
+    border-radius: 12px;
+    outline: none;
+    padding: 13px;
+    font-size: 16px;
 }
 
 .task-input input {
@@ -231,12 +306,11 @@ button {
     background: var(--accent);
     color: white;
     font-weight: bold;
-    cursor: pointer;
     font-size: 15px;
 }
 
 button:active {
-    transform: scale(0.97);
+    transform: scale(.97);
 }
 
 .tasks {
@@ -247,15 +321,18 @@ button:active {
     display: flex;
     align-items: center;
     gap: 10px;
+
     background: var(--panel2);
-    padding: 12px;
+    padding: 11px;
     margin-bottom: 7px;
+
     border-radius: 12px;
 }
 
-.task input[type="checkbox"] {
+.task input {
     width: 21px;
     height: 21px;
+    padding: 0;
 }
 
 .task-text {
@@ -270,7 +347,7 @@ button:active {
 
 .delete {
     background: transparent;
-    color: var(--danger);
+    color: var(--red);
     padding: 5px;
 }
 
@@ -278,11 +355,10 @@ button:active {
    REMINDERS
 ========================= */
 
-.reminder {
+.reminder-input {
     display: grid;
-    grid-template-columns: 1fr 130px;
+    grid-template-columns: 1fr 120px;
     gap: 8px;
-    margin-bottom: 8px;
 }
 
 .reminder-list {
@@ -293,9 +369,10 @@ button:active {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    padding: 11px;
+
     background: var(--panel2);
+    padding: 11px;
+
     border-radius: 12px;
     margin-bottom: 7px;
 }
@@ -303,17 +380,90 @@ button:active {
 .reminder-time {
     color: var(--accent);
     font-weight: bold;
+    margin-top: 3px;
 }
 
 /* =========================
-   FOOTER
+   SETTINGS
+========================= */
+
+.settings-overlay {
+    position: fixed;
+    inset: 0;
+
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+
+    background: rgba(0,0,0,.65);
+
+    z-index: 1000;
+}
+
+.settings-overlay.open {
+    display: flex;
+}
+
+.settings {
+    width: 100%;
+    max-width: 680px;
+    max-height: 90vh;
+
+    overflow-y: auto;
+
+    background: var(--panel);
+    border-radius: 24px 24px 0 0;
+
+    padding: 20px;
+}
+
+.settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 18px;
+}
+
+.settings-header h2 {
+    margin: 0;
+    font-size: 21px;
+}
+
+.close-button {
+    background: var(--panel2);
+    color: var(--text);
+}
+
+.setting {
+    margin-bottom: 17px;
+}
+
+.setting label {
+    display: block;
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 7px;
+}
+
+.setting select {
+    width: 100%;
+}
+
+.fullscreen-setting {
+    width: 100%;
+    margin-top: 5px;
+}
+
+/* =========================
+   STATUS
 ========================= */
 
 .status {
     text-align: center;
     color: var(--muted);
     font-size: 11px;
-    margin-top: 18px;
+    padding-top: 5px;
 }
 
 .online {
@@ -321,32 +471,28 @@ button:active {
 }
 
 /* =========================
-   SMALL TABLETS
+   FULLSCREEN MODE
 ========================= */
 
-@media (max-width: 420px) {
+body.fullscreen-ui .topbar {
+    display: none;
+}
 
-    .app {
-        padding: 12px;
-    }
-
-    .panel {
-        border-radius: 16px;
-        padding: 15px;
-    }
-
-    .weather-extra {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    .forecast {
-        grid-template-columns: repeat(5, 1fr);
-    }
-
+body.fullscreen-ui .app {
+    max-width: 700px;
+    padding-top: 12px;
 }
 
 /* =========================
-   LANDSCAPE SAFETY
+   HIDDEN PANELS
+========================= */
+
+.panel.hidden-panel {
+    display: none;
+}
+
+/* =========================
+   LANDSCAPE
 ========================= */
 
 @media (orientation: landscape) {
@@ -358,10 +504,44 @@ button:active {
     .dashboard-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 14px;
+        gap: 13px;
     }
 
 }
+
+/* =========================
+   SMALL SCREENS
+========================= */
+
+@media (max-width: 390px) {
+
+    .app {
+        padding: 10px;
+    }
+
+    .panel {
+        padding: 14px;
+        border-radius: 17px;
+    }
+
+    .time {
+        font-size: 52px;
+    }
+
+}
+
+/* =========================
+   REDUCED MOTION
+========================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    * {
+        transition: none !important;
+    }
+
+}
+
 </style>
 </head>
 
@@ -369,19 +549,39 @@ button:active {
 
 <div class="app">
 
+    <!-- TOP BAR -->
+
+    <div class="topbar">
+
+        <button
+            class="top-button"
+            onclick="openSettings()"
+            aria-label="Réglages">
+            ⚙️
+        </button>
+
+    </div>
+
+
     <!-- HEADER -->
 
     <header class="header">
 
-        <div id="time" class="time">
+        <div
+            id="time"
+            class="time">
             --:--
         </div>
 
-        <div id="date" class="date">
+        <div
+            id="date"
+            class="date">
             Chargement...
         </div>
 
-        <div id="location" class="location">
+        <div
+            id="location"
+            class="location">
             📍 Recherche de votre position...
         </div>
 
@@ -392,7 +592,9 @@ button:active {
 
         <!-- WEATHER -->
 
-        <section class="panel">
+        <section
+            class="panel"
+            id="weatherPanel">
 
             <div class="panel-title">
                 Météo actuelle
@@ -402,20 +604,23 @@ button:active {
 
                 <div>
 
-                    <div id="temperature"
-                         class="temperature">
+                    <div
+                        id="temperature"
+                        class="temperature">
                         --°
                     </div>
 
-                    <div id="weatherDescription"
-                         class="weather-description">
+                    <div
+                        id="weatherDescription"
+                        class="weather-description">
                         Chargement...
                     </div>
 
                 </div>
 
-                <div id="weatherIcon"
-                     class="weather-icon">
+                <div
+                    id="weatherIcon"
+                    class="weather-icon">
                     🌤️
                 </div>
 
@@ -445,17 +650,18 @@ button:active {
 
         <!-- FORECAST -->
 
-        <section class="panel">
+        <section
+            class="panel"
+            id="forecastPanel">
 
             <div class="panel-title">
                 Prévisions
             </div>
 
-            <div id="forecast"
-                 class="forecast">
-
+            <div
+                id="forecast"
+                class="forecast">
                 <div>Chargement...</div>
-
             </div>
 
         </section>
@@ -463,7 +669,9 @@ button:active {
 
         <!-- NOTES -->
 
-        <section class="panel">
+        <section
+            class="panel"
+            id="notesPanel">
 
             <div class="panel-title">
                 📝 Notes
@@ -478,7 +686,9 @@ button:active {
 
         <!-- TASKS -->
 
-        <section class="panel">
+        <section
+            class="panel"
+            id="tasksPanel">
 
             <div class="panel-title">
                 ✅ Tâches
@@ -491,27 +701,32 @@ button:active {
                     type="text"
                     placeholder="Nouvelle tâche...">
 
-                <button onclick="addTask()">
+                <button
+                    onclick="addTask()">
                     +
                 </button>
 
             </div>
 
-            <div id="tasks"
-                 class="tasks"></div>
+            <div
+                id="tasks"
+                class="tasks">
+            </div>
 
         </section>
 
 
         <!-- REMINDERS -->
 
-        <section class="panel">
+        <section
+            class="panel"
+            id="remindersPanel">
 
             <div class="panel-title">
                 🔔 Rappels
             </div>
 
-            <div class="reminder">
+            <div class="reminder-input">
 
                 <input
                     id="reminderText"
@@ -524,12 +739,17 @@ button:active {
 
             </div>
 
-            <button onclick="addReminder()">
-                Ajouter un rappel
+            <br>
+
+            <button
+                onclick="addReminder()">
+                Ajouter
             </button>
 
-            <div id="reminders"
-                 class="reminder-list"></div>
+            <div
+                id="reminders"
+                class="reminder-list">
+            </div>
 
         </section>
 
@@ -539,8 +759,228 @@ button:active {
     <div class="status">
 
         <span class="online">●</span>
+
         Dashboard actif ·
-        météo actualisée automatiquement
+
+        <span id="lastUpdate">
+            météo en attente
+        </span>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     SETTINGS
+========================= -->
+
+<div
+    id="settingsOverlay"
+    class="settings-overlay"
+    onclick="closeSettingsOutside(event)">
+
+    <div
+        class="settings"
+        onclick="event.stopPropagation()">
+
+        <div class="settings-header">
+
+            <h2>⚙️ Réglages</h2>
+
+            <button
+                class="close-button"
+                onclick="closeSettings()">
+                ✕
+            </button>
+
+        </div>
+
+
+        <!-- THEME -->
+
+        <div class="setting">
+
+            <label>
+                Apparence
+            </label>
+
+            <select
+                id="themeSelect"
+                onchange="changeTheme(this.value)">
+
+                <option value="dark">
+                    🌙 Sombre
+                </option>
+
+                <option value="light">
+                    ☀️ Clair
+                </option>
+
+                <option value="auto">
+                    🌓 Automatique
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- CLOCK -->
+
+        <div class="setting">
+
+            <label>
+                Format de l'heure
+            </label>
+
+            <select
+                id="clockSelect"
+                onchange="changeClockFormat(this.value)">
+
+                <option value="24">
+                    24 heures
+                </option>
+
+                <option value="12">
+                    12 heures
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- TEMPERATURE -->
+
+        <div class="setting">
+
+            <label>
+                Température
+            </label>
+
+            <select
+                id="unitSelect"
+                onchange="changeTemperatureUnit(this.value)">
+
+                <option value="c">
+                    Celsius °C
+                </option>
+
+                <option value="f">
+                    Fahrenheit °F
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- WEATHER REFRESH -->
+
+        <div class="setting">
+
+            <label>
+                Actualisation météo
+            </label>
+
+            <select
+                id="refreshSelect"
+                onchange="changeRefresh(this.value)">
+
+                <option value="5">
+                    Toutes les 5 minutes
+                </option>
+
+                <option value="15">
+                    Toutes les 15 minutes
+                </option>
+
+                <option value="30">
+                    Toutes les 30 minutes
+                </option>
+
+                <option value="60">
+                    Toutes les heures
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- PANELS -->
+
+        <div class="setting">
+
+            <label>
+                Affichage des sections
+            </label>
+
+            <select
+                id="notesVisibility"
+                onchange="togglePanel('notesPanel', this.value)">
+
+                <option value="show">
+                    📝 Notes visibles
+                </option>
+
+                <option value="hide">
+                    Notes masquées
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="setting">
+
+            <select
+                id="tasksVisibility"
+                onchange="togglePanel('tasksPanel', this.value)">
+
+                <option value="show">
+                    ✅ Tâches visibles
+                </option>
+
+                <option value="hide">
+                    Tâches masquées
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="setting">
+
+            <select
+                id="remindersVisibility"
+                onchange="togglePanel('remindersPanel', this.value)">
+
+                <option value="show">
+                    🔔 Rappels visibles
+                </option>
+
+                <option value="hide">
+                    Rappels masqués
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- FULLSCREEN -->
+
+        <button
+            class="fullscreen-setting"
+            onclick="toggleFullscreen()">
+
+            ⛶ Activer / quitter le plein écran
+
+        </button>
 
     </div>
 
@@ -550,52 +990,174 @@ button:active {
 <script>
 
 /* =====================================================
+   SETTINGS
+===================================================== */
+
+const defaultSettings = {
+
+    theme: "dark",
+    clock: "24",
+    unit: "c",
+    refresh: "15",
+    notes: "show",
+    tasks: "show",
+    reminders: "show"
+
+};
+
+let settings =
+    JSON.parse(
+        localStorage.getItem(
+            "wall_settings"
+        ) || "null"
+    ) || defaultSettings;
+
+
+function saveSettings() {
+
+    localStorage.setItem(
+        "wall_settings",
+        JSON.stringify(settings)
+    );
+
+}
+
+
+/* =====================================================
+   THEME
+===================================================== */
+
+function applyTheme() {
+
+    let theme =
+        settings.theme;
+
+    if (theme === "auto") {
+
+        const dark =
+            window.matchMedia(
+                "(prefers-color-scheme: dark)"
+            ).matches;
+
+        document.body.classList.toggle(
+            "light",
+            !dark
+        );
+
+    } else {
+
+        document.body.classList.toggle(
+            "light",
+            theme === "light"
+        );
+
+    }
+
+}
+
+
+function changeTheme(value) {
+
+    settings.theme = value;
+
+    saveSettings();
+    applyTheme();
+
+}
+
+
+window
+    .matchMedia(
+        "(prefers-color-scheme: dark)"
+    )
+    .addEventListener(
+        "change",
+        applyTheme
+    );
+
+
+/* =====================================================
    CLOCK
 ===================================================== */
 
 function updateClock() {
 
-    const now = new Date();
+    const now =
+        new Date();
+
+    const is12 =
+        settings.clock === "12";
 
     document.getElementById("time")
         .textContent =
-        now.toLocaleTimeString("fr-CA", {
-            hour: "2-digit",
-            minute: "2-digit"
-        });
+        now.toLocaleTimeString(
+            "fr-CA",
+            {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: is12
+            }
+        );
 
     document.getElementById("date")
         .textContent =
-        now.toLocaleDateString("fr-CA", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric"
-        });
+        now.toLocaleDateString(
+            "fr-CA",
+            {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric"
+            }
+        );
+
 }
 
-updateClock();
+setInterval(
+    updateClock,
+    1000
+);
 
-setInterval(updateClock, 1000);
+
+/* =====================================================
+   CLOCK SETTING
+===================================================== */
+
+function changeClockFormat(value) {
+
+    settings.clock = value;
+
+    saveSettings();
+    updateClock();
+
+}
 
 
 /* =====================================================
    NOTES
 ===================================================== */
 
-const notes = document.getElementById("notes");
-
-notes.value =
-    localStorage.getItem("wall_notes") || "";
-
-notes.addEventListener("input", () => {
-
-    localStorage.setItem(
-        "wall_notes",
-        notes.value
+const notes =
+    document.getElementById(
+        "notes"
     );
 
-});
+notes.value =
+    localStorage.getItem(
+        "wall_notes"
+    ) || "";
+
+notes.addEventListener(
+    "input",
+    () => {
+
+        localStorage.setItem(
+            "wall_notes",
+            notes.value
+        );
+
+    }
+);
 
 
 /* =====================================================
@@ -604,8 +1166,11 @@ notes.addEventListener("input", () => {
 
 let tasks =
     JSON.parse(
-        localStorage.getItem("wall_tasks") || "[]"
+        localStorage.getItem(
+            "wall_tasks"
+        ) || "[]"
     );
+
 
 function saveTasks() {
 
@@ -616,56 +1181,73 @@ function saveTasks() {
 
 }
 
+
 function renderTasks() {
 
     const container =
-        document.getElementById("tasks");
+        document.getElementById(
+            "tasks"
+        );
 
     container.innerHTML = "";
 
-    tasks.forEach((task, index) => {
+    tasks.forEach(
+        (task, index) => {
 
-        const div =
-            document.createElement("div");
+            const div =
+                document.createElement(
+                    "div"
+                );
 
-        div.className =
-            "task " +
-            (task.done ? "done" : "");
+            div.className =
+                "task " +
+                (
+                    task.done
+                    ? "done"
+                    : ""
+                );
 
-        div.innerHTML = `
+            div.innerHTML = `
 
-            <input
-                type="checkbox"
-                ${task.done ? "checked" : ""}
-                onchange="toggleTask(${index})">
+                <input
+                    type="checkbox"
+                    ${task.done ? "checked" : ""}
+                    onchange="toggleTask(${index})">
 
-            <div class="task-text">
-                ${escapeHTML(task.text)}
-            </div>
+                <div class="task-text">
+                    ${escapeHTML(task.text)}
+                </div>
 
-            <button
-                class="delete"
-                onclick="deleteTask(${index})">
-                ✕
-            </button>
+                <button
+                    class="delete"
+                    onclick="deleteTask(${index})">
+                    ✕
+                </button>
 
-        `;
+            `;
 
-        container.appendChild(div);
+            container.appendChild(
+                div
+            );
 
-    });
+        }
+    );
 
 }
+
 
 function addTask() {
 
     const input =
-        document.getElementById("taskInput");
+        document.getElementById(
+            "taskInput"
+        );
 
     const text =
         input.value.trim();
 
-    if (!text) return;
+    if (!text)
+        return;
 
     tasks.push({
         text: text,
@@ -679,6 +1261,7 @@ function addTask() {
 
 }
 
+
 function toggleTask(index) {
 
     tasks[index].done =
@@ -689,26 +1272,37 @@ function toggleTask(index) {
 
 }
 
+
 function deleteTask(index) {
 
-    tasks.splice(index, 1);
+    tasks.splice(
+        index,
+        1
+    );
 
     saveTasks();
     renderTasks();
 
 }
 
+
 document
-    .getElementById("taskInput")
-    .addEventListener("keydown", event => {
+    .getElementById(
+        "taskInput"
+    )
+    .addEventListener(
+        "keydown",
+        event => {
 
-        if (event.key === "Enter") {
-            addTask();
+            if (
+                event.key ===
+                "Enter"
+            ) {
+                addTask();
+            }
+
         }
-
-    });
-
-renderTasks();
+    );
 
 
 /* =====================================================
@@ -717,8 +1311,11 @@ renderTasks();
 
 let reminders =
     JSON.parse(
-        localStorage.getItem("wall_reminders") || "[]"
+        localStorage.getItem(
+            "wall_reminders"
+        ) || "[]"
     );
+
 
 function saveReminders() {
 
@@ -729,70 +1326,97 @@ function saveReminders() {
 
 }
 
+
 function renderReminders() {
 
     const container =
-        document.getElementById("reminders");
+        document.getElementById(
+            "reminders"
+        );
 
     container.innerHTML = "";
 
-    reminders.forEach((reminder, index) => {
+    reminders.forEach(
+        (reminder, index) => {
 
-        const div =
-            document.createElement("div");
+            const div =
+                document.createElement(
+                    "div"
+                );
 
-        div.className =
-            "reminder-item";
+            div.className =
+                "reminder-item";
 
-        div.innerHTML = `
+            div.innerHTML = `
 
-            <div>
                 <div>
-                    ${escapeHTML(reminder.text)}
+
+                    <div>
+                        ${escapeHTML(
+                            reminder.text
+                        )}
+                    </div>
+
+                    <div
+                        class="reminder-time">
+                        ${reminder.time}
+                    </div>
+
                 </div>
 
-                <div class="reminder-time">
-                    ${reminder.time}
-                </div>
-            </div>
+                <button
+                    class="delete"
+                    onclick="deleteReminder(${index})">
+                    ✕
+                </button>
 
-            <button
-                class="delete"
-                onclick="deleteReminder(${index})">
-                ✕
-            </button>
+            `;
 
-        `;
+            container.appendChild(
+                div
+            );
 
-        container.appendChild(div);
-
-    });
+        }
+    );
 
 }
+
 
 function addReminder() {
 
     const text =
-        document
-            .getElementById("reminderText")
-            .value
-            .trim();
+        document.getElementById(
+            "reminderText"
+        ).value.trim();
 
     const time =
-        document
-            .getElementById("reminderTime")
-            .value;
+        document.getElementById(
+            "reminderTime"
+        ).value;
 
-    if (!text || !time) return;
+    if (
+        !text ||
+        !time
+    )
+        return;
 
     reminders.push({
+
         text: text,
+
         time: time,
+
         lastTriggered: ""
+
     });
 
-    document.getElementById("reminderText").value = "";
-    document.getElementById("reminderTime").value = "";
+    document.getElementById(
+        "reminderText"
+    ).value = "";
+
+    document.getElementById(
+        "reminderTime"
+    ).value = "";
 
     saveReminders();
     renderReminders();
@@ -801,27 +1425,30 @@ function addReminder() {
 
 }
 
+
 function deleteReminder(index) {
 
-    reminders.splice(index, 1);
+    reminders.splice(
+        index,
+        1
+    );
 
     saveReminders();
     renderReminders();
 
 }
 
-renderReminders();
-
 
 /* =====================================================
-   LOCAL NOTIFICATIONS
+   NOTIFICATIONS
 ===================================================== */
 
 function requestNotificationPermission() {
 
     if (
         "Notification" in window &&
-        Notification.permission === "default"
+        Notification.permission ===
+        "default"
     ) {
 
         Notification.requestPermission();
@@ -829,6 +1456,7 @@ function requestNotificationPermission() {
     }
 
 }
+
 
 function checkReminders() {
 
@@ -843,59 +1471,75 @@ function checkReminders() {
         now.toISOString()
            .slice(0,10);
 
-    reminders.forEach(reminder => {
-
-        if (
-            reminder.time === currentTime &&
-            reminder.lastTriggered !== today
-        ) {
+    reminders.forEach(
+        reminder => {
 
             if (
-                "Notification" in window &&
-                Notification.permission === "granted"
+                reminder.time ===
+                currentTime &&
+                reminder.lastTriggered !==
+                today
             ) {
 
-                new Notification(
-                    "🔔 Rappel",
-                    {
-                        body: reminder.text
-                    }
-                );
+                if (
+                    "Notification" in window &&
+                    Notification.permission ===
+                    "granted"
+                ) {
 
-            } else {
+                    new Notification(
+                        "🔔 Rappel",
+                        {
+                            body:
+                                reminder.text
+                        }
+                    );
 
-                alert(
-                    "🔔 " +
-                    reminder.text
-                );
+                } else {
+
+                    alert(
+                        "🔔 " +
+                        reminder.text
+                    );
+
+                }
+
+                reminder.lastTriggered =
+                    today;
+
+                saveReminders();
 
             }
 
-            reminder.lastTriggered =
-                today;
-
-            saveReminders();
-
         }
-
-    });
+    );
 
 }
 
-setInterval(checkReminders, 30000);
+setInterval(
+    checkReminders,
+    30000
+);
 
 
 /* =====================================================
-   GEOLOCATION + WEATHER
+   GEOLOCATION
 ===================================================== */
+
+let latitude = null;
+let longitude = null;
+
 
 function getLocation() {
 
-    if (!navigator.geolocation) {
+    if (
+        !navigator.geolocation
+    ) {
 
-        document.getElementById("location")
-            .textContent =
-            "📍 Géolocalisation non disponible";
+        document.getElementById(
+            "location"
+        ).textContent =
+            "📍 Géolocalisation indisponible";
 
         return;
 
@@ -905,28 +1549,39 @@ function getLocation() {
 
         position => {
 
-            const lat =
+            latitude =
                 position.coords.latitude;
 
-            const lon =
+            longitude =
                 position.coords.longitude;
 
-            loadWeather(lat, lon);
+            loadWeather(
+                latitude,
+                longitude
+            );
 
         },
 
-        error => {
+        () => {
 
-            document.getElementById("location")
-                .textContent =
+            document.getElementById(
+                "location"
+            ).textContent =
                 "📍 Autorisation de localisation nécessaire";
 
         },
 
         {
-            enableHighAccuracy: false,
-            timeout: 10000,
-            maximumAge: 600000
+
+            enableHighAccuracy:
+                false,
+
+            timeout:
+                10000,
+
+            maximumAge:
+                600000
+
         }
 
     );
@@ -935,35 +1590,73 @@ function getLocation() {
 
 
 /* =====================================================
-   WEATHER API
+   WEATHER
 ===================================================== */
 
-async function loadWeather(lat, lon) {
+async function loadWeather(
+    lat,
+    lon
+) {
 
     try {
 
         const url =
             "https://api.open-meteo.com/v1/forecast" +
-            "?latitude=" + lat +
-            "&longitude=" + lon +
-            "&current=temperature_2m,relative_humidity_2m," +
-            "apparent_temperature,weather_code,wind_speed_10m" +
-            "&daily=weather_code,temperature_2m_max," +
+
+            "?latitude=" +
+            encodeURIComponent(lat) +
+
+            "&longitude=" +
+            encodeURIComponent(lon) +
+
+            "&current=" +
+
+            "temperature_2m," +
+            "relative_humidity_2m," +
+            "apparent_temperature," +
+            "weather_code," +
+            "wind_speed_10m" +
+
+            "&daily=" +
+
+            "weather_code," +
+            "temperature_2m_max," +
             "temperature_2m_min" +
+
             "&timezone=auto" +
+
             "&forecast_days=5";
 
         const response =
             await fetch(url);
+
+        if (!response.ok)
+            throw new Error();
 
         const data =
             await response.json();
 
         updateWeather(data);
 
-        getLocationName(lat, lon);
+        await getLocationName(
+            lat,
+            lon
+        );
 
-    } catch (error) {
+        document.getElementById(
+            "lastUpdate"
+        ).textContent =
+            "dernière mise à jour : " +
+            new Date()
+                .toLocaleTimeString(
+                    "fr-CA",
+                    {
+                        hour: "2-digit",
+                        minute: "2-digit"
+                    }
+                );
+
+    } catch {
 
         document.getElementById(
             "weatherDescription"
@@ -975,31 +1668,58 @@ async function loadWeather(lat, lon) {
 }
 
 
+/* =====================================================
+   WEATHER UPDATE
+===================================================== */
+
 function updateWeather(data) {
 
     const current =
         data.current;
 
+    let temp =
+        current.temperature_2m;
+
+    let feels =
+        current.apparent_temperature;
+
+    if (
+        settings.unit === "f"
+    ) {
+
+        temp =
+            cToF(temp);
+
+        feels =
+            cToF(feels);
+
+    }
+
     document.getElementById(
         "temperature"
     ).textContent =
-        Math.round(current.temperature_2m) + "°";
+        Math.round(temp) +
+        "°";
 
     document.getElementById(
         "feels"
     ).textContent =
-        Math.round(current.apparent_temperature) + "°";
+        Math.round(feels) +
+        "°";
 
     document.getElementById(
         "humidity"
     ).textContent =
-        current.relative_humidity_2m + "%";
+        current.relative_humidity_2m +
+        "%";
 
     document.getElementById(
         "wind"
     ).textContent =
-        Math.round(current.wind_speed_10m)
-        + " km/h";
+        Math.round(
+            current.wind_speed_10m
+        ) +
+        " km/h";
 
     document.getElementById(
         "weatherDescription"
@@ -1016,12 +1736,13 @@ function updateWeather(data) {
         );
 
 
-    /* FORECAST */
-
     const forecast =
-        document.getElementById("forecast");
+        document.getElementById(
+            "forecast"
+        );
 
     forecast.innerHTML = "";
+
 
     for (
         let i = 0;
@@ -1042,35 +1763,50 @@ function updateWeather(data) {
                 }
             );
 
-        const icon =
-            weatherIcon(
-                data.daily.weather_code[i]
-            );
+        let max =
+            data.daily
+                .temperature_2m_max[i];
 
-        const max =
-            Math.round(
-                data.daily.temperature_2m_max[i]
-            );
+        let min =
+            data.daily
+                .temperature_2m_min[i];
 
-        const min =
-            Math.round(
-                data.daily.temperature_2m_min[i]
-            );
+        if (
+            settings.unit === "f"
+        ) {
+
+            max =
+                cToF(max);
+
+            min =
+                cToF(min);
+
+        }
 
         forecast.innerHTML += `
 
-            <div class="forecast-day">
+            <div
+                class="forecast-day">
 
-                <div class="forecast-day-name">
+                <div
+                    class="forecast-day-name">
                     ${day}
                 </div>
 
-                <div class="forecast-icon">
-                    ${icon}
+                <div
+                    class="forecast-icon">
+                    ${weatherIcon(
+                        data.daily.weather_code[i]
+                    )}
                 </div>
 
-                <div class="forecast-temp">
-                    ${max}° / ${min}°
+                <div
+                    class="forecast-temp">
+
+                    ${Math.round(max)}°
+                    /
+                    ${Math.round(min)}°
+
                 </div>
 
             </div>
@@ -1083,33 +1819,85 @@ function updateWeather(data) {
 
 
 /* =====================================================
-   WEATHER CODES
+   TEMPERATURE
 ===================================================== */
 
-function weatherDescription(code) {
+function cToF(c) {
+
+    return (
+        c * 9 / 5
+    ) + 32;
+
+}
+
+
+function changeTemperatureUnit(
+    value
+) {
+
+    settings.unit =
+        value;
+
+    saveSettings();
+
+    if (
+        latitude !== null
+    ) {
+
+        loadWeather(
+            latitude,
+            longitude
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   WEATHER DESCRIPTION
+===================================================== */
+
+function weatherDescription(
+    code
+) {
 
     if (code === 0)
         return "Ciel dégagé";
 
-    if ([1,2,3].includes(code))
+    if (
+        [1,2,3].includes(code)
+    )
         return "Partiellement nuageux";
 
-    if ([45,48].includes(code))
+    if (
+        [45,48].includes(code)
+    )
         return "Brouillard";
 
-    if ([51,53,55].includes(code))
+    if (
+        [51,53,55].includes(code)
+    )
         return "Bruine";
 
-    if ([61,63,65].includes(code))
+    if (
+        [61,63,65].includes(code)
+    )
         return "Pluie";
 
-    if ([71,73,75,77].includes(code))
+    if (
+        [71,73,75,77].includes(code)
+    )
         return "Neige";
 
-    if ([80,81,82].includes(code))
+    if (
+        [80,81,82].includes(code)
+    )
         return "Averses";
 
-    if ([95,96,99].includes(code))
+    if (
+        [95,96,99].includes(code)
+    )
         return "Orage";
 
     return "Conditions variables";
@@ -1117,27 +1905,47 @@ function weatherDescription(code) {
 }
 
 
-function weatherIcon(code) {
+/* =====================================================
+   WEATHER ICON
+===================================================== */
+
+function weatherIcon(
+    code
+) {
 
     if (code === 0)
         return "☀️";
 
-    if ([1,2].includes(code))
+    if (
+        [1,2].includes(code)
+    )
         return "🌤️";
 
     if (code === 3)
         return "☁️";
 
-    if ([45,48].includes(code))
+    if (
+        [45,48].includes(code)
+    )
         return "🌫️";
 
-    if ([51,53,55,61,63,65,80,81,82].includes(code))
+    if (
+        [
+            51,53,55,
+            61,63,65,
+            80,81,82
+        ].includes(code)
+    )
         return "🌧️";
 
-    if ([71,73,75,77].includes(code))
+    if (
+        [71,73,75,77].includes(code)
+    )
         return "❄️";
 
-    if ([95,96,99].includes(code))
+    if (
+        [95,96,99].includes(code)
+    )
         return "⛈️";
 
     return "🌤️";
@@ -1149,31 +1957,38 @@ function weatherIcon(code) {
    LOCATION NAME
 ===================================================== */
 
-async function getLocationName(lat, lon) {
+async function getLocationName(
+    lat,
+    lon
+) {
 
     try {
 
+        /*
+         * Reverse geocoding.
+         */
+
         const url =
-            "https://geocoding-api.open-meteo.com/v1/search" +
-            "?name=" +
-            encodeURIComponent(
-                "Montreal"
-            ) +
-            "&count=1" +
-            "&language=fr";
+            "https://geocoding-api.open-meteo.com/v1/search";
 
         /*
-         * La météo fonctionne avec les coordonnées.
-         * Le nom de ville peut être récupéré via
-         * reverse-geocoding lorsque disponible.
+         * Open-Meteo geocoding est
+         * principalement prévu pour
+         * rechercher un nom.
+         *
+         * On affiche donc les coordonnées
+         * si aucun nom n'est disponible.
          */
 
         document.getElementById(
             "location"
         ).textContent =
-            "📍 Localisation automatique activée";
+            "📍 Position détectée · " +
+            lat.toFixed(3) +
+            ", " +
+            lon.toFixed(3);
 
-    } catch (error) {
+    } catch {
 
         document.getElementById(
             "location"
@@ -1189,38 +2004,295 @@ async function getLocationName(lat, lon) {
    AUTO REFRESH
 ===================================================== */
 
-/*
-   Actualisation météo toutes les 15 minutes.
-*/
+let refreshTimer = null;
 
-setInterval(() => {
 
-    getLocation();
+function startWeatherRefresh() {
 
-}, 15 * 60 * 1000);
+    if (refreshTimer)
+        clearInterval(
+            refreshTimer
+        );
+
+    refreshTimer =
+        setInterval(
+            getLocation,
+            Number(settings.refresh)
+            * 60
+            * 1000
+        );
+
+}
+
+
+function changeRefresh(
+    value
+) {
+
+    settings.refresh =
+        value;
+
+    saveSettings();
+
+    startWeatherRefresh();
+
+}
+
+
+/* =====================================================
+   PANEL VISIBILITY
+===================================================== */
+
+function togglePanel(
+    panelId,
+    value
+) {
+
+    const panel =
+        document.getElementById(
+            panelId
+        );
+
+    panel.classList.toggle(
+        "hidden-panel",
+        value === "hide"
+    );
+
+    if (
+        panelId === "notesPanel"
+    )
+        settings.notes =
+            value;
+
+    if (
+        panelId === "tasksPanel"
+    )
+        settings.tasks =
+            value;
+
+    if (
+        panelId === "remindersPanel"
+    )
+        settings.reminders =
+            value;
+
+    saveSettings();
+
+}
+
+
+/* =====================================================
+   SETTINGS UI
+===================================================== */
+
+function openSettings() {
+
+    document.getElementById(
+        "settingsOverlay"
+    ).classList.add(
+        "open"
+    );
+
+}
+
+
+function closeSettings() {
+
+    document.getElementById(
+        "settingsOverlay"
+    ).classList.remove(
+        "open"
+    );
+
+}
+
+
+function closeSettingsOutside(
+    event
+) {
+
+    if (
+        event.target.id ===
+        "settingsOverlay"
+    ) {
+
+        closeSettings();
+
+    }
+
+}
+
+
+/* =====================================================
+   FULLSCREEN
+===================================================== */
+
+async function toggleFullscreen() {
+
+    try {
+
+        if (
+            !document.fullscreenElement
+        ) {
+
+            await document.documentElement
+                .requestFullscreen();
+
+            document.body.classList.add(
+                "fullscreen-ui"
+            );
+
+        } else {
+
+            await document.exitFullscreen();
+
+            document.body.classList.remove(
+                "fullscreen-ui"
+            );
+
+        }
+
+    } catch {
+
+        /*
+         * Certains vieux navigateurs
+         * ne supportent pas Fullscreen API.
+         */
+
+        document.body.classList.toggle(
+            "fullscreen-ui"
+        );
+
+    }
+
+}
+
+
+document.addEventListener(
+    "fullscreenchange",
+    () => {
+
+        document.body.classList.toggle(
+            "fullscreen-ui",
+            Boolean(
+                document.fullscreenElement
+            )
+        );
+
+    }
+);
 
 
 /* =====================================================
    SECURITY
 ===================================================== */
 
-function escapeHTML(text) {
+function escapeHTML(
+    text
+) {
 
-    return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    return String(text)
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
 
 }
 
 
 /* =====================================================
-   START
+   LOAD SETTINGS
 ===================================================== */
 
+function loadSettings() {
+
+    document.getElementById(
+        "themeSelect"
+    ).value =
+        settings.theme;
+
+    document.getElementById(
+        "clockSelect"
+    ).value =
+        settings.clock;
+
+    document.getElementById(
+        "unitSelect"
+    ).value =
+        settings.unit;
+
+    document.getElementById(
+        "refreshSelect"
+    ).value =
+        settings.refresh;
+
+    document.getElementById(
+        "notesVisibility"
+    ).value =
+        settings.notes;
+
+    document.getElementById(
+        "tasksVisibility"
+    ).value =
+        settings.tasks;
+
+    document.getElementById(
+        "remindersVisibility"
+    ).value =
+        settings.reminders;
+
+
+    togglePanel(
+        "notesPanel",
+        settings.notes
+    );
+
+    togglePanel(
+        "tasksPanel",
+        settings.tasks
+    );
+
+    togglePanel(
+        "remindersPanel",
+        settings.reminders
+    );
+
+}
+
+
+/* =====================================================
+   START APPLICATION
+===================================================== */
+
+applyTheme();
+
+loadSettings();
+
+updateClock();
+
+renderTasks();
+
+renderReminders();
+
 getLocation();
+
+startWeatherRefresh();
 
 </script>
 

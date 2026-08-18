@@ -9,45 +9,71 @@
                maximum-scale=1,
                user-scalable=no">
 
-<meta name="theme-color" content="#0b0f14">
+<meta name="theme-color" content="#002366">
 
-<title>Wall Dashboard</title>
+<title>Wall Dashboard V3</title>
 
 <style>
 
+/* =====================================================
+   WALL DASHBOARD V3
+   BRAND COLORS
+===================================================== */
+
 :root {
-    --bg: #080c11;
-    --panel: #111820;
-    --panel2: #18212b;
-    --text: #f4f7fb;
-    --muted: #8996a6;
-    --accent: #65a9ff;
-    --green: #61d59b;
-    --red: #ff7070;
-    --border: rgba(255,255,255,.07);
-    --shadow: 0 8px 30px rgba(0,0,0,.20);
-}
+    --blue: #002366;
+    --blue-dark: #001536;
+    --blue-deep: #000b1d;
 
-/* =========================
-   LIGHT THEME
-========================= */
+    --silver: #bcbfc2;
 
-body.light {
-    --bg: #eef2f6;
+    --white: #ffffff;
+
+    --bg: #f1f3f5;
     --panel: #ffffff;
-    --panel2: #f1f4f7;
-    --text: #17202a;
+    --panel2: #e9ecef;
+
+    --text: #002366;
     --muted: #66717d;
-    --accent: #2878d7;
-    --green: #269b68;
-    --red: #d94b4b;
-    --border: rgba(0,0,0,.08);
-    --shadow: 0 8px 25px rgba(0,0,0,.08);
+
+    --border: rgba(0,35,102,.12);
+
+    --glow:
+        0 0 10px rgba(188,191,194,.55),
+        0 0 25px rgba(188,191,194,.30);
 }
 
-/* =========================
+/* =====================================================
+   DARK THEME
+===================================================== */
+
+body.dark {
+    --bg: #001536;
+    --panel: #002366;
+    --panel2: #001b4d;
+
+    --text: #ffffff;
+    --muted: #bcbfc2;
+
+    --border: rgba(188,191,194,.16);
+}
+
+/* =====================================================
+   AUTO NIGHT
+===================================================== */
+
+body.night-mode {
+    --bg: #000714;
+    --panel: #000e27;
+    --panel2: #001536;
+
+    --text: #dce8ff;
+    --muted: #8d9bb3;
+}
+
+/* =====================================================
    GLOBAL
-========================= */
+===================================================== */
 
 * {
     box-sizing: border-box;
@@ -58,21 +84,25 @@ html,
 body {
     margin: 0;
     padding: 0;
+
     width: 100%;
     min-height: 100%;
+
     background: var(--bg);
     color: var(--text);
+
     font-family:
         Arial,
         Helvetica,
         sans-serif;
+
+    transition:
+        background .4s,
+        color .4s;
 }
 
 body {
     overflow-x: hidden;
-    transition:
-        background .25s,
-        color .25s;
 }
 
 button,
@@ -82,110 +112,157 @@ select {
     font-family: inherit;
 }
 
-/* =========================
+/* =====================================================
    APP
-========================= */
+===================================================== */
 
 .app {
     width: 100%;
-    max-width: 680px;
+    max-width: 700px;
+
     margin: auto;
-    padding: 14px;
-    padding-bottom: 30px;
+
+    padding: 12px 14px 30px;
 }
 
-/* =========================
+/* =====================================================
    TOP BAR
-========================= */
+===================================================== */
 
 .topbar {
+    height: 45px;
+
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    height: 42px;
 }
 
 .top-button {
     width: 42px;
     height: 42px;
-    padding: 0;
+
     border-radius: 50%;
+
+    border:
+        1px solid var(--border);
+
     background: var(--panel);
+
     color: var(--text);
-    border: 1px solid var(--border);
+
     font-size: 19px;
 }
 
-/* =========================
-   CLOCK
-========================= */
+/* =====================================================
+   HEADER
+===================================================== */
 
 .header {
-    padding: 4px 4px 20px;
+    padding:
+        4px
+        4px
+        20px;
 }
 
 .time {
-    font-size: clamp(52px, 16vw, 92px);
+    font-size:
+        clamp(
+            52px,
+            17vw,
+            96px
+        );
+
     font-weight: 300;
-    letter-spacing: -4px;
-    line-height: .95;
+
+    letter-spacing:
+        -4px;
+
+    line-height: .9;
 }
 
 .date {
-    margin-top: 10px;
+    margin-top: 12px;
+
     color: var(--muted);
+
     font-size: 17px;
-    text-transform: capitalize;
+
+    text-transform:
+        capitalize;
 }
 
 .location {
-    margin-top: 12px;
-    color: var(--accent);
+    margin-top: 11px;
+
+    color:
+        var(--silver);
+
     font-size: 14px;
 }
 
-/* =========================
+/* =====================================================
    PANELS
-========================= */
+===================================================== */
 
 .panel {
-    background: var(--panel);
-    border: 1px solid var(--border);
+    background:
+        var(--panel);
+
+    border:
+        1px solid var(--border);
+
     border-radius: 20px;
+
     padding: 17px;
+
     margin-bottom: 13px;
-    box-shadow: var(--shadow);
-    transition:
-        background .25s,
-        color .25s;
+
+    box-shadow:
+        0 8px 30px
+        rgba(0,0,0,.15);
 }
 
 .panel-title {
-    color: var(--muted);
+    color:
+        var(--silver);
+
     font-size: 12px;
+
     font-weight: bold;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
+
+    letter-spacing:
+        1.5px;
+
+    text-transform:
+        uppercase;
+
     margin-bottom: 15px;
 }
 
-/* =========================
+/* =====================================================
    WEATHER
-========================= */
+===================================================== */
 
 .weather-main {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
 }
 
 .temperature {
-    font-size: 58px;
+    font-size: 60px;
+
     font-weight: 300;
 }
 
 .weather-description {
-    color: var(--muted);
+    color:
+        var(--muted);
+
     margin-top: 4px;
 }
 
@@ -194,123 +271,198 @@ select {
 }
 
 .weather-extra {
-    display: grid;
-    grid-template-columns: repeat(3,1fr);
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(3,1fr);
+
     gap: 8px;
+
     margin-top: 18px;
 }
 
 .weather-stat {
-    background: var(--panel2);
-    border-radius: 13px;
-    padding: 11px 5px;
-    text-align: center;
+    background:
+        var(--panel2);
+
+    border-radius:
+        13px;
+
+    padding:
+        11px 5px;
+
+    text-align:
+        center;
 }
 
 .weather-stat small {
     display: block;
-    color: var(--muted);
+
+    color:
+        var(--muted);
+
     font-size: 11px;
+
     margin-bottom: 5px;
 }
 
-/* =========================
+/* =====================================================
    FORECAST
-========================= */
+===================================================== */
 
 .forecast {
-    display: grid;
+    display:
+        grid;
+
     grid-template-columns:
         repeat(5,1fr);
+
     gap: 6px;
 }
 
 .forecast-day {
-    background: var(--panel2);
-    border-radius: 12px;
-    padding: 9px 3px;
-    text-align: center;
+    background:
+        var(--panel2);
+
+    border-radius:
+        12px;
+
+    padding:
+        9px 3px;
+
+    text-align:
+        center;
 }
 
 .forecast-day-name {
-    color: var(--muted);
+    color:
+        var(--muted);
+
     font-size: 11px;
 }
 
 .forecast-icon {
     font-size: 25px;
-    margin: 7px 0;
+
+    margin:
+        7px 0;
 }
 
 .forecast-temp {
     font-size: 12px;
 }
 
-/* =========================
+/* =====================================================
    NOTES
-========================= */
+===================================================== */
 
 textarea {
     width: 100%;
-    min-height: 145px;
-    resize: vertical;
-    padding: 14px;
 
-    background: var(--panel2);
-    color: var(--text);
+    min-height:
+        145px;
+
+    resize:
+        vertical;
+
+    padding:
+        14px;
+
+    background:
+        var(--panel2);
+
+    color:
+        var(--text);
 
     border:
         1px solid var(--border);
 
-    border-radius: 13px;
-    outline: none;
+    border-radius:
+        13px;
 
-    font-size: 16px;
+    outline:
+        none;
+
+    font-size:
+        16px;
 }
 
-textarea:focus,
-input:focus,
-select:focus {
-    border-color: var(--accent);
-}
-
-/* =========================
-   TASKS
-========================= */
-
-.task-input {
-    display: flex;
-    gap: 8px;
-}
+/* =====================================================
+   INPUTS
+===================================================== */
 
 input,
 select {
-    background: var(--panel2);
-    color: var(--text);
+    background:
+        var(--panel2);
+
+    color:
+        var(--text);
+
     border:
         1px solid var(--border);
-    border-radius: 12px;
-    outline: none;
-    padding: 13px;
-    font-size: 16px;
+
+    border-radius:
+        12px;
+
+    outline:
+        none;
+
+    padding:
+        13px;
+
+    font-size:
+        16px;
 }
 
-.task-input input {
-    flex: 1;
+input:focus,
+textarea:focus,
+select:focus {
+    border-color:
+        var(--silver);
 }
 
 button {
     border: 0;
-    border-radius: 12px;
-    padding: 12px 15px;
-    background: var(--accent);
-    color: white;
-    font-weight: bold;
-    font-size: 15px;
+
+    border-radius:
+        12px;
+
+    padding:
+        12px 15px;
+
+    background:
+        var(--blue);
+
+    color:
+        white;
+
+    font-weight:
+        bold;
+
+    font-size:
+        15px;
 }
 
 button:active {
-    transform: scale(.97);
+    transform:
+        scale(.97);
+}
+
+/* =====================================================
+   TASKS
+===================================================== */
+
+.task-input {
+    display:
+        flex;
+
+    gap: 8px;
+}
+
+.task-input input {
+    flex: 1;
 }
 
 .tasks {
@@ -318,226 +470,673 @@ button:active {
 }
 
 .task {
-    display: flex;
-    align-items: center;
+    display:
+        flex;
+
+    align-items:
+        center;
+
     gap: 10px;
 
-    background: var(--panel2);
-    padding: 11px;
-    margin-bottom: 7px;
+    background:
+        var(--panel2);
 
-    border-radius: 12px;
+    padding:
+        11px;
+
+    margin-bottom:
+        7px;
+
+    border-radius:
+        12px;
 }
 
 .task input {
-    width: 21px;
-    height: 21px;
-    padding: 0;
+    width:
+        21px;
+
+    height:
+        21px;
+
+    padding:
+        0;
 }
 
 .task-text {
     flex: 1;
-    word-break: break-word;
+
+    word-break:
+        break-word;
 }
 
 .task.done .task-text {
-    text-decoration: line-through;
-    color: var(--muted);
+    text-decoration:
+        line-through;
+
+    color:
+        var(--muted);
 }
 
 .delete {
-    background: transparent;
-    color: var(--red);
-    padding: 5px;
+    background:
+        transparent;
+
+    color:
+        #ff7070;
+
+    padding:
+        5px;
 }
 
-/* =========================
+/* =====================================================
    REMINDERS
-========================= */
+===================================================== */
 
 .reminder-input {
-    display: grid;
-    grid-template-columns: 1fr 120px;
+    display:
+        grid;
+
+    grid-template-columns:
+        1fr 120px;
+
     gap: 8px;
 }
 
 .reminder-list {
-    margin-top: 12px;
+    margin-top:
+        12px;
 }
 
 .reminder-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    display:
+        flex;
 
-    background: var(--panel2);
-    padding: 11px;
+    align-items:
+        center;
 
-    border-radius: 12px;
-    margin-bottom: 7px;
+    justify-content:
+        space-between;
+
+    background:
+        var(--panel2);
+
+    padding:
+        11px;
+
+    border-radius:
+        12px;
+
+    margin-bottom:
+        7px;
 }
 
 .reminder-time {
-    color: var(--accent);
-    font-weight: bold;
-    margin-top: 3px;
+    color:
+        var(--silver);
+
+    font-weight:
+        bold;
+
+    margin-top:
+        3px;
 }
 
-/* =========================
-   SETTINGS
-========================= */
-
-.settings-overlay {
-    position: fixed;
-    inset: 0;
-
-    display: none;
-    align-items: flex-end;
-    justify-content: center;
-
-    background: rgba(0,0,0,.65);
-
-    z-index: 1000;
-}
-
-.settings-overlay.open {
-    display: flex;
-}
-
-.settings {
-    width: 100%;
-    max-width: 680px;
-    max-height: 90vh;
-
-    overflow-y: auto;
-
-    background: var(--panel);
-    border-radius: 24px 24px 0 0;
-
-    padding: 20px;
-}
-
-.settings-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    margin-bottom: 18px;
-}
-
-.settings-header h2 {
-    margin: 0;
-    font-size: 21px;
-}
-
-.close-button {
-    background: var(--panel2);
-    color: var(--text);
-}
-
-.setting {
-    margin-bottom: 17px;
-}
-
-.setting label {
-    display: block;
-    color: var(--muted);
-    font-size: 13px;
-    margin-bottom: 7px;
-}
-
-.setting select {
-    width: 100%;
-}
-
-.fullscreen-setting {
-    width: 100%;
-    margin-top: 5px;
-}
-
-/* =========================
+/* =====================================================
    STATUS
-========================= */
+===================================================== */
 
 .status {
-    text-align: center;
-    color: var(--muted);
-    font-size: 11px;
-    padding-top: 5px;
+    text-align:
+        center;
+
+    color:
+        var(--muted);
+
+    font-size:
+        11px;
 }
 
 .online {
-    color: var(--green);
+    color:
+        #4ed994;
 }
 
-/* =========================
-   FULLSCREEN MODE
-========================= */
+/* =====================================================
+   SETTINGS
+===================================================== */
+
+.settings-overlay {
+    position:
+        fixed;
+
+    inset:
+        0;
+
+    display:
+        none;
+
+    align-items:
+        flex-end;
+
+    justify-content:
+        center;
+
+    background:
+        rgba(0,0,0,.72);
+
+    z-index:
+        1000;
+}
+
+.settings-overlay.open {
+    display:
+        flex;
+}
+
+.settings {
+    width:
+        100%;
+
+    max-width:
+        700px;
+
+    max-height:
+        90vh;
+
+    overflow-y:
+        auto;
+
+    background:
+        var(--panel);
+
+    border-radius:
+        24px 24px 0 0;
+
+    padding:
+        20px;
+}
+
+.settings-header {
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        center;
+
+    margin-bottom:
+        18px;
+}
+
+.settings-header h2 {
+    margin:
+        0;
+
+    font-size:
+        21px;
+}
+
+.close-button {
+    background:
+        var(--panel2);
+
+    color:
+        var(--text);
+}
+
+.setting {
+    margin-bottom:
+        17px;
+}
+
+.setting label {
+    display:
+        block;
+
+    color:
+        var(--muted);
+
+    font-size:
+        13px;
+
+    margin-bottom:
+        7px;
+}
+
+.setting select {
+    width:
+        100%;
+}
+
+.fullscreen-button {
+    width:
+        100%;
+
+    margin-top:
+        5px;
+}
+
+/* =====================================================
+   HIDDEN PANELS
+===================================================== */
+
+.hidden-panel {
+    display:
+        none;
+}
+
+/* =====================================================
+   AMBIENT / SLEEP SCREEN
+===================================================== */
+
+#ambientScreen {
+
+    position:
+        fixed;
+
+    inset:
+        0;
+
+    z-index:
+        2000;
+
+    display:
+        none;
+
+    flex-direction:
+        column;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        center;
+
+    text-align:
+        center;
+
+    padding:
+        8vh 5vw 4vh;
+
+    background:
+        radial-gradient(
+            circle at center,
+            #003b91 0%,
+            #002366 35%,
+            #000c20 100%
+        );
+
+    color:
+        #ffffff;
+
+    cursor:
+        pointer;
+
+    overflow:
+        hidden;
+}
+
+#ambientScreen.active {
+    display:
+        flex;
+}
+
+/* =====================================================
+   AMBIENT CLOCK
+===================================================== */
+
+.ambient-clock {
+
+    font-size:
+        clamp(
+            90px,
+            25vw,
+            190px
+        );
+
+    font-weight:
+        300;
+
+    letter-spacing:
+        -8px;
+
+    line-height:
+        .85;
+
+    color:
+        #ffffff;
+
+    text-shadow:
+
+        0 0 5px
+        rgba(255,255,255,.95),
+
+        0 0 18px
+        rgba(188,191,194,.9),
+
+        0 0 40px
+        rgba(188,191,194,.65),
+
+        0 0 80px
+        rgba(188,191,194,.35);
+
+    animation:
+        ambientGlow 4s
+        ease-in-out
+        infinite alternate;
+}
+
+@keyframes ambientGlow {
+
+    from {
+        text-shadow:
+
+            0 0 5px
+            rgba(255,255,255,.95),
+
+            0 0 18px
+            rgba(188,191,194,.9),
+
+            0 0 40px
+            rgba(188,191,194,.65);
+    }
+
+    to {
+        text-shadow:
+
+            0 0 8px
+            rgba(255,255,255,1),
+
+            0 0 30px
+            rgba(255,255,255,.9),
+
+            0 0 60px
+            rgba(188,191,194,.8),
+
+            0 0 100px
+            rgba(188,191,194,.5);
+    }
+
+}
+
+/* =====================================================
+   AMBIENT DATE
+===================================================== */
+
+.ambient-date {
+
+    margin-top:
+        22px;
+
+    font-size:
+        clamp(
+            17px,
+            4vw,
+            28px
+        );
+
+    color:
+        #bcbfc2;
+
+    text-shadow:
+        0 0 15px
+        rgba(188,191,194,.7);
+}
+
+/* =====================================================
+   AMBIENT WEATHER
+===================================================== */
+
+.ambient-weather {
+
+    width:
+        100%;
+
+    max-width:
+        600px;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    align-items:
+        center;
+
+    gap:
+        8px;
+}
+
+.ambient-weather-row {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    gap:
+        18px;
+}
+
+.ambient-weather-icon {
+
+    font-size:
+        clamp(
+            45px,
+            10vw,
+            75px
+        );
+
+    filter:
+        drop-shadow(
+            0 0 18px
+            rgba(255,255,255,.75)
+        );
+}
+
+.ambient-temperature {
+
+    font-size:
+        clamp(
+            55px,
+            14vw,
+            100px
+        );
+
+    font-weight:
+        300;
+
+    color:
+        #ffffff;
+
+    text-shadow:
+
+        0 0 8px
+        rgba(255,255,255,.9),
+
+        0 0 30px
+        rgba(188,191,194,.7);
+}
+
+.ambient-description {
+
+    font-size:
+        clamp(
+            16px,
+            4vw,
+            24px
+        );
+
+    color:
+        #bcbfc2;
+}
+
+/* =====================================================
+   AMBIENT STATS
+===================================================== */
+
+.ambient-stats {
+
+    display:
+        flex;
+
+    justify-content:
+        center;
+
+    gap:
+        25px;
+
+    flex-wrap:
+        wrap;
+
+    color:
+        #ffffff;
+
+    font-size:
+        clamp(
+            13px,
+            3vw,
+            18px
+        );
+}
+
+.ambient-stat {
+    text-shadow:
+        0 0 12px
+        rgba(255,255,255,.7);
+}
+
+/* =====================================================
+   AMBIENT IMPORTANT INFO
+===================================================== */
+
+.ambient-important {
+
+    min-height:
+        28px;
+
+    font-size:
+        clamp(
+            13px,
+            3vw,
+            19px
+        );
+
+    color:
+        #bcbfc2;
+
+    opacity:
+        .92;
+
+    text-shadow:
+        0 0 12px
+        rgba(188,191,194,.55);
+
+    transition:
+        opacity .4s;
+}
+
+.ambient-important:empty {
+    opacity:
+        0;
+}
+
+/* =====================================================
+   AMBIENT LOCATION
+===================================================== */
+
+.ambient-location {
+
+    font-size:
+        12px;
+
+    color:
+        rgba(188,191,194,.75);
+}
+
+/* =====================================================
+   FULLSCREEN
+===================================================== */
 
 body.fullscreen-ui .topbar {
-    display: none;
+    display:
+        none;
 }
 
 body.fullscreen-ui .app {
-    max-width: 700px;
-    padding-top: 12px;
+    padding-top:
+        8px;
 }
 
-/* =========================
-   HIDDEN PANELS
-========================= */
-
-.panel.hidden-panel {
-    display: none;
-}
-
-/* =========================
+/* =====================================================
    LANDSCAPE
-========================= */
+===================================================== */
 
 @media (orientation: landscape) {
 
     .app {
-        max-width: 1100px;
+        max-width:
+            1100px;
     }
 
     .dashboard-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 13px;
+        display:
+            grid;
+
+        grid-template-columns:
+            1fr 1fr;
+
+        gap:
+            13px;
     }
 
 }
 
-/* =========================
-   SMALL SCREENS
-========================= */
+/* =====================================================
+   SMALL TABLETS
+===================================================== */
 
-@media (max-width: 390px) {
+@media (max-width:390px) {
 
     .app {
-        padding: 10px;
+        padding:
+            10px;
     }
 
     .panel {
-        padding: 14px;
-        border-radius: 17px;
+        padding:
+            14px;
+
+        border-radius:
+            17px;
     }
 
-    .time {
-        font-size: 52px;
+    .ambient-clock {
+        letter-spacing:
+            -5px;
     }
 
 }
 
-/* =========================
+/* =====================================================
    REDUCED MOTION
-========================= */
+===================================================== */
 
 @media (prefers-reduced-motion: reduce) {
 
     * {
-        transition: none !important;
+        animation:
+            none !important;
+
+        transition:
+            none !important;
     }
 
 }
@@ -547,23 +1146,22 @@ body.fullscreen-ui .app {
 
 <body>
 
-<div class="app">
+<!-- ===================================================
+     NORMAL DASHBOARD
+=================================================== -->
 
-    <!-- TOP BAR -->
+<div class="app">
 
     <div class="topbar">
 
         <button
             class="top-button"
-            onclick="openSettings()"
-            aria-label="Réglages">
+            onclick="openSettings()">
             ⚙️
         </button>
 
     </div>
 
-
-    <!-- HEADER -->
 
     <header class="header">
 
@@ -758,7 +1356,9 @@ body.fullscreen-ui .app {
 
     <div class="status">
 
-        <span class="online">●</span>
+        <span class="online">
+            ●
+        </span>
 
         Dashboard actif ·
 
@@ -771,9 +1371,100 @@ body.fullscreen-ui .app {
 </div>
 
 
-<!-- =========================
+<!-- ===================================================
+     AMBIENT WALL MODE
+=================================================== -->
+
+<div
+    id="ambientScreen"
+    onclick="wakeDashboard()">
+
+    <div>
+
+        <div
+            id="ambientClock"
+            class="ambient-clock">
+            --:--
+        </div>
+
+        <div
+            id="ambientDate"
+            class="ambient-date">
+            --
+        </div>
+
+    </div>
+
+
+    <div class="ambient-weather">
+
+        <div class="ambient-weather-row">
+
+            <div
+                id="ambientIcon"
+                class="ambient-weather-icon">
+                ☀️
+            </div>
+
+            <div
+                id="ambientTemperature"
+                class="ambient-temperature">
+                --°
+            </div>
+
+        </div>
+
+
+        <div
+            id="ambientDescription"
+            class="ambient-description">
+            --
+        </div>
+
+
+        <div class="ambient-stats">
+
+            <div
+                id="ambientFeels"
+                class="ambient-stat">
+                Ressenti --
+            </div>
+
+            <div
+                id="ambientHumidity"
+                class="ambient-stat">
+                💧 --%
+            </div>
+
+            <div
+                id="ambientWind"
+                class="ambient-stat">
+                💨 -- km/h
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div
+        id="ambientImportant"
+        class="ambient-important">
+    </div>
+
+
+    <div
+        id="ambientLocation"
+        class="ambient-location">
+        📍 Position
+    </div>
+
+</div>
+
+
+<!-- ===================================================
      SETTINGS
-========================= -->
+=================================================== -->
 
 <div
     id="settingsOverlay"
@@ -786,7 +1477,9 @@ body.fullscreen-ui .app {
 
         <div class="settings-header">
 
-            <h2>⚙️ Réglages</h2>
+            <h2>
+                ⚙️ Réglages
+            </h2>
 
             <button
                 class="close-button"
@@ -796,8 +1489,6 @@ body.fullscreen-ui .app {
 
         </div>
 
-
-        <!-- THEME -->
 
         <div class="setting">
 
@@ -809,12 +1500,12 @@ body.fullscreen-ui .app {
                 id="themeSelect"
                 onchange="changeTheme(this.value)">
 
-                <option value="dark">
-                    🌙 Sombre
-                </option>
-
                 <option value="light">
                     ☀️ Clair
+                </option>
+
+                <option value="dark">
+                    🌙 Sombre
                 </option>
 
                 <option value="auto">
@@ -825,8 +1516,6 @@ body.fullscreen-ui .app {
 
         </div>
 
-
-        <!-- CLOCK -->
 
         <div class="setting">
 
@@ -851,8 +1540,6 @@ body.fullscreen-ui .app {
         </div>
 
 
-        <!-- TEMPERATURE -->
-
         <div class="setting">
 
             <label>
@@ -876,7 +1563,40 @@ body.fullscreen-ui .app {
         </div>
 
 
-        <!-- WEATHER REFRESH -->
+        <div class="setting">
+
+            <label>
+                Passage en mode veille
+            </label>
+
+            <select
+                id="sleepSelect"
+                onchange="changeSleepTime(this.value)">
+
+                <option value="1">
+                    Après 1 minute
+                </option>
+
+                <option value="2">
+                    Après 2 minutes
+                </option>
+
+                <option value="5">
+                    Après 5 minutes
+                </option>
+
+                <option value="10">
+                    Après 10 minutes
+                </option>
+
+                <option value="0">
+                    Désactivé
+                </option>
+
+            </select>
+
+        </div>
+
 
         <div class="setting">
 
@@ -909,24 +1629,25 @@ body.fullscreen-ui .app {
         </div>
 
 
-        <!-- PANELS -->
-
         <div class="setting">
 
             <label>
-                Affichage des sections
+                Notes
             </label>
 
             <select
                 id="notesVisibility"
-                onchange="togglePanel('notesPanel', this.value)">
+                onchange="togglePanel(
+                    'notesPanel',
+                    this.value
+                )">
 
                 <option value="show">
-                    📝 Notes visibles
+                    Afficher
                 </option>
 
                 <option value="hide">
-                    Notes masquées
+                    Masquer
                 </option>
 
             </select>
@@ -935,17 +1656,24 @@ body.fullscreen-ui .app {
 
 
         <div class="setting">
+
+            <label>
+                Tâches
+            </label>
 
             <select
                 id="tasksVisibility"
-                onchange="togglePanel('tasksPanel', this.value)">
+                onchange="togglePanel(
+                    'tasksPanel',
+                    this.value
+                )">
 
                 <option value="show">
-                    ✅ Tâches visibles
+                    Afficher
                 </option>
 
                 <option value="hide">
-                    Tâches masquées
+                    Masquer
                 </option>
 
             </select>
@@ -955,16 +1683,23 @@ body.fullscreen-ui .app {
 
         <div class="setting">
 
+            <label>
+                Rappels
+            </label>
+
             <select
                 id="remindersVisibility"
-                onchange="togglePanel('remindersPanel', this.value)">
+                onchange="togglePanel(
+                    'remindersPanel',
+                    this.value
+                )">
 
                 <option value="show">
-                    🔔 Rappels visibles
+                    Afficher
                 </option>
 
                 <option value="hide">
-                    Rappels masqués
+                    Masquer
                 </option>
 
             </select>
@@ -972,13 +1707,11 @@ body.fullscreen-ui .app {
         </div>
 
 
-        <!-- FULLSCREEN -->
-
         <button
-            class="fullscreen-setting"
+            class="fullscreen-button"
             onclick="toggleFullscreen()">
 
-            ⛶ Activer / quitter le plein écran
+            ⛶ Plein écran
 
         </button>
 
@@ -990,33 +1723,46 @@ body.fullscreen-ui .app {
 <script>
 
 /* =====================================================
-   SETTINGS
+   DEFAULT SETTINGS
 ===================================================== */
 
 const defaultSettings = {
 
     theme: "dark",
+
     clock: "24",
+
     unit: "c",
+
+    sleep: "2",
+
     refresh: "15",
+
     notes: "show",
+
     tasks: "show",
+
     reminders: "show"
 
 };
 
+
 let settings =
     JSON.parse(
         localStorage.getItem(
-            "wall_settings"
+            "wall_v3_settings"
         ) || "null"
     ) || defaultSettings;
 
 
+/* =====================================================
+   SAVE SETTINGS
+===================================================== */
+
 function saveSettings() {
 
     localStorage.setItem(
-        "wall_settings",
+        "wall_v3_settings",
         JSON.stringify(settings)
     );
 
@@ -1029,27 +1775,41 @@ function saveSettings() {
 
 function applyTheme() {
 
-    let theme =
-        settings.theme;
+    document.body.classList.remove(
+        "dark",
+        "night-mode"
+    );
 
-    if (theme === "auto") {
+
+    if (
+        settings.theme ===
+        "dark"
+    ) {
+
+        document.body.classList.add(
+            "dark"
+        );
+
+    }
+
+
+    if (
+        settings.theme ===
+        "auto"
+    ) {
 
         const dark =
             window.matchMedia(
                 "(prefers-color-scheme: dark)"
             ).matches;
 
-        document.body.classList.toggle(
-            "light",
-            !dark
-        );
+        if (dark) {
 
-    } else {
+            document.body.classList.add(
+                "dark"
+            );
 
-        document.body.classList.toggle(
-            "light",
-            theme === "light"
-        );
+        }
 
     }
 
@@ -1058,9 +1818,11 @@ function applyTheme() {
 
 function changeTheme(value) {
 
-    settings.theme = value;
+    settings.theme =
+        value;
 
     saveSettings();
+
     applyTheme();
 
 }
@@ -1080,27 +1842,34 @@ window
    CLOCK
 ===================================================== */
 
+function getTimeString() {
+
+    const now =
+        new Date();
+
+    return now.toLocaleTimeString(
+        "fr-CA",
+        {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12:
+                settings.clock ===
+                "12"
+        }
+    );
+
+}
+
+
 function updateClock() {
 
     const now =
         new Date();
 
-    const is12 =
-        settings.clock === "12";
+    const time =
+        getTimeString();
 
-    document.getElementById("time")
-        .textContent =
-        now.toLocaleTimeString(
-            "fr-CA",
-            {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: is12
-            }
-        );
-
-    document.getElementById("date")
-        .textContent =
+    const date =
         now.toLocaleDateString(
             "fr-CA",
             {
@@ -1111,7 +1880,29 @@ function updateClock() {
             }
         );
 
+    document.getElementById(
+        "time"
+    ).textContent =
+        time;
+
+    document.getElementById(
+        "date"
+    ).textContent =
+        date;
+
+
+    document.getElementById(
+        "ambientClock"
+    ).textContent =
+        time;
+
+    document.getElementById(
+        "ambientDate"
+    ).textContent =
+        date;
+
 }
+
 
 setInterval(
     updateClock,
@@ -1119,15 +1910,15 @@ setInterval(
 );
 
 
-/* =====================================================
-   CLOCK SETTING
-===================================================== */
+function changeClockFormat(
+    value
+) {
 
-function changeClockFormat(value) {
-
-    settings.clock = value;
+    settings.clock =
+        value;
 
     saveSettings();
+
     updateClock();
 
 }
@@ -1144,7 +1935,7 @@ const notes =
 
 notes.value =
     localStorage.getItem(
-        "wall_notes"
+        "wall_v3_notes"
     ) || "";
 
 notes.addEventListener(
@@ -1152,7 +1943,7 @@ notes.addEventListener(
     () => {
 
         localStorage.setItem(
-            "wall_notes",
+            "wall_v3_notes",
             notes.value
         );
 
@@ -1167,7 +1958,7 @@ notes.addEventListener(
 let tasks =
     JSON.parse(
         localStorage.getItem(
-            "wall_tasks"
+            "wall_v3_tasks"
         ) || "[]"
     );
 
@@ -1175,7 +1966,7 @@ let tasks =
 function saveTasks() {
 
     localStorage.setItem(
-        "wall_tasks",
+        "wall_v3_tasks",
         JSON.stringify(tasks)
     );
 
@@ -1190,6 +1981,7 @@ function renderTasks() {
         );
 
     container.innerHTML = "";
+
 
     tasks.forEach(
         (task, index) => {
@@ -1207,20 +1999,28 @@ function renderTasks() {
                     : ""
                 );
 
+
             div.innerHTML = `
 
                 <input
                     type="checkbox"
                     ${task.done ? "checked" : ""}
-                    onchange="toggleTask(${index})">
+                    onchange="
+                        toggleTask(${index})
+                    ">
 
-                <div class="task-text">
-                    ${escapeHTML(task.text)}
+                <div
+                    class="task-text">
+                    ${escapeHTML(
+                        task.text
+                    )}
                 </div>
 
                 <button
                     class="delete"
-                    onclick="deleteTask(${index})">
+                    onclick="
+                        deleteTask(${index})
+                    ">
                     ✕
                 </button>
 
@@ -1232,6 +2032,9 @@ function renderTasks() {
 
         }
     );
+
+
+    updateAmbientImportant();
 
 }
 
@@ -1250,13 +2053,20 @@ function addTask() {
         return;
 
     tasks.push({
+
         text: text,
-        done: false
+
+        done: false,
+
+        created:
+            Date.now()
+
     });
 
     input.value = "";
 
     saveTasks();
+
     renderTasks();
 
 }
@@ -1268,6 +2078,7 @@ function toggleTask(index) {
         !tasks[index].done;
 
     saveTasks();
+
     renderTasks();
 
 }
@@ -1281,6 +2092,7 @@ function deleteTask(index) {
     );
 
     saveTasks();
+
     renderTasks();
 
 }
@@ -1298,7 +2110,9 @@ document
                 event.key ===
                 "Enter"
             ) {
+
                 addTask();
+
             }
 
         }
@@ -1312,7 +2126,7 @@ document
 let reminders =
     JSON.parse(
         localStorage.getItem(
-            "wall_reminders"
+            "wall_v3_reminders"
         ) || "[]"
     );
 
@@ -1320,7 +2134,7 @@ let reminders =
 function saveReminders() {
 
     localStorage.setItem(
-        "wall_reminders",
+        "wall_v3_reminders",
         JSON.stringify(reminders)
     );
 
@@ -1336,6 +2150,7 @@ function renderReminders() {
 
     container.innerHTML = "";
 
+
     reminders.forEach(
         (reminder, index) => {
 
@@ -1346,6 +2161,7 @@ function renderReminders() {
 
             div.className =
                 "reminder-item";
+
 
             div.innerHTML = `
 
@@ -1366,7 +2182,9 @@ function renderReminders() {
 
                 <button
                     class="delete"
-                    onclick="deleteReminder(${index})">
+                    onclick="
+                        deleteReminder(${index})
+                    ">
                     ✕
                 </button>
 
@@ -1378,6 +2196,9 @@ function renderReminders() {
 
         }
     );
+
+
+    updateAmbientImportant();
 
 }
 
@@ -1394,11 +2215,13 @@ function addReminder() {
             "reminderTime"
         ).value;
 
+
     if (
         !text ||
         !time
     )
         return;
+
 
     reminders.push({
 
@@ -1410,6 +2233,7 @@ function addReminder() {
 
     });
 
+
     document.getElementById(
         "reminderText"
     ).value = "";
@@ -1418,7 +2242,9 @@ function addReminder() {
         "reminderTime"
     ).value = "";
 
+
     saveReminders();
+
     renderReminders();
 
     requestNotificationPermission();
@@ -1426,7 +2252,9 @@ function addReminder() {
 }
 
 
-function deleteReminder(index) {
+function deleteReminder(
+    index
+) {
 
     reminders.splice(
         index,
@@ -1434,6 +2262,7 @@ function deleteReminder(index) {
     );
 
     saveReminders();
+
     renderReminders();
 
 }
@@ -1471,18 +2300,21 @@ function checkReminders() {
         now.toISOString()
            .slice(0,10);
 
+
     reminders.forEach(
         reminder => {
 
             if (
                 reminder.time ===
                 currentTime &&
+
                 reminder.lastTriggered !==
                 today
             ) {
 
                 if (
                     "Notification" in window &&
+
                     Notification.permission ===
                     "granted"
                 ) {
@@ -1497,12 +2329,25 @@ function checkReminders() {
 
                 } else {
 
-                    alert(
-                        "🔔 " +
-                        reminder.text
-                    );
+                    /*
+                     * Le navigateur peut
+                     * bloquer alert() en mode
+                     * veille selon la plateforme.
+                     */
+
+                    if (
+                        !ambientMode
+                    ) {
+
+                        alert(
+                            "🔔 " +
+                            reminder.text
+                        );
+
+                    }
 
                 }
+
 
                 reminder.lastTriggered =
                     today;
@@ -1514,7 +2359,11 @@ function checkReminders() {
         }
     );
 
+
+    updateAmbientImportant();
+
 }
+
 
 setInterval(
     checkReminders,
@@ -1526,8 +2375,11 @@ setInterval(
    GEOLOCATION
 ===================================================== */
 
-let latitude = null;
-let longitude = null;
+let latitude =
+    null;
+
+let longitude =
+    null;
 
 
 function getLocation() {
@@ -1545,6 +2397,7 @@ function getLocation() {
 
     }
 
+
     navigator.geolocation.getCurrentPosition(
 
         position => {
@@ -1554,6 +2407,7 @@ function getLocation() {
 
             longitude =
                 position.coords.longitude;
+
 
             loadWeather(
                 latitude,
@@ -1593,6 +2447,10 @@ function getLocation() {
    WEATHER
 ===================================================== */
 
+let weatherData =
+    null;
+
+
 async function loadWeather(
     lat,
     lon
@@ -1627,34 +2485,71 @@ async function loadWeather(
 
             "&forecast_days=5";
 
+
         const response =
             await fetch(url);
+
 
         if (!response.ok)
             throw new Error();
 
+
         const data =
             await response.json();
 
-        updateWeather(data);
 
-        await getLocationName(
-            lat,
-            lon
+        weatherData =
+            data;
+
+
+        updateWeather(
+            data
         );
+
+
+        updateAmbientWeather(
+            data
+        );
+
+
+        document.getElementById(
+            "location"
+        ).textContent =
+
+            "📍 Position détectée · " +
+
+            lat.toFixed(3) +
+
+            ", " +
+
+            lon.toFixed(3);
+
+
+        document.getElementById(
+            "ambientLocation"
+        ).textContent =
+
+            "📍 Position détectée";
+
 
         document.getElementById(
             "lastUpdate"
         ).textContent =
-            "dernière mise à jour : " +
+
+            "mise à jour " +
+
             new Date()
                 .toLocaleTimeString(
                     "fr-CA",
                     {
-                        hour: "2-digit",
-                        minute: "2-digit"
+                        hour:
+                            "2-digit",
+
+                        minute:
+                            "2-digit"
                     }
                 );
+
 
     } catch {
 
@@ -1669,13 +2564,16 @@ async function loadWeather(
 
 
 /* =====================================================
-   WEATHER UPDATE
+   WEATHER DISPLAY
 ===================================================== */
 
-function updateWeather(data) {
+function updateWeather(
+    data
+) {
 
     const current =
         data.current;
+
 
     let temp =
         current.temperature_2m;
@@ -1683,8 +2581,10 @@ function updateWeather(data) {
     let feels =
         current.apparent_temperature;
 
+
     if (
-        settings.unit === "f"
+        settings.unit ===
+        "f"
     ) {
 
         temp =
@@ -1695,11 +2595,13 @@ function updateWeather(data) {
 
     }
 
+
     document.getElementById(
         "temperature"
     ).textContent =
         Math.round(temp) +
         "°";
+
 
     document.getElementById(
         "feels"
@@ -1707,11 +2609,13 @@ function updateWeather(data) {
         Math.round(feels) +
         "°";
 
+
     document.getElementById(
         "humidity"
     ).textContent =
         current.relative_humidity_2m +
         "%";
+
 
     document.getElementById(
         "wind"
@@ -1721,12 +2625,14 @@ function updateWeather(data) {
         ) +
         " km/h";
 
+
     document.getElementById(
         "weatherDescription"
     ).textContent =
         weatherDescription(
             current.weather_code
         );
+
 
     document.getElementById(
         "weatherIcon"
@@ -1755,24 +2661,30 @@ function updateWeather(data) {
                 data.daily.time[i]
             );
 
+
         const day =
             date.toLocaleDateString(
                 "fr-CA",
                 {
-                    weekday: "short"
+                    weekday:
+                        "short"
                 }
             );
+
 
         let max =
             data.daily
                 .temperature_2m_max[i];
 
+
         let min =
             data.daily
                 .temperature_2m_min[i];
 
+
         if (
-            settings.unit === "f"
+            settings.unit ===
+            "f"
         ) {
 
             max =
@@ -1782,6 +2694,7 @@ function updateWeather(data) {
                 cToF(min);
 
         }
+
 
         forecast.innerHTML += `
 
@@ -1819,10 +2732,193 @@ function updateWeather(data) {
 
 
 /* =====================================================
-   TEMPERATURE
+   AMBIENT WEATHER
 ===================================================== */
 
-function cToF(c) {
+function updateAmbientWeather(
+    data
+) {
+
+    const current =
+        data.current;
+
+
+    let temp =
+        current.temperature_2m;
+
+    let feels =
+        current.apparent_temperature;
+
+
+    if (
+        settings.unit ===
+        "f"
+    ) {
+
+        temp =
+            cToF(temp);
+
+        feels =
+            cToF(feels);
+
+    }
+
+
+    document.getElementById(
+        "ambientIcon"
+    ).textContent =
+        weatherIcon(
+            current.weather_code
+        );
+
+
+    document.getElementById(
+        "ambientTemperature"
+    ).textContent =
+        Math.round(temp) +
+        "°";
+
+
+    document.getElementById(
+        "ambientDescription"
+    ).textContent =
+        weatherDescription(
+            current.weather_code
+        );
+
+
+    document.getElementById(
+        "ambientFeels"
+    ).textContent =
+        "Ressenti " +
+        Math.round(feels) +
+        "°";
+
+
+    document.getElementById(
+        "ambientHumidity"
+    ).textContent =
+        "💧 " +
+        current.relative_humidity_2m +
+        "%";
+
+
+    document.getElementById(
+        "ambientWind"
+    ).textContent =
+        "💨 " +
+        Math.round(
+            current.wind_speed_10m
+        ) +
+        " km/h";
+
+
+    updateAmbientImportant();
+
+}
+
+
+/* =====================================================
+   RELEVANT AMBIENT INFORMATION
+===================================================== */
+
+function updateAmbientImportant() {
+
+    const element =
+        document.getElementById(
+            "ambientImportant"
+        );
+
+
+    const now =
+        new Date();
+
+
+    /*
+     * Cherche le prochain rappel
+     * d'aujourd'hui.
+     */
+
+    const upcomingReminders =
+        reminders
+            .filter(
+                reminder => {
+
+                    return (
+                        reminder.time >=
+                        now.toTimeString()
+                           .slice(0,5)
+                    );
+
+                }
+            )
+            .sort(
+                (a,b) =>
+                    a.time.localeCompare(
+                        b.time
+                    )
+            );
+
+
+    if (
+        upcomingReminders.length
+    ) {
+
+        const next =
+            upcomingReminders[0];
+
+
+        element.textContent =
+            "🔔 " +
+            next.time +
+            " · " +
+            next.text;
+
+        return;
+
+    }
+
+
+    /*
+     * Sinon, cherche une tâche
+     * non terminée.
+     */
+
+    const nextTask =
+        tasks.find(
+            task =>
+                !task.done
+        );
+
+
+    if (nextTask) {
+
+        element.textContent =
+            "☐ " +
+            nextTask.text;
+
+        return;
+
+    }
+
+
+    /*
+     * Rien d'important.
+     */
+
+    element.textContent =
+        "";
+
+}
+
+
+/* =====================================================
+   TEMPERATURE UNIT
+===================================================== */
+
+function cToF(
+    c
+) {
 
     return (
         c * 9 / 5
@@ -1839,6 +2935,7 @@ function changeTemperatureUnit(
         value;
 
     saveSettings();
+
 
     if (
         latitude !== null
@@ -1954,57 +3051,11 @@ function weatherIcon(
 
 
 /* =====================================================
-   LOCATION NAME
+   WEATHER REFRESH
 ===================================================== */
 
-async function getLocationName(
-    lat,
-    lon
-) {
-
-    try {
-
-        /*
-         * Reverse geocoding.
-         */
-
-        const url =
-            "https://geocoding-api.open-meteo.com/v1/search";
-
-        /*
-         * Open-Meteo geocoding est
-         * principalement prévu pour
-         * rechercher un nom.
-         *
-         * On affiche donc les coordonnées
-         * si aucun nom n'est disponible.
-         */
-
-        document.getElementById(
-            "location"
-        ).textContent =
-            "📍 Position détectée · " +
-            lat.toFixed(3) +
-            ", " +
-            lon.toFixed(3);
-
-    } catch {
-
-        document.getElementById(
-            "location"
-        ).textContent =
-            "📍 Position détectée";
-
-    }
-
-}
-
-
-/* =====================================================
-   AUTO REFRESH
-===================================================== */
-
-let refreshTimer = null;
+let refreshTimer =
+    null;
 
 
 function startWeatherRefresh() {
@@ -2014,12 +3065,16 @@ function startWeatherRefresh() {
             refreshTimer
         );
 
+
     refreshTimer =
         setInterval(
             getLocation,
-            Number(settings.refresh)
-            * 60
-            * 1000
+
+            Number(
+                settings.refresh
+            ) *
+            60 *
+            1000
         );
 
 }
@@ -2040,49 +3095,142 @@ function changeRefresh(
 
 
 /* =====================================================
-   PANEL VISIBILITY
+   AMBIENT MODE
 ===================================================== */
 
-function togglePanel(
-    panelId,
+let ambientMode =
+    false;
+
+let inactivityTimer =
+    null;
+
+
+function resetInactivityTimer() {
+
+    if (
+        ambientMode
+    )
+        return;
+
+
+    clearTimeout(
+        inactivityTimer
+    );
+
+
+    if (
+        Number(
+            settings.sleep
+        ) === 0
+    )
+        return;
+
+
+    inactivityTimer =
+        setTimeout(
+
+            enterAmbientMode,
+
+            Number(
+                settings.sleep
+            ) *
+            60 *
+            1000
+
+        );
+
+}
+
+
+function enterAmbientMode() {
+
+    if (
+        Number(
+            settings.sleep
+        ) === 0
+    )
+        return;
+
+
+    ambientMode =
+        true;
+
+
+    updateAmbientImportant();
+
+
+    document.getElementById(
+        "ambientScreen"
+    ).classList.add(
+        "active"
+    );
+
+}
+
+
+function wakeDashboard() {
+
+    ambientMode =
+        false;
+
+
+    document.getElementById(
+        "ambientScreen"
+    ).classList.remove(
+        "active"
+    );
+
+
+    resetInactivityTimer();
+
+}
+
+
+/*
+ * Toute interaction avec la page
+ * remet le compteur à zéro.
+ */
+
+[
+    "touchstart",
+    "mousedown",
+    "keydown",
+    "scroll"
+].forEach(
+    eventName => {
+
+        document.addEventListener(
+            eventName,
+            resetInactivityTimer,
+            {
+                passive: true
+            }
+        );
+
+    }
+);
+
+
+/* =====================================================
+   SLEEP SETTING
+===================================================== */
+
+function changeSleepTime(
     value
 ) {
 
-    const panel =
-        document.getElementById(
-            panelId
-        );
-
-    panel.classList.toggle(
-        "hidden-panel",
-        value === "hide"
-    );
-
-    if (
-        panelId === "notesPanel"
-    )
-        settings.notes =
-            value;
-
-    if (
-        panelId === "tasksPanel"
-    )
-        settings.tasks =
-            value;
-
-    if (
-        panelId === "remindersPanel"
-    )
-        settings.reminders =
-            value;
+    settings.sleep =
+        value;
 
     saveSettings();
+
+    resetInactivityTimer();
 
 }
 
 
 /* =====================================================
-   SETTINGS UI
+   SETTINGS
 ===================================================== */
 
 function openSettings() {
@@ -2124,6 +3272,56 @@ function closeSettingsOutside(
 
 
 /* =====================================================
+   PANEL VISIBILITY
+===================================================== */
+
+function togglePanel(
+    panelId,
+    value
+) {
+
+    const panel =
+        document.getElementById(
+            panelId
+        );
+
+
+    panel.classList.toggle(
+        "hidden-panel",
+        value === "hide"
+    );
+
+
+    if (
+        panelId ===
+        "notesPanel"
+    )
+        settings.notes =
+            value;
+
+
+    if (
+        panelId ===
+        "tasksPanel"
+    )
+        settings.tasks =
+            value;
+
+
+    if (
+        panelId ===
+        "remindersPanel"
+    )
+        settings.reminders =
+            value;
+
+
+    saveSettings();
+
+}
+
+
+/* =====================================================
    FULLSCREEN
 ===================================================== */
 
@@ -2135,29 +3333,18 @@ async function toggleFullscreen() {
             !document.fullscreenElement
         ) {
 
-            await document.documentElement
+            await document
+                .documentElement
                 .requestFullscreen();
-
-            document.body.classList.add(
-                "fullscreen-ui"
-            );
 
         } else {
 
-            await document.exitFullscreen();
-
-            document.body.classList.remove(
-                "fullscreen-ui"
-            );
+            await document
+                .exitFullscreen();
 
         }
 
     } catch {
-
-        /*
-         * Certains vieux navigateurs
-         * ne supportent pas Fullscreen API.
-         */
 
         document.body.classList.toggle(
             "fullscreen-ui"
@@ -2184,40 +3371,7 @@ document.addEventListener(
 
 
 /* =====================================================
-   SECURITY
-===================================================== */
-
-function escapeHTML(
-    text
-) {
-
-    return String(text)
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
-}
-
-
-/* =====================================================
-   LOAD SETTINGS
+   LOAD SETTINGS INTO UI
 ===================================================== */
 
 function loadSettings() {
@@ -2227,30 +3381,42 @@ function loadSettings() {
     ).value =
         settings.theme;
 
+
     document.getElementById(
         "clockSelect"
     ).value =
         settings.clock;
+
 
     document.getElementById(
         "unitSelect"
     ).value =
         settings.unit;
 
+
+    document.getElementById(
+        "sleepSelect"
+    ).value =
+        settings.sleep;
+
+
     document.getElementById(
         "refreshSelect"
     ).value =
         settings.refresh;
+
 
     document.getElementById(
         "notesVisibility"
     ).value =
         settings.notes;
 
+
     document.getElementById(
         "tasksVisibility"
     ).value =
         settings.tasks;
+
 
     document.getElementById(
         "remindersVisibility"
@@ -2263,10 +3429,12 @@ function loadSettings() {
         settings.notes
     );
 
+
     togglePanel(
         "tasksPanel",
         settings.tasks
     );
+
 
     togglePanel(
         "remindersPanel",
@@ -2277,7 +3445,80 @@ function loadSettings() {
 
 
 /* =====================================================
-   START APPLICATION
+   SECURITY
+===================================================== */
+
+function escapeHTML(
+    text
+) {
+
+    return String(text)
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+/* =====================================================
+   NIGHT MODE
+===================================================== */
+
+function updateNightMode() {
+
+    const hour =
+        new Date()
+            .getHours();
+
+
+    /*
+     * Le mode nuit concerne surtout
+     * le dashboard normal.
+     *
+     * Le mode Ambient conserve son
+     * contraste très élevé.
+     */
+
+    document.body.classList.toggle(
+        "night-mode",
+
+        hour >= 23 ||
+        hour < 6
+    );
+
+}
+
+
+setInterval(
+    updateNightMode,
+    60000
+);
+
+
+/* =====================================================
+   START
 ===================================================== */
 
 applyTheme();
@@ -2286,6 +3527,8 @@ loadSettings();
 
 updateClock();
 
+updateNightMode();
+
 renderTasks();
 
 renderReminders();
@@ -2293,6 +3536,8 @@ renderReminders();
 getLocation();
 
 startWeatherRefresh();
+
+resetInactivityTimer();
 
 </script>
 

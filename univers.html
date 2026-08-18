@@ -1,0 +1,2148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>Visualiseur de Mémoire 3D</title>
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+
+<style>
+:root{
+    --bg:#0b0d12;
+    --panel:#12151c;
+    --panel-2:#0a0c10;
+    --line:#232833;
+    --text:#e7ebf1;
+    --dim:#8a93a3;
+    --accent:#4fd1c5;
+    --accent-2:#7c9cff;
+    --mono:"JetBrains Mono","SFMono-Regular",Consolas,monospace;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+
+body{
+    margin:0;
+    background:
+        radial-gradient(1200px 600px at 50% -10%,#14202033,transparent),
+        var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+}
+
+.wrap{
+    width:min(880px,100%);
+    margin:auto;
+    padding:14px 14px 24px;
+}
+
+.hdr{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:6px;
+}
+
+.hdr h1{
+    font-size:1rem;
+    margin:0;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-2),var(--accent));
+    background-size:200% auto;
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    animation:chatoiement 6s linear infinite;
+}
+
+@keyframes chatoiement{
+    to{background-position:200% center}
+}
+
+body{
+    animation:apparition 1s ease;
+}
+
+@keyframes apparition{
+    from{opacity:0}
+    to{opacity:1}
+}
+
+.hdr-mini{
+    display:flex;
+    gap:12px;
+    font-family:var(--mono);
+    font-size:.7rem;
+    color:var(--dim);
+}
+
+.hdr-mini b{color:var(--accent)}
+
+.panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px;
+    margin-bottom:12px;
+}
+
+.panel h2{
+    font-size:.86rem;
+    margin:0 0 10px;
+    display:flex;
+    align-items:center;
+    gap:7px;
+}
+
+.hint{
+    color:var(--dim);
+    font-size:.76rem;
+    line-height:1.5;
+    margin-bottom:10px;
+}
+
+button{
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+    color:var(--text);
+    background:#191d26;
+    cursor:pointer;
+    font-weight:600;
+    font-size:.84rem;
+    -webkit-tap-highlight-color:transparent;
+}
+
+button:active{transform:scale(.98)}
+
+.btn-block{width:100%}
+
+.primary{
+    background:var(--accent-2);
+    border-color:var(--accent-2);
+    color:#0a0c10;
+}
+
+.liste-fichiers{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+    margin-top:10px;
+}
+
+.fichier-chip{
+    background:#ffffff0d;
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:7px 12px;
+    font-size:.74rem;
+    color:var(--dim);
+    cursor:pointer;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:6px;
+}
+
+.fichier-chip.active{
+    color:#0a0c10;
+    background:var(--accent);
+    border-color:var(--accent);
+}
+
+.fichier-chip .suppr{
+    opacity:.6;
+    font-weight:900;
+}
+
+.grid-stats{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:8px;
+}
+
+@media(min-width:560px){
+    .grid-stats{grid-template-columns:repeat(4,1fr)}
+}
+
+.stat{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    padding:10px 8px;
+    border-radius:10px;
+    text-align:center;
+}
+
+.stat-label{
+    color:var(--dim);
+    font-size:.6rem;
+    letter-spacing:.4px;
+}
+
+.stat-value{
+    color:var(--accent);
+    font-size:1rem;
+    font-weight:700;
+    margin-top:3px;
+    font-family:var(--mono);
+}
+
+.canvas-wrap{
+    position:relative;
+    width:100%;
+    height:min(72vh,560px);
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:12px;
+    overflow:hidden;
+}
+
+.canvas-wrap canvas{display:block}
+
+.tooltip3d{
+    position:absolute;
+    pointer-events:none;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:.72rem;
+    line-height:1.55;
+    color:var(--text);
+    max-width:220px;
+    z-index:6;
+    display:none;
+    box-shadow:0 6px 18px #00000055;
+}
+
+.tooltip3d b{color:var(--accent-2)}
+
+.hint3d{
+    position:absolute;
+    left:10px;
+    bottom:10px;
+    font-size:.64rem;
+    color:var(--dim);
+    background:#00000066;
+    padding:5px 9px;
+    border-radius:6px;
+    z-index:4;
+    pointer-events:none;
+    max-width:70%;
+}
+
+.vol-controls{
+    position:absolute;
+    right:10px;
+    bottom:10px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    z-index:5;
+}
+
+.vol-controls button{
+    padding:11px 15px;
+    font-size:1.05rem;
+    line-height:1;
+}
+
+.loading-overlay{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    gap:10px;
+    background:#0a0c10cc;
+    z-index:10;
+    font-size:.85rem;
+    color:var(--dim);
+    text-align:center;
+    padding:20px;
+}
+
+.spinner{
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    border:3px solid #ffffff22;
+    border-top-color:var(--accent);
+    animation:tourner 0.8s linear infinite;
+}
+
+@keyframes tourner{to{transform:rotate(360deg)}}
+
+.legend-cat{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:10px;
+}
+
+.legend-chip{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:.7rem;
+    color:var(--dim);
+    background:#ffffff0d;
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:5px 10px;
+}
+
+.legend-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    flex:none;
+}
+
+.legend-taille{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:10px;
+    font-size:.7rem;
+    color:var(--dim);
+}
+
+.legend-taille .puce{
+    border-radius:50%;
+    background:#7c9cff;
+    flex:none;
+}
+
+.empty-state{
+    text-align:center;
+    padding:26px 10px;
+    color:var(--dim);
+    font-size:.85rem;
+}
+
+.empty-state .ic{
+    font-size:1.8rem;
+    display:block;
+    margin-bottom:6px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+    <div class="hdr">
+        <h1>🌌 Visualiseur de Mémoire 3D</h1>
+        <div class="hdr-mini">
+            <span>Snapshot <b id="hdrNom">—</b></span>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>📂 Charger des mémoires</h2>
+
+        <div class="hint">
+            Outil de visualisation seul — aucune modification n'est faite
+            aux fichiers. Charge une ou plusieurs sauvegardes JSON pour
+            comparer leur évolution en changeant simplement de fichier
+            dans la liste.
+        </div>
+
+        <button class="primary btn-block" onclick="ouvrirFichiers()">
+            📂 Charger des fichiers JSON
+        </button>
+
+        <input id="fichiersInput"
+               type="file"
+               accept=".json,application/json"
+               multiple
+               style="display:none">
+
+        <div id="listeFichiers" class="liste-fichiers"></div>
+    </div>
+
+    <div class="panel" id="panelStats" style="display:none">
+        <h2>📊 Snapshot affiché</h2>
+
+        <div class="grid-stats">
+            <div class="stat">
+                <div class="stat-label">TOKENS</div>
+                <div id="statTokens" class="stat-value">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">MOTS AFFICHÉS</div>
+                <div id="statAffiches" class="stat-value">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">VOCAB. TOTAL</div>
+                <div id="statVocabTotal" class="stat-value">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">LIENS TRACÉS</div>
+                <div id="statLiens" class="stat-value">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>🕸️ Constellation</h2>
+
+        <div class="canvas-wrap" id="canvasWrap">
+
+            <div class="tooltip3d" id="tooltip3D"></div>
+
+            <div class="hint3d" id="hint3D">
+                Charge un fichier pour commencer
+            </div>
+
+            <div class="vol-controls" id="volControls" style="display:none">
+                <button id="btnAvancer">⬆️</button>
+                <button id="btnReculer">⬇️</button>
+            </div>
+
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="spinner"></div>
+                <div id="loadingTexte">Calcul de la disposition…</div>
+            </div>
+
+        </div>
+
+        <div class="legend-taille">
+            <span class="puce" style="width:6px;height:6px"></span>
+            Mot rare
+            <span class="puce" style="width:18px;height:18px"></span>
+            Mot très fréquent
+            <span style="margin-left:auto">Distance = force d'association</span>
+        </div>
+
+        <div class="legend-cat" id="legendeCategories"></div>
+    </div>
+
+</div>
+
+<script>
+
+/* =========================================================
+   PALETTE CATEGORIES
+========================================================= */
+
+const PALETTE_CATEGORIES={
+    animaux:"#ff6b6b",
+    nourriture:"#f0b93a",
+    lieux:"#4fd1c5",
+    personnes:"#7c9cff",
+    objets:"#c17cff",
+    nature:"#3ecf6e",
+    action:"#ff9f4f",
+    "général":"#6b7688"
+};
+
+function couleurCategorie(cat){
+
+    return PALETTE_CATEGORIES[cat]||PALETTE_CATEGORIES["général"];
+}
+
+
+/* =========================================================
+   PARAMETRES
+========================================================= */
+
+const PARAM={
+
+    plafondMots:550,
+
+    aretesParMot:3,
+
+    iterations:220,
+
+    kRepulsion:34,
+
+    kSpring:.03,
+
+    kCentrage:.0018,
+
+    amortissement:.80,
+
+    tailleMin:.16,
+
+    tailleMax:1.1,
+
+    longueurMin:1.3,
+
+    longueurMax:9.5
+
+};
+
+
+/* =========================================================
+   ETAT
+========================================================= */
+
+let fichiersCharges=[];
+
+let indexActif=-1;
+
+let scene3D=null;
+let camera3D=null;
+let renderer3D=null;
+let raycaster3D=null;
+let souris3D=null;
+
+let noeudsCliquables3D=[];
+
+let etatVol={yaw:0,pitch:0};
+
+let glisseActif=false;
+let dernierX=0;
+let dernierY=0;
+let distanceGlissee=0;
+
+let touchesActives=new Set();
+
+let dernierTemps=performance.now();
+
+let survolActuel=null;
+
+let texteGlow=null;
+
+let dernierInteraction=performance.now();
+
+let idleActif=false;
+
+let idleAngle=0;
+
+let idleRayon=0;
+
+let idleHauteur=0;
+
+let tempsEcoule=0;
+
+let noeudsAnimables=[];
+
+let particulesVoyageuses=[];
+
+
+/* =========================================================
+   OUVERTURE FICHIERS
+========================================================= */
+
+function ouvrirFichiers(){
+
+    document.getElementById("fichiersInput").click();
+}
+
+
+document
+.getElementById("fichiersInput")
+.addEventListener("change",gererSelectionFichiers);
+
+
+async function gererSelectionFichiers(event){
+
+    const fichiers=Array.from(event.target.files||[]);
+
+    for(const fichier of fichiers){
+
+        try{
+
+            const texte=await fichier.text();
+
+            const data=JSON.parse(texte);
+
+            fichiersCharges.push({
+                nom:fichier.name,
+                data:normaliser(data)
+            });
+
+        }
+        catch(erreur){
+
+            console.error(erreur);
+
+            alert(
+                "Impossible de lire "+
+                fichier.name+
+                " : fichier JSON invalide."
+            );
+        }
+    }
+
+    afficherListeFichiers();
+
+    if(indexActif===-1&&fichiersCharges.length){
+
+        chargerSnapshot(fichiersCharges.length-1);
+    }
+
+    event.target.value="";
+}
+
+
+function normaliser(data){
+
+    return{
+
+        statistiques:data.statistiques||{tokens:0},
+
+        vocabulaire:data.vocabulaire||{},
+
+        semantique:{
+
+            associations:
+                (data.semantique&&data.semantique.associations)||{},
+
+            categories:
+                (data.semantique&&data.semantique.categories)||{}
+
+        }
+
+    };
+}
+
+
+function afficherListeFichiers(){
+
+    const zone=document.getElementById("listeFichiers");
+
+    if(!fichiersCharges.length){
+
+        zone.innerHTML="";
+
+        return;
+    }
+
+    zone.innerHTML=
+        fichiersCharges
+        .map((f,i)=>
+
+            "<span class='fichier-chip"+
+            (i===indexActif?" active":"")+
+            "' onclick='chargerSnapshot("+i+")'>"+
+            escapeHTML(f.nom)+
+            "<span class='suppr' onclick='event.stopPropagation();retirerFichier("+i+")'>✕</span>"+
+            "</span>"
+        )
+        .join("");
+}
+
+
+function retirerFichier(i){
+
+    fichiersCharges.splice(i,1);
+
+    if(indexActif===i){
+
+        indexActif=-1;
+
+        document.getElementById("panelStats").style.display="none";
+
+        viderScene();
+    }
+    else if(indexActif>i){
+
+        indexActif--;
+    }
+
+    afficherListeFichiers();
+}
+
+
+/* =========================================================
+   CHARGEMENT D'UN SNAPSHOT
+========================================================= */
+
+async function chargerSnapshot(index){
+
+    indexActif=index;
+
+    afficherListeFichiers();
+
+    const entree=fichiersCharges[index];
+
+    document.getElementById("hdrNom").textContent=entree.nom;
+
+    document.getElementById("panelStats").style.display="block";
+
+    document.getElementById("statTokens").textContent=
+        formatNombre(entree.data.statistiques.tokens||0);
+
+    afficherChargement(true,"Préparation des mots…");
+
+    await new Promise(r=>setTimeout(r,20));
+
+    initScene();
+
+    construireConstellation(entree.data);
+}
+
+
+/* =========================================================
+   INITIALISATION SCENE
+========================================================= */
+
+function initScene(){
+
+    if(scene3D)return;
+
+    if(typeof THREE==="undefined"){
+
+        document.getElementById("canvasWrap").innerHTML=
+            "<div class='empty-state'>"+
+            "<span class='ic'>⚠️</span>"+
+            "Moteur 3D indisponible (pas de connexion internet)."+
+            "</div>";
+
+        return;
+    }
+
+    try{
+
+        const wrap=document.getElementById("canvasWrap");
+
+        const largeur=wrap.clientWidth||700;
+
+        const hauteur=wrap.clientHeight||420;
+
+        scene3D=new THREE.Scene();
+
+        camera3D=new THREE.PerspectiveCamera(
+            55,largeur/hauteur,.1,200
+        );
+
+        camera3D.position.set(0,0,30);
+
+        souris3D=new THREE.Vector2();
+
+
+        renderer3D=new THREE.WebGLRenderer({
+            antialias:true,
+            alpha:true
+        });
+
+        renderer3D.setPixelRatio(
+            Math.min(window.devicePixelRatio||1,2)
+        );
+
+        renderer3D.setSize(largeur,hauteur);
+
+        renderer3D.setClearColor(0x000000,0);
+
+        renderer3D.domElement.style.touchAction="none";
+
+        wrap.insertBefore(
+            renderer3D.domElement,
+            wrap.firstChild
+        );
+
+
+        scene3D.add(new THREE.AmbientLight(0xffffff,.8));
+
+        const lumiere=new THREE.DirectionalLight(0xffffff,.55);
+
+        lumiere.position.set(6,8,6);
+
+        scene3D.add(lumiere);
+
+
+        texteGlow=creerTextureGlow();
+
+        ajouterChampEtoiles();
+
+
+        raycaster3D=new THREE.Raycaster();
+
+
+        attacherControles();
+
+        window.addEventListener("resize",debounce(redimensionner,200));
+
+        boucleAnimation();
+
+    }
+    catch(erreur){
+
+        console.error(erreur);
+
+        document.getElementById("canvasWrap").innerHTML=
+            "<div class='empty-state'>"+
+            "<span class='ic'>⚠️</span>"+
+            "Le moteur 3D n'a pas pu démarrer : "+
+            escapeHTML(erreur.message||"erreur inconnue")+
+            "</div>";
+    }
+}
+
+
+function redimensionner(){
+
+    if(!renderer3D||!camera3D)return;
+
+    const wrap=document.getElementById("canvasWrap");
+
+    const largeur=wrap.clientWidth||700;
+
+    const hauteur=wrap.clientHeight||420;
+
+    camera3D.aspect=largeur/hauteur;
+
+    camera3D.updateProjectionMatrix();
+
+    renderer3D.setSize(largeur,hauteur);
+}
+
+
+/* =========================================================
+   CONTROLES DE VOL LIBRE
+========================================================= */
+
+function attacherControles(){
+
+    const el=renderer3D.domElement;
+
+    el.style.cursor="grab";
+
+    el.addEventListener("pointerdown",e=>{
+
+        dernierInteraction=performance.now();
+
+        glisseActif=true;
+
+        distanceGlissee=0;
+
+        dernierX=e.clientX;
+
+        dernierY=e.clientY;
+
+        el.style.cursor="grabbing";
+
+        try{el.setPointerCapture(e.pointerId);}catch(err){}
+    });
+
+    el.addEventListener("pointermove",e=>{
+
+        if(glisseActif){
+
+            dernierInteraction=performance.now();
+
+            const dx=e.clientX-dernierX;
+
+            const dy=e.clientY-dernierY;
+
+            distanceGlissee+=Math.abs(dx)+Math.abs(dy);
+
+            etatVol.yaw-=dx*.005;
+
+            etatVol.pitch=
+                Math.min(
+                    Math.max(etatVol.pitch-dy*.005,-1.4),
+                    1.4
+                );
+
+            appliquerRotationVol();
+
+            dernierX=e.clientX;
+
+            dernierY=e.clientY;
+        }
+
+        gererSurvol(e);
+    });
+
+    el.addEventListener("pointerup",()=>{
+
+        glisseActif=false;
+
+        el.style.cursor="grab";
+    });
+
+    el.addEventListener("pointercancel",()=>{
+
+        glisseActif=false;
+
+        el.style.cursor="grab";
+    });
+
+    el.addEventListener("pointerleave",()=>{
+
+        glisseActif=false;
+
+        el.style.cursor="grab";
+
+        document.getElementById("tooltip3D").style.display="none";
+    });
+
+    el.addEventListener("wheel",e=>{
+
+        e.preventDefault();
+
+        dernierInteraction=performance.now();
+
+        const avant=new THREE.Vector3();
+
+        camera3D.getWorldDirection(avant);
+
+        camera3D.position.addScaledVector(avant,-e.deltaY*.02);
+
+    },{passive:false});
+
+    el.addEventListener("click",e=>{
+
+        if(distanceGlissee>6)return;
+
+        gererClic(e);
+    });
+
+
+    window.addEventListener("keydown",e=>{
+
+        const touche=e.key.toLowerCase();
+
+        const carte={
+            arrowup:"w",arrowdown:"s",
+            arrowleft:"a",arrowright:"d"
+        };
+
+        const cle=carte[touche]||touche;
+
+        if(["w","a","s","d"].includes(cle)){
+
+            dernierInteraction=performance.now();
+
+            touchesActives.add(cle);
+
+            e.preventDefault();
+        }
+    });
+
+    window.addEventListener("keyup",e=>{
+
+        const touche=e.key.toLowerCase();
+
+        const carte={
+            arrowup:"w",arrowdown:"s",
+            arrowleft:"a",arrowright:"d"
+        };
+
+        touchesActives.delete(carte[touche]||touche);
+    });
+
+
+    const btnAvancer=document.getElementById("btnAvancer");
+
+    const btnReculer=document.getElementById("btnReculer");
+
+    const armer=(btn,touche)=>{
+
+        btn.addEventListener("pointerdown",e=>{
+
+            dernierInteraction=performance.now();
+
+            e.preventDefault();
+
+            touchesActives.add(touche);
+        });
+
+        ["pointerup","pointerleave","pointercancel"].forEach(ev=>
+
+            btn.addEventListener(ev,()=>touchesActives.delete(touche))
+        );
+    };
+
+    armer(btnAvancer,"w");
+
+    armer(btnReculer,"s");
+}
+
+
+function appliquerRotationVol(){
+
+    camera3D.rotation.order="YXZ";
+
+    camera3D.rotation.y=etatVol.yaw;
+
+    camera3D.rotation.x=etatVol.pitch;
+}
+
+
+function deplacerVol(dt){
+
+    if(!camera3D||!touchesActives.size)return;
+
+    const avant=new THREE.Vector3();
+
+    camera3D.getWorldDirection(avant);
+
+    const droite=
+        new THREE.Vector3()
+        .crossVectors(avant,camera3D.up)
+        .normalize();
+
+    const vitesse=16*dt;
+
+    if(touchesActives.has("w"))camera3D.position.addScaledVector(avant,vitesse);
+
+    if(touchesActives.has("s"))camera3D.position.addScaledVector(avant,-vitesse);
+
+    if(touchesActives.has("a"))camera3D.position.addScaledVector(droite,-vitesse);
+
+    if(touchesActives.has("d"))camera3D.position.addScaledVector(droite,vitesse);
+}
+
+
+function boucleAnimation(){
+
+    requestAnimationFrame(boucleAnimation);
+
+    const maintenant=performance.now();
+
+    const dt=Math.min(.05,(maintenant-dernierTemps)/1000);
+
+    dernierTemps=maintenant;
+
+    tempsEcoule+=dt;
+
+
+    const enVeille=
+        (maintenant-dernierInteraction)>4000&&
+        !glisseActif&&
+        touchesActives.size===0;
+
+    if(enVeille){
+
+        if(!idleActif){
+
+            idleActif=true;
+
+            idleRayon=
+                Math.sqrt(
+                    camera3D.position.x**2+
+                    camera3D.position.z**2
+                )||20;
+
+            idleHauteur=camera3D.position.y;
+
+            idleAngle=
+                Math.atan2(
+                    camera3D.position.x,
+                    camera3D.position.z
+                );
+        }
+
+        idleAngle+=.09*dt;
+
+        camera3D.position.x=idleRayon*Math.sin(idleAngle);
+
+        camera3D.position.z=idleRayon*Math.cos(idleAngle);
+
+        camera3D.position.y=
+            idleHauteur+Math.sin(tempsEcoule*.15)*idleRayon*.06;
+
+        camera3D.lookAt(0,0,0);
+
+        etatVol.yaw=camera3D.rotation.y;
+
+        etatVol.pitch=camera3D.rotation.x;
+
+    }else{
+
+        idleActif=false;
+
+        deplacerVol(dt);
+    }
+
+
+    /* Respiration des sphères et de leurs halos, une fois l'apparition terminée */
+
+    noeudsAnimables.forEach(n=>{
+
+        if(!n.stable){
+
+            if(n.mesh.scale.x>.98){
+
+                n.stable=true;
+            }
+
+            return;
+        }
+
+        const pulsation=
+            1+Math.sin(tempsEcoule*.9+n.phase)*.045;
+
+        n.mesh.scale.setScalar(pulsation);
+
+        n.halo.scale.setScalar(n.rayonBase*4.2*pulsation);
+    });
+
+
+    /* Particules qui glissent le long des liens */
+
+    particulesVoyageuses.forEach(p=>{
+
+        const t=
+            (tempsEcoule*p.vitesse+p.decalage)%1;
+
+        p.sprite.position.lerpVectors(p.a,p.b,t);
+
+        const eclat=
+            Math.sin(t*Math.PI);
+
+        p.sprite.material.opacity=.25+eclat*.65;
+    });
+
+
+    /* Scintillement doux du champ d'étoiles */
+
+    if(scene3D&&scene3D.userData.etoiles){
+
+        scene3D.userData.etoiles.material.opacity=
+            .45+Math.sin(tempsEcoule*.6)*.12;
+    }
+
+
+    if(renderer3D&&scene3D&&camera3D){
+
+        renderer3D.render(scene3D,camera3D);
+    }
+}
+
+
+/* =========================================================
+   INTERACTION — CLIC / SURVOL
+========================================================= */
+
+function gererClic(event){
+
+    const mot=intersecter(event);
+
+    if(!mot)return;
+
+    volerVers(mot.position);
+}
+
+
+function gererSurvol(event){
+
+    const intersection=intersecterBrut(event);
+
+    const tooltip=document.getElementById("tooltip3D");
+
+    if(!intersection){
+
+        tooltip.style.display="none";
+
+        renderer3D.domElement.style.cursor=glisseActif?"grabbing":"grab";
+
+        survolActuel=null;
+
+        return;
+    }
+
+    renderer3D.domElement.style.cursor="pointer";
+
+    const data=intersection.object.userData;
+
+    const rect=renderer3D.domElement.getBoundingClientRect();
+
+    if(survolActuel!==data.mot){
+
+        survolActuel=data.mot;
+
+        tooltip.innerHTML=
+            "<b>"+escapeHTML(data.mot)+"</b><br>"+
+            formatNombre(data.poids)+" occurrences<br>"+
+            "Catégorie : "+escapeHTML(data.categorie);
+
+        tooltip.style.display="block";
+    }
+
+    tooltip.style.left=(event.clientX-rect.left+14)+"px";
+
+    tooltip.style.top=(event.clientY-rect.top+10)+"px";
+}
+
+
+function intersecterBrut(event){
+
+    if(!raycaster3D||!camera3D)return null;
+
+    const rect=renderer3D.domElement.getBoundingClientRect();
+
+    souris3D.x=((event.clientX-rect.left)/rect.width)*2-1;
+
+    souris3D.y=-((event.clientY-rect.top)/rect.height)*2+1;
+
+    raycaster3D.setFromCamera(souris3D,camera3D);
+
+    const inter=raycaster3D.intersectObjects(noeudsCliquables3D);
+
+    return inter.length?inter[0]:null;
+}
+
+
+function intersecter(event){
+
+    const inter=intersecterBrut(event);
+
+    if(!inter)return null;
+
+    return{
+        mot:inter.object.userData.mot,
+        position:inter.object.position.clone()
+    };
+}
+
+
+function volerVers(cible){
+
+    if(!camera3D)return;
+
+    const depart=camera3D.position.clone();
+
+    const direction=
+        cible.clone().sub(depart).normalize();
+
+    const arrivee=
+        cible.clone().sub(direction.multiplyScalar(3));
+
+    const debut=performance.now();
+
+    const duree=550;
+
+    function ease(x){
+
+        return x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
+    }
+
+    function etape(t){
+
+        const progres=Math.min(1,(t-debut)/duree);
+
+        camera3D.position.lerpVectors(depart,arrivee,ease(progres));
+
+        camera3D.lookAt(cible);
+
+        etatVol.yaw=camera3D.rotation.y;
+
+        etatVol.pitch=camera3D.rotation.x;
+
+        if(progres<1){
+
+            requestAnimationFrame(etape);
+        }
+    }
+
+    requestAnimationFrame(etape);
+}
+
+
+/* =========================================================
+   CONSTRUCTION DE LA CONSTELLATION
+========================================================= */
+
+function categorieDominante(mot,data){
+
+    const cats=data.semantique.categories[mot];
+
+    if(!cats)return"général";
+
+    let meilleure="général";
+
+    let max=0;
+
+    for(const c in cats){
+
+        if(cats[c]>max){
+
+            max=cats[c];
+
+            meilleure=c;
+        }
+    }
+
+    return meilleure;
+}
+
+
+async function construireConstellation(data){
+
+    afficherChargement(true,"Sélection des mots…");
+
+    await new Promise(r=>setTimeout(r,10));
+
+    let mots=
+        Object.keys(data.vocabulaire)
+        .filter(m=>!estPonctuation(m));
+
+    const vocabTotal=mots.length;
+
+    mots.sort(
+        (a,b)=>(data.vocabulaire[b]||0)-(data.vocabulaire[a]||0)
+    );
+
+    const tronque=mots.length>PARAM.plafondMots;
+
+    if(tronque){
+
+        mots=mots.slice(0,PARAM.plafondMots);
+    }
+
+    document.getElementById("statAffiches").textContent=
+        formatNombre(mots.length);
+
+    document.getElementById("statVocabTotal").textContent=
+        formatNombre(vocabTotal);
+
+
+    if(!mots.length){
+
+        viderScene();
+
+        afficherChargement(false);
+
+        document.getElementById("hint3D").textContent=
+            "Ce fichier ne contient pas encore de vocabulaire.";
+
+        return;
+    }
+
+    document.getElementById("hint3D").textContent=
+        "Glisser pour regarder · WASD ou les boutons pour avancer/reculer · clic sur une sphère pour s'en approcher"+
+        (tronque
+            ?" · "+formatNombre(PARAM.plafondMots)+" mots les plus fréquents affichés sur "+formatNombre(vocabTotal)
+            :"");
+
+
+    const inclus=new Set(mots);
+
+    const noeuds=mots.map((mot,i)=>({
+        mot,
+        index:i,
+        poids:data.vocabulaire[mot]||0,
+        categorie:categorieDominante(mot,data),
+        x:0,y:0,z:0,vx:0,vy:0,vz:0
+    }));
+
+    const indexParMot={};
+
+    noeuds.forEach(n=>indexParMot[n.mot]=n.index);
+
+
+    afficherChargement(true,"Construction des liens d'association…");
+
+    await new Promise(r=>setTimeout(r,10));
+
+    const aretes=[];
+
+    for(const mot of mots){
+
+        const assoc=data.semantique.associations[mot];
+
+        if(!assoc)continue;
+
+        const top=
+            Object.entries(assoc)
+            .filter(([m])=>inclus.has(m)&&m!==mot)
+            .sort((a,b)=>b[1]-a[1])
+            .slice(0,PARAM.aretesParMot);
+
+        for(const[autre,poids]of top){
+
+            aretes.push({
+                a:indexParMot[mot],
+                b:indexParMot[autre],
+                poids:Number(poids)
+            });
+        }
+    }
+
+    document.getElementById("statLiens").textContent=
+        formatNombre(aretes.length);
+
+
+    afficherChargement(true,"Calcul de la disposition physique…");
+
+    await new Promise(r=>setTimeout(r,10));
+
+    initialiserPositions(noeuds);
+
+    const poidsMax=
+        Math.max(...aretes.map(a=>a.poids),.001);
+
+    simulerForces(noeuds,aretes,poidsMax);
+
+    resoudreCollisions(noeuds);
+
+
+    afficherChargement(true,"Assemblage de la scène 3D…");
+
+    await new Promise(r=>setTimeout(r,10));
+
+    rendreScene(noeuds,aretes);
+
+    construireLegendeCategories(noeuds);
+
+    afficherChargement(false);
+}
+
+
+function initialiserPositions(noeuds){
+
+    noeuds.forEach(n=>{
+
+        const r=Math.cbrt(Math.random())*13;
+
+        const theta=Math.random()*Math.PI*2;
+
+        const phi=Math.acos(2*Math.random()-1);
+
+        n.x=r*Math.sin(phi)*Math.cos(theta);
+
+        n.y=r*Math.sin(phi)*Math.sin(theta);
+
+        n.z=r*Math.cos(phi);
+    });
+}
+
+
+function rayonDuMot(poids,poidsMaxVocab){
+
+    const norm=
+        Math.log1p(poids)/Math.log1p(poidsMaxVocab||1);
+
+    return PARAM.tailleMin+norm*(PARAM.tailleMax-PARAM.tailleMin);
+}
+
+
+function simulerForces(noeuds,aretes,poidsMax){
+
+    const poidsMaxVocab=
+        Math.max(...noeuds.map(n=>n.poids),1);
+
+    noeuds.forEach(n=>{
+
+        n.rayon=rayonDuMot(n.poids,poidsMaxVocab);
+    });
+
+    const n=noeuds.length;
+
+    for(let iter=0;iter<PARAM.iterations;iter++){
+
+        const fx=new Float64Array(n);
+
+        const fy=new Float64Array(n);
+
+        const fz=new Float64Array(n);
+
+
+        /* Répulsion — évite les chevauchements */
+
+        for(let i=0;i<n;i++){
+
+            for(let j=i+1;j<n;j++){
+
+                let dx=noeuds[i].x-noeuds[j].x;
+
+                let dy=noeuds[i].y-noeuds[j].y;
+
+                let dz=noeuds[i].z-noeuds[j].z;
+
+                let distCarre=dx*dx+dy*dy+dz*dz;
+
+                if(distCarre<.0001){
+
+                    dx=(Math.random()-.5)*.1;
+
+                    dy=(Math.random()-.5)*.1;
+
+                    dz=(Math.random()-.5)*.1;
+
+                    distCarre=.01;
+                }
+
+                const dist=Math.sqrt(distCarre);
+
+                const minDist=
+                    (noeuds[i].rayon+noeuds[j].rayon)*1.6+.4;
+
+                let force=
+                    PARAM.kRepulsion/distCarre;
+
+                if(dist<minDist){
+
+                    force+=(minDist-dist)*2.2;
+                }
+
+                const fxu=(dx/dist)*force;
+
+                const fyu=(dy/dist)*force;
+
+                const fzu=(dz/dist)*force;
+
+                fx[i]+=fxu;fy[i]+=fyu;fz[i]+=fzu;
+
+                fx[j]-=fxu;fy[j]-=fyu;fz[j]-=fzu;
+            }
+        }
+
+
+        /* Attraction — ressorts d'association */
+
+        for(const arete of aretes){
+
+            const a=noeuds[arete.a];
+
+            const b=noeuds[arete.b];
+
+            const dx=b.x-a.x;
+
+            const dy=b.y-a.y;
+
+            const dz=b.z-a.z;
+
+            const dist=Math.sqrt(dx*dx+dy*dy+dz*dz)||.001;
+
+            const normPoids=
+                Math.min(1,arete.poids/poidsMax);
+
+            const longueurIdeale=
+                PARAM.longueurMax-
+                normPoids*(PARAM.longueurMax-PARAM.longueurMin);
+
+            const force=
+                PARAM.kSpring*(dist-longueurIdeale);
+
+            const fxu=(dx/dist)*force;
+
+            const fyu=(dy/dist)*force;
+
+            const fzu=(dz/dist)*force;
+
+            fx[arete.a]+=fxu;fy[arete.a]+=fyu;fz[arete.a]+=fzu;
+
+            fx[arete.b]-=fxu;fy[arete.b]-=fyu;fz[arete.b]-=fzu;
+        }
+
+
+        /* Centrage doux */
+
+        for(let i=0;i<n;i++){
+
+            fx[i]-=noeuds[i].x*PARAM.kCentrage;
+
+            fy[i]-=noeuds[i].y*PARAM.kCentrage;
+
+            fz[i]-=noeuds[i].z*PARAM.kCentrage;
+        }
+
+
+        /* Intégration */
+
+        for(let i=0;i<n;i++){
+
+            noeuds[i].vx=(noeuds[i].vx+fx[i])*PARAM.amortissement;
+
+            noeuds[i].vy=(noeuds[i].vy+fy[i])*PARAM.amortissement;
+
+            noeuds[i].vz=(noeuds[i].vz+fz[i])*PARAM.amortissement;
+
+            const vitesseMax=2.2;
+
+            const vNorme=
+                Math.sqrt(
+                    noeuds[i].vx**2+
+                    noeuds[i].vy**2+
+                    noeuds[i].vz**2
+                );
+
+            if(vNorme>vitesseMax){
+
+                const ratio=vitesseMax/vNorme;
+
+                noeuds[i].vx*=ratio;
+
+                noeuds[i].vy*=ratio;
+
+                noeuds[i].vz*=ratio;
+            }
+
+            noeuds[i].x+=noeuds[i].vx;
+
+            noeuds[i].y+=noeuds[i].vy;
+
+            noeuds[i].z+=noeuds[i].vz;
+        }
+    }
+}
+
+
+function resoudreCollisions(noeuds){
+
+    const n=noeuds.length;
+
+    for(let passe=0;passe<25;passe++){
+
+        let corrections=0;
+
+        for(let i=0;i<n;i++){
+
+            for(let j=i+1;j<n;j++){
+
+                const dx=noeuds[j].x-noeuds[i].x;
+
+                const dy=noeuds[j].y-noeuds[i].y;
+
+                const dz=noeuds[j].z-noeuds[i].z;
+
+                const dist=
+                    Math.sqrt(dx*dx+dy*dy+dz*dz)||.001;
+
+                const minDist=
+                    (noeuds[i].rayon+noeuds[j].rayon)*1.5+.35;
+
+                if(dist<minDist){
+
+                    const chevauchement=(minDist-dist)/2;
+
+                    const ux=dx/dist;
+
+                    const uy=dy/dist;
+
+                    const uz=dz/dist;
+
+                    noeuds[i].x-=ux*chevauchement;
+
+                    noeuds[i].y-=uy*chevauchement;
+
+                    noeuds[i].z-=uz*chevauchement;
+
+                    noeuds[j].x+=ux*chevauchement;
+
+                    noeuds[j].y+=uy*chevauchement;
+
+                    noeuds[j].z+=uz*chevauchement;
+
+                    corrections++;
+                }
+            }
+        }
+
+        if(!corrections)break;
+    }
+}
+
+
+/* =========================================================
+   RENDU THREE.JS
+========================================================= */
+
+function viderScene(){
+
+    if(!scene3D)return;
+
+    for(let i=scene3D.children.length-1;i>=0;i--){
+
+        const obj=scene3D.children[i];
+
+        if(obj.isLight||obj.userData.persistant)continue;
+
+        obj.traverse(child=>{
+
+            if(child.geometry)child.geometry.dispose();
+
+            if(child.material){
+
+                if(child.material.map)child.material.map.dispose();
+
+                child.material.dispose();
+            }
+        });
+
+        scene3D.remove(obj);
+    }
+
+    noeudsCliquables3D=[];
+
+    noeudsAnimables=[];
+
+    particulesVoyageuses=[];
+}
+
+
+function creerTextureGlow(){
+
+    const canvas=document.createElement("canvas");
+
+    canvas.width=128;
+
+    canvas.height=128;
+
+    const ctx=canvas.getContext("2d");
+
+    const degrade=
+        ctx.createRadialGradient(64,64,0,64,64,64);
+
+    degrade.addColorStop(0,"rgba(255,255,255,1)");
+
+    degrade.addColorStop(.35,"rgba(255,255,255,.55)");
+
+    degrade.addColorStop(1,"rgba(255,255,255,0)");
+
+    ctx.fillStyle=degrade;
+
+    ctx.fillRect(0,0,128,128);
+
+    const texture=new THREE.CanvasTexture(canvas);
+
+    texture.needsUpdate=true;
+
+    return texture;
+}
+
+
+function ajouterChampEtoiles(){
+
+    const NB_ETOILES=2200;
+
+    const positions=new Float32Array(NB_ETOILES*3);
+
+    const opacites=new Float32Array(NB_ETOILES);
+
+    for(let i=0;i<NB_ETOILES;i++){
+
+        const r=40+Math.random()*140;
+
+        const theta=Math.random()*Math.PI*2;
+
+        const phi=Math.acos(2*Math.random()-1);
+
+        positions[i*3]=r*Math.sin(phi)*Math.cos(theta);
+
+        positions[i*3+1]=r*Math.sin(phi)*Math.sin(theta);
+
+        positions[i*3+2]=r*Math.cos(phi);
+
+        opacites[i]=.25+Math.random()*.6;
+    }
+
+    const geometrie=new THREE.BufferGeometry();
+
+    geometrie.setAttribute(
+        "position",
+        new THREE.BufferAttribute(positions,3)
+    );
+
+    const materiau=new THREE.PointsMaterial({
+        size:.55,
+        map:creerTextureGlow(),
+        transparent:true,
+        opacity:.55,
+        depthWrite:false,
+        blending:THREE.AdditiveBlending,
+        color:0xaebdff,
+        sizeAttenuation:true
+    });
+
+    const etoiles=new THREE.Points(geometrie,materiau);
+
+    etoiles.userData.persistant=true;
+
+    etoiles.userData.opacitesBase=opacites;
+
+    scene3D.add(etoiles);
+
+    scene3D.userData.etoiles=etoiles;
+}
+
+
+function creerSprite(texte,taille){
+
+    const canvas=document.createElement("canvas");
+
+    const echelle=4;
+
+    canvas.width=320*echelle;
+
+    canvas.height=80*echelle;
+
+    const ctx=canvas.getContext("2d");
+
+    ctx.scale(echelle,echelle);
+
+    ctx.font="600 24px Inter, system-ui, sans-serif";
+
+    ctx.textAlign="center";
+
+    ctx.textBaseline="middle";
+
+    ctx.shadowColor="rgba(0,0,0,.85)";
+
+    ctx.shadowBlur=6;
+
+    ctx.fillStyle="#e7ebf1";
+
+    ctx.fillText(texte,160,40);
+
+    const texture=new THREE.CanvasTexture(canvas);
+
+    texture.needsUpdate=true;
+
+    const materiau=new THREE.SpriteMaterial({
+        map:texture,
+        transparent:true,
+        depthWrite:false
+    });
+
+    const sprite=new THREE.Sprite(materiau);
+
+    const ratio=320/80;
+
+    sprite.scale.set(taille*ratio*.55,taille*.55,1);
+
+    return sprite;
+}
+
+
+function animerEchelle(objet,cible,duree,delai){
+
+    const depart=performance.now()+(delai||0);
+
+    function etape(t){
+
+        if(t<depart){
+
+            requestAnimationFrame(etape);
+
+            return;
+        }
+
+        const progres=Math.min(1,(t-depart)/duree);
+
+        const ease=1-Math.pow(1-progres,3);
+
+        objet.scale.setScalar(Math.max(.001,ease*cible));
+
+        if(progres<1){
+
+            requestAnimationFrame(etape);
+        }
+    }
+
+    requestAnimationFrame(etape);
+}
+
+
+function animerOpacite(materiau,cible,duree,delai){
+
+    const depart=performance.now()+(delai||0);
+
+    function etape(t){
+
+        if(t<depart){
+
+            requestAnimationFrame(etape);
+
+            return;
+        }
+
+        const progres=Math.min(1,(t-depart)/duree);
+
+        materiau.opacity=progres*cible;
+
+        if(progres<1){
+
+            requestAnimationFrame(etape);
+        }
+    }
+
+    requestAnimationFrame(etape);
+}
+
+
+function rendreScene(noeuds,aretes){
+
+    viderScene();
+
+    const groupe=new THREE.Group();
+
+    scene3D.add(groupe);
+
+
+    const topLabels=
+        [...noeuds]
+        .sort((a,b)=>b.poids-a.poids)
+        .slice(0,70)
+        .map(n=>n.mot);
+
+    const ensembleLabels=new Set(topLabels);
+
+    const centre=new THREE.Vector3(0,0,0);
+
+
+    noeuds.forEach((n,i)=>{
+
+        const couleur=new THREE.Color(couleurCategorie(n.categorie));
+
+        const mesh=new THREE.Mesh(
+            new THREE.SphereGeometry(n.rayon,16,16),
+            new THREE.MeshStandardMaterial({
+                color:couleur,
+                emissive:couleur,
+                emissiveIntensity:.42,
+                roughness:.42,
+                metalness:.1
+            })
+        );
+
+        mesh.position.set(n.x,n.y,n.z);
+
+        mesh.userData={
+            mot:n.mot,
+            poids:n.poids,
+            categorie:n.categorie
+        };
+
+        groupe.add(mesh);
+
+        noeudsCliquables3D.push(mesh);
+
+
+        /* Halo lumineux additif derrière le mot */
+
+        const halo=new THREE.Sprite(
+            new THREE.SpriteMaterial({
+                map:texteGlow,
+                color:couleur,
+                transparent:true,
+                opacity:.5,
+                depthWrite:false,
+                blending:THREE.AdditiveBlending
+            })
+        );
+
+        halo.scale.setScalar(n.rayon*4.2);
+
+        halo.position.copy(mesh.position);
+
+        groupe.add(halo);
+
+
+        /* Apparition échelonnée selon la distance au centre */
+
+        const delai=
+            Math.min(900,mesh.position.distanceTo(centre)*22)+
+            Math.random()*120;
+
+        const echelleFinale=1;
+
+        mesh.scale.setScalar(.001);
+
+        halo.scale.setScalar(.001);
+
+        animerEchelle(mesh,echelleFinale,420,delai);
+
+        animerEchelle(halo,n.rayon*4.2,420,delai);
+
+
+        noeudsAnimables.push({
+            mesh,
+            halo,
+            rayonBase:n.rayon,
+            phase:Math.random()*Math.PI*2
+        });
+
+
+        if(ensembleLabels.has(n.mot)){
+
+            const sprite=creerSprite(n.mot,n.rayon*2.4);
+
+            sprite.position.set(
+                n.x,
+                n.y+n.rayon+.25,
+                n.z
+            );
+
+            sprite.material.opacity=0;
+
+            groupe.add(sprite);
+
+            animerOpacite(sprite.material,1,500,delai+120);
+        }
+    });
+
+
+    const aretesTriees=
+        [...aretes].sort((a,b)=>b.poids-a.poids);
+
+    aretesTriees.forEach((arete,i)=>{
+
+        const a=noeuds[arete.a];
+
+        const b=noeuds[arete.b];
+
+        const materiau=new THREE.LineBasicMaterial({
+            color:0x8a93a3,
+            transparent:true,
+            opacity:0
+        });
+
+        const geometrie=
+            new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(a.x,a.y,a.z),
+                new THREE.Vector3(b.x,b.y,b.z)
+            ]);
+
+        groupe.add(new THREE.Line(geometrie,materiau));
+
+        animerOpacite(materiau,.18,600,300+Math.random()*500);
+
+
+        /* Particules voyageuses sur les liens les plus forts */
+
+        if(i<40){
+
+            const couleurLien=
+                new THREE.Color(couleurCategorie(a.categorie))
+                .lerp(new THREE.Color(couleurCategorie(b.categorie)),.5);
+
+            const particule=new THREE.Sprite(
+                new THREE.SpriteMaterial({
+                    map:texteGlow,
+                    color:couleurLien,
+                    transparent:true,
+                    opacity:.85,
+                    depthWrite:false,
+                    blending:THREE.AdditiveBlending
+                })
+            );
+
+            particule.scale.setScalar(.32);
+
+            groupe.add(particule);
+
+            particulesVoyageuses.push({
+                sprite:particule,
+                a:new THREE.Vector3(a.x,a.y,a.z),
+                b:new THREE.Vector3(b.x,b.y,b.z),
+                vitesse:.12+Math.random()*.18,
+                decalage:Math.random()
+            });
+        }
+    });
+
+
+    /* Positionne la caméra pour voir l'ensemble */
+
+    const etendue=
+        Math.max(
+            10,
+            ...noeuds.map(n=>
+                Math.sqrt(n.x*n.x+n.y*n.y+n.z*n.z)
+            )
+        );
+
+    camera3D.position.set(0,etendue*.25,etendue*1.9);
+
+    etatVol.yaw=0;
+
+    etatVol.pitch=-.12;
+
+    appliquerRotationVol();
+}
+
+
+function construireLegendeCategories(noeuds){
+
+    const presentes=
+        new Set(noeuds.map(n=>n.categorie));
+
+    const zone=document.getElementById("legendeCategories");
+
+    zone.innerHTML=
+        Array.from(presentes)
+        .sort()
+        .map(cat=>
+
+            "<span class='legend-chip'>"+
+            "<span class='legend-dot' style='background:"+
+            couleurCategorie(cat)+
+            "'></span>"+
+            escapeHTML(cat)+
+            "</span>"
+        )
+        .join("");
+}
+
+
+/* =========================================================
+   CHARGEMENT UI
+========================================================= */
+
+function afficherChargement(visible,texte){
+
+    document.getElementById("loadingOverlay").style.display=
+        visible?"flex":"none";
+
+    document.getElementById("volControls").style.display=
+        visible?"none":"flex";
+
+    if(texte){
+
+        document.getElementById("loadingTexte").textContent=texte;
+    }
+}
+
+
+/* =========================================================
+   UTILITAIRES
+========================================================= */
+
+function formatNombre(n){
+
+    return Number(n||0).toLocaleString("fr-FR");
+}
+
+
+function escapeHTML(texte){
+
+    return String(texte)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+}
+
+
+function estPonctuation(mot){
+
+    return[
+        ".",",","!","?",";",":","(",")","[","]","«","»"
+    ].includes(mot);
+}
+
+
+function debounce(fn,delai){
+
+    let t;
+
+    return function(...args){
+
+        clearTimeout(t);
+
+        t=setTimeout(()=>fn.apply(this,args),delai);
+    };
+}
+
+</script>
+
+</body>
+</html>

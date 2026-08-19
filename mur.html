@@ -4,303 +4,116 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#002366">
-<title>Wall Dashboard V4.1</title>
+<title>Wall Dashboard V5</title>
 <style>
-:root{
- --blue:#002366;--silver:#bcbfc2;--bg:#eef1f4;--card:#fff;--text:#17202a;
- --muted:#66717d;--border:rgba(0,35,102,.15);--danger:#c62828;
- --ok:#19733b;--shadow:0 8px 25px rgba(0,35,102,.12)
-}
+:root{--blue:#002366;--silver:#bcbfc2;--bg:#edf0f3;--card:#fff;--text:#142033;--muted:#66717d;--line:rgba(0,35,102,.14);--shadow:0 8px 28px rgba(0,35,102,.12)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
-body.dark{--bg:#07111f;--card:#101d2e;--text:#f1f4f7;--muted:#9ca9b7;--border:rgba(188,191,194,.16);--shadow:0 8px 25px rgba(0,0,0,.35)}
-button,input,textarea{font:inherit}button{cursor:pointer;border:0}
-#dashboard{width:100%;height:100%;overflow-y:auto;padding:16px 16px 90px}
-.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.brand{color:var(--blue);font-weight:800;font-size:18px}.dark .brand{color:#b7cdf8}
-.icon-button{min-width:48px;min-height:48px;border-radius:14px;background:var(--card);color:var(--blue);box-shadow:var(--shadow);font-size:21px}
-.clock-card{background:var(--blue);color:#fff;border-radius:24px;padding:22px;box-shadow:var(--shadow);margin-bottom:14px}
-.clock{font-size:clamp(52px,14vw,105px);font-weight:800;letter-spacing:-3px;line-height:1}
-.date{margin-top:9px;font-size:clamp(16px,4vw,23px);opacity:.9;text-transform:capitalize}
-.location{margin-top:12px;font-size:15px;opacity:.85}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:16px;box-shadow:var(--shadow);min-width:0}
-.card.full{grid-column:1/-1}
-.card-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;color:var(--blue);font-weight:800;font-size:17px}
-.dark .card-title{color:#b7cdf8}
-.weather-main{display:flex;align-items:center;gap:12px}.weather-icon{font-size:47px}
-.temperature{font-size:40px;font-weight:800}.weather-description{color:var(--muted);margin-top:4px}
-.forecast{display:flex;gap:8px;overflow-x:auto;margin-top:15px;padding-bottom:3px}
-.forecast-item{min-width:80px;text-align:center;background:rgba(188,191,194,.18);border-radius:12px;padding:9px 5px;font-size:12px}
-.forecast-icon{font-size:24px;margin:4px 0}
-.input-row{display:flex;gap:8px}input,textarea{width:100%;border:1px solid var(--border);background:var(--bg);color:var(--text);border-radius:12px;padding:12px;outline:none}
-input:focus,textarea:focus{border-color:var(--blue)}
-.primary{background:var(--blue);color:#fff;border-radius:12px;padding:12px 15px;font-weight:700}
-.task-list{margin-top:12px}.task{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)}
-.task-check{width:26px;height:26px;min-width:26px;border-radius:8px;border:2px solid var(--blue);background:transparent}
-.task.completed .task-check{background:var(--blue);color:#fff}.task-text{flex:1;word-break:break-word}
-.task.completed .task-text{text-decoration:line-through;opacity:.5}.delete-button{background:transparent;color:var(--danger);font-size:18px;padding:8px}
-.reminder{padding:12px;border-radius:13px;background:rgba(188,191,194,.18);margin-bottom:8px}
-.reminder-time{font-weight:800;color:var(--blue)}.dark .reminder-time{color:#b7cdf8}
-.reminder-controls{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.note-preview{min-height:80px;white-space:pre-wrap;color:var(--text)}
-.note-save{margin-top:8px}.actions{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
-.action{min-height:55px;border-radius:14px;background:var(--blue);color:#fff;font-weight:700}
-.bottom-bar{position:fixed;bottom:10px;left:12px;right:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:7px;z-index:30}
-.bottom-bar button{min-height:50px;border-radius:14px;background:var(--blue);color:#fff;font-size:18px}
-.overlay{position:fixed;inset:0;z-index:100;display:none;background:var(--bg)}.overlay.active{display:block}
-.overlay-header{height:65px;display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--blue);color:#fff}
-.overlay-content{height:calc(100% - 65px);overflow:auto;padding:15px}
-#drawingPad{background:#fff;border-radius:14px;width:100%;height:calc(100% - 65px);touch-action:none;display:block}
-.drawing-toolbar{height:65px;display:flex;align-items:center;gap:8px;overflow-x:auto;padding:8px;background:var(--blue)}
-.pen{min-width:45px;height:45px;border-radius:50%;border:3px solid white}.pen-black{background:#000}.pen-red{background:#e53935}.pen-blue{background:#1565c0}
-.eraser{min-width:60px;height:45px;border-radius:12px;background:#fff;color:#000}
-#wallMode{position:fixed;inset:0;z-index:200;display:none;background:#002366;color:#fff;overflow:hidden;align-items:center;justify-content:center;flex-direction:column;text-align:center}
-#wallMode.active{display:flex}
-.wall-time{font-size:clamp(80px,22vw,220px);line-height:.9;font-weight:900;letter-spacing:-7px;text-shadow:0 0 10px rgba(255,255,255,.95),0 0 30px rgba(255,255,255,.65),0 0 60px rgba(188,191,194,.35)}
-.wall-date{font-size:clamp(17px,4vw,32px);margin-top:18px;opacity:.95}
-.wall-info{margin-top:35px;display:flex;justify-content:center;flex-wrap:wrap;gap:15px;font-size:clamp(16px,4vw,26px);font-weight:700}
-.wall-info span{padding:8px 15px;border-radius:30px;background:rgba(255,255,255,.13)}
-.wall-next{position:absolute;bottom:18px;left:20px;right:20px;font-size:14px;opacity:.75}
-.wall-exit{position:absolute;top:12px;right:12px;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:20px}
-#alertBox{position:fixed;inset:0;z-index:500;display:none;background:rgba(0,0,0,.88);align-items:center;justify-content:center;padding:20px}
-#alertBox.active{display:flex}.alert-inner{width:100%;max-width:500px;background:var(--card);border-radius:25px;padding:28px;text-align:center;border:4px solid var(--blue);animation:pulse .8s infinite alternate}
-.alert-title{font-size:30px;font-weight:900;color:var(--blue)}.alert-message{margin:15px 0;font-size:21px}
-@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.025)}}
-.test-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)}.ok{color:var(--ok);font-weight:800}.warning{color:#b36b00;font-weight:800}
-#miniFeedback{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);z-index:1000;background:#002366;color:#fff;padding:13px 20px;border-radius:15px;font-weight:700;display:none}
-@media(min-width:800px){#dashboard{padding:24px 24px 100px}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.clock-card{padding:28px}.card.full{grid-column:span 2}.actions{grid-template-columns:repeat(4,1fr)}}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+body.dark{--bg:#07111e;--card:#101c2b;--text:#f4f6f8;--muted:#a7b0ba;--line:rgba(188,191,194,.16);--shadow:0 8px 28px rgba(0,0,0,.38)}
+button,input,textarea{font:inherit}button{border:0;cursor:pointer}
+#home{height:100%;overflow-y:auto;padding:14px 14px 82px}
+.top{height:45px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-size:14px;font-weight:900;letter-spacing:2px;color:var(--blue)}
+.dark .brand{color:#c4d4f1}.quick{display:flex;gap:7px}.quick button{width:42px;height:42px;border-radius:13px;background:var(--card);color:var(--blue);box-shadow:var(--shadow);font-size:17px}
+.hero{position:relative;overflow:hidden;border-radius:27px;min-height:330px;padding:25px 22px;color:#fff;background:radial-gradient(circle at 50% 48%,#5275ad 0%,#234d8d 28%,#002366 63%,#00183f 100%);box-shadow:0 12px 35px rgba(0,35,102,.28);display:flex;flex-direction:column;justify-content:center}
+.hero:after{content:"";position:absolute;inset:-30%;background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.12),transparent 38%);pointer-events:none}
+.hero>*{position:relative;z-index:1}.hero-location{text-align:center;font-size:15px;opacity:.9;margin-bottom:9px}
+.hero-time{font-size:clamp(76px,20vw,175px);font-weight:900;letter-spacing:-7px;line-height:.85;text-align:center;text-shadow:0 0 10px rgba(255,255,255,.75),0 0 32px rgba(255,255,255,.3)}
+.hero-date{text-align:center;font-size:clamp(15px,3.8vw,24px);margin-top:17px;text-transform:capitalize;opacity:.94}
+.hero-weather{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:21px;font-size:18px}.hero-icon{font-size:42px;filter:drop-shadow(0 0 8px rgba(255,255,255,.4))}.hero-temp{font-size:29px;font-weight:900}.hero-desc{font-size:13px;opacity:.8}.next{margin-top:19px;text-align:center;font-size:13px;opacity:.76;min-height:18px}
+.peek{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.peek button{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:14px;min-height:43px;font-size:13px}
+.section{display:none;margin-top:10px}.section.open{display:block}.panel{background:var(--card);border:1px solid var(--line);border-radius:19px;padding:15px;box-shadow:var(--shadow)}
+.panel-title{display:flex;align-items:center;justify-content:space-between;color:var(--blue);font-weight:900;margin-bottom:12px}.dark .panel-title{color:#c4d4f1}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+input,textarea{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:11px;padding:11px;outline:none;width:100%}
+.row{display:flex;gap:7px}.primary{background:var(--blue);color:#fff;border-radius:11px;padding:11px 14px;font-weight:800}
+.task{display:flex;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}.task .check{width:25px;height:25px;border:2px solid var(--blue);border-radius:7px;background:transparent;color:#fff}.task.done .check{background:var(--blue)}.task.done .txt{text-decoration:line-through;opacity:.45}.txt{flex:1;word-break:break-word}.trash{background:transparent;color:#c62828;padding:7px}
+.rem{padding:10px;border-radius:12px;background:rgba(188,191,194,.18);margin:7px 0}.rem strong{color:var(--blue)}.dark .rem strong{color:#c4d4f1}.small{font-size:12px;color:var(--muted)}
+.forecast{display:flex;gap:7px;overflow-x:auto}.fday{min-width:74px;text-align:center;padding:9px 5px;border-radius:12px;background:rgba(188,191,194,.18);font-size:12px}.ficon{font-size:25px;margin:4px}.event{padding:10px 0;border-bottom:1px solid var(--line)}
+.tool-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.tool{min-height:58px;border-radius:13px;background:var(--blue);color:#fff;font-weight:800}
+.bottom{position:fixed;bottom:9px;left:10px;right:10px;z-index:40;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.bottom button{height:48px;border-radius:14px;background:var(--blue);color:#fff;font-size:17px}
+.overlay{position:fixed;inset:0;z-index:100;display:none;background:var(--bg)}.overlay.active{display:block}.overlay-head{height:62px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:8px 12px}.overlay-head button{background:transparent;color:#fff;font-size:24px}.overlay-body{height:calc(100% - 62px);overflow:auto;padding:14px}
+#drawCanvas{display:block;width:100%;height:calc(100% - 58px);background:#fff;border-radius:12px;touch-action:none}.draw-tools{height:58px;background:var(--blue);display:flex;align-items:center;gap:7px;overflow-x:auto;padding:7px}.draw-tools button{min-width:43px;height:43px;border-radius:11px}.black{background:#000}.red{background:#e53935}.bluepen{background:#1565c0}.white{background:#fff;color:#000;padding:0 10px}
+#wall{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;color:#fff;background:radial-gradient(circle at 50% 48%,#5275ad 0%,#234d8d 27%,#002366 62%,#00183f 100%);overflow:hidden}#wall.active{display:flex}
+.wall-time{font-size:clamp(86px,23vw,230px);font-weight:900;letter-spacing:-8px;line-height:.85;text-shadow:0 0 12px #fff,0 0 35px rgba(255,255,255,.65),0 0 70px rgba(188,191,194,.35)}.wall-date{font-size:clamp(16px,4vw,31px);margin-top:20px}.wall-weather{display:flex;align-items:center;gap:11px;margin-top:26px}.wall-icon{font-size:46px}.wall-temp{font-size:31px;font-weight:900}.wall-desc{font-size:13px;opacity:.85}.wall-next{position:absolute;bottom:16px;left:15px;right:15px;font-size:13px;opacity:.7}.wall-exit{position:absolute;top:10px;right:10px;width:45px;height:45px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff}
+#alert{position:fixed;inset:0;z-index:500;display:none;background:rgba(0,0,0,.88);align-items:center;justify-content:center;padding:18px}#alert.active{display:flex}.alertbox{background:var(--card);color:var(--text);width:100%;max-width:480px;border-radius:24px;padding:26px;text-align:center;border:4px solid var(--blue);animation:pulse .8s infinite alternate}.alertbox h2{color:var(--blue);margin:0;font-size:28px}.alertbox p{font-size:20px}@keyframes pulse{to{transform:scale(1.025)}}.toast{position:fixed;z-index:1000;bottom:73px;left:50%;transform:translateX(-50%);display:none;background:var(--blue);color:#fff;border-radius:13px;padding:11px 17px;font-weight:800}
+@media(min-width:800px){#home{padding:18px 24px 85px}.hero{min-height:420px}.peek{max-width:720px;margin:12px auto 0}.section.open{max-width:1100px;margin-left:auto;margin-right:auto}.grid{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
 <body>
-<div id="app">
-<main id="dashboard">
-<div class="topbar"><div class="brand">WALL DASHBOARD</div><button class="icon-button" onclick="toggleTheme()">🌙</button></div>
-<section class="clock-card">
-<div id="clock" class="clock">00:00</div><div id="date" class="date">Chargement...</div><div id="location" class="location">📍 Localisation...</div>
+<main id="home">
+<div class="top"><div class="brand">WALL DASHBOARD</div><div class="quick"><button onclick="toggleTheme()">◐</button><button onclick="enterFullscreen()">⛶</button></div></div>
+<section class="hero">
+<div id="heroLocation" class="hero-location">📍 Localisation...</div><div id="heroTime" class="hero-time">00:00</div><div id="heroDate" class="hero-date">Chargement...</div>
+<div class="hero-weather"><div id="heroIcon" class="hero-icon">⛅</div><div><div id="heroTemp" class="hero-temp">--°C</div><div id="heroDesc" class="hero-desc">Météo...</div></div></div><div id="heroNext" class="next">Aucun événement prochain.</div>
 </section>
-<section class="grid">
-<div class="card full">
-<div class="card-title"><span>🌤️ Météo</span><button onclick="loadWeather()" style="background:transparent;font-size:18px">🔄</button></div>
-<div class="weather-main"><div id="weatherIcon" class="weather-icon">⛅</div><div><div id="temperature" class="temperature">--°C</div><div id="weatherDescription" class="weather-description">Chargement...</div></div></div>
-<div id="forecast" class="forecast"></div>
-</div>
-<div class="card">
-<div class="card-title"><span>☑️ Tâches</span></div>
-<div class="input-row"><input id="taskInput" type="text" placeholder="Nouvelle tâche"><button class="primary" onclick="addTask()">+</button></div>
-<div id="taskList" class="task-list"></div>
-</div>
-<div class="card">
-<div class="card-title"><span>🔔 Rappels</span></div>
-<input id="reminderText" type="text" placeholder="Rappel">
-<input id="reminderDate" type="datetime-local" style="margin-top:7px">
-<button class="primary" onclick="addReminder()" style="width:100%;margin-top:7px">Ajouter le rappel</button>
-<div id="reminderList" style="margin-top:12px"></div>
-</div>
-<div class="card">
-<div class="card-title"><span>📝 Note</span><button onclick="openTextNote()" style="background:transparent;font-size:18px">⛶</button></div>
-<textarea id="textNote" rows="5" placeholder="Écris quelque chose..."></textarea>
-<button class="primary note-save" onclick="saveNote()">💾 Sauvegarder</button>
-</div>
-<div class="card">
-<div class="card-title"><span>⚡ Actions</span></div>
-<div class="actions">
-<button class="action" onclick="openDrawing()">✍️ Écrire</button>
-<button class="action" onclick="enterFullscreen()">⛶ Plein écran</button>
-<button class="action" onclick="startWallMode()">🧱 Mode mur</button>
-<button class="action" onclick="openDiagnostics()">🧪 Tests</button>
-</div>
-</div>
-</section>
-</main>
-<nav class="bottom-bar"><button onclick="openDrawing()">✍️</button><button onclick="openTextNote()">📝</button><button onclick="startWallMode()">🕐</button><button onclick="enterFullscreen()">⛶</button></nav>
+<div class="peek"><button onclick="toggleSection('weatherSection')">☀️ Météo</button><button onclick="toggleSection('tasksSection')">☑️ Tâches</button><button onclick="toggleSection('moreSection')">••• Plus</button></div>
+<section id="weatherSection" class="section"><div class="panel"><div class="panel-title"><span>🌤️ Prévisions</span><button onclick="loadWeather(true)" style="background:transparent">🔄</button></div><div id="forecast" class="forecast"></div><div class="small" id="weatherDetails" style="margin-top:10px"></div></div></section>
+<section id="tasksSection" class="section"><div class="panel"><div class="panel-title"><span>☑️ Tâches</span><span class="small" id="taskCount"></span></div><div class="row"><input id="taskInput" placeholder="Ajouter une tâche"><button class="primary" onclick="addTask()">+</button></div><div id="taskList" style="margin-top:9px"></div></div></section>
+<section id="moreSection" class="section"><div class="grid">
+<div class="panel"><div class="panel-title"><span>🔔 Rappels</span></div><input id="remText" placeholder="Rappel"><input id="remTime" type="datetime-local" style="margin-top:7px"><button class="primary" onclick="addReminder()" style="width:100%;margin-top:7px">Ajouter</button><div id="remList" style="margin-top:8px"></div></div>
+<div class="panel"><div class="panel-title"><span>📅 Aujourd'hui</span></div><input id="eventText" placeholder="Événement"><input id="eventTime" type="time" style="margin-top:7px"><button class="primary" onclick="addEvent()" style="width:100%;margin-top:7px">Ajouter</button><div id="calendarList" style="margin-top:8px"></div></div>
+<div class="panel"><div class="panel-title"><span>📝 Note rapide</span><button onclick="openNote()" style="background:transparent">⛶</button></div><textarea id="quickNote" rows="5" placeholder="Ta note..."></textarea><button class="primary" onclick="saveNote()" style="width:100%;margin-top:7px">💾 Sauvegarder</button></div>
+<div class="panel"><div class="panel-title"><span>🧰 Outils</span></div><div class="tool-grid"><button class="tool" onclick="openDrawing()">✍️</button><button class="tool" onclick="openTimer()">⏱️</button><button class="tool" onclick="startWall()">🕐</button><button class="tool" onclick="diagnostics()">🧪</button></div></div>
+</div></section>
+<nav class="bottom"><button onclick="toggleSection('weatherSection')">☀️</button><button onclick="toggleSection('tasksSection')">☑️</button><button onclick="openNote()">📝</button><button onclick="startWall()">🕐</button><button onclick="enterFullscreen()">⛶</button></nav>
 
-<section id="noteOverlay" class="overlay">
-<div class="overlay-header"><strong>📝 Bloc-notes</strong><button onclick="closeOverlay('noteOverlay')" style="background:transparent;color:#fff;font-size:25px">✕</button></div>
-<div class="overlay-content"><textarea id="fullNote" style="height:85%;font-size:20px" placeholder="Écris ta note ici..."></textarea><button class="primary" onclick="saveFullNote()" style="width:100%;margin-top:10px">💾 Sauvegarder</button></div>
-</section>
-
-<section id="drawingOverlay" class="overlay">
-<div class="drawing-toolbar">
-<button class="pen pen-black" onclick="setPen('#000000')"></button><button class="pen pen-red" onclick="setPen('#e53935')"></button><button class="pen pen-blue" onclick="setPen('#1565c0')"></button>
-<button class="eraser" onclick="setEraser()">🧽 Gomme</button><button class="eraser" onclick="clearCanvas()">🗑️ Effacer</button><button class="eraser" onclick="saveDrawing()">💾 Sauver</button><button class="eraser" onclick="closeDrawing()">✕ Fermer</button>
-</div><canvas id="drawingPad"></canvas>
-</section>
-
-<section id="wallMode">
-<button class="wall-exit" onclick="stopWallMode()">✕</button>
-<div id="wallTime" class="wall-time">00:00</div><div id="wallDate" class="wall-date">...</div>
-<div class="wall-info"><span id="wallTemperature">🌡️ --°C</span><span id="wallWeather">⛅ ...</span><span id="wallLocation">📍 ...</span></div>
-<div id="wallNext" class="wall-next">Aucun événement prochain.</div>
-</section>
-
-<section id="alertBox"><div class="alert-inner"><div class="alert-title">🔔 RAPPEL</div><div id="alertMessage" class="alert-message"></div><button class="primary" onclick="closeAlert()" style="width:100%">OK</button></div></section>
-
-<section id="diagnosticsOverlay" class="overlay">
-<div class="overlay-header"><strong>🧪 Diagnostic V4.1</strong><button onclick="closeOverlay('diagnosticsOverlay')" style="background:transparent;color:#fff;font-size:25px">✕</button></div>
-<div id="diagnosticContent" class="overlay-content"></div>
-</section>
-<div id="miniFeedback"></div>
-</div>
+<section id="noteOverlay" class="overlay"><div class="overlay-head"><strong>📝 Note</strong><button onclick="closeOverlay('noteOverlay')">✕</button></div><div class="overlay-body"><textarea id="fullNote" style="height:85%;font-size:20px"></textarea><button class="primary" style="width:100%;margin-top:9px" onclick="saveFullNote()">💾 Sauvegarder</button></div></section>
+<section id="drawOverlay" class="overlay"><div class="draw-tools"><button class="black" onclick="setPen('#000')"></button><button class="red" onclick="setPen('#e53935')"></button><button class="bluepen" onclick="setPen('#1565c0')"></button><button class="white" onclick="erase()">🧽</button><button class="white" onclick="clearDraw()">🗑️</button><button class="white" onclick="closeDrawing()">✕</button></div><canvas id="drawCanvas"></canvas></section>
+<section id="timerOverlay" class="overlay"><div class="overlay-head"><strong>⏱️ Minuteur</strong><button onclick="closeOverlay('timerOverlay')">✕</button></div><div class="overlay-body" style="text-align:center"><div id="timerDisplay" style="font-size:80px;font-weight:900;color:var(--blue);margin-top:25px">05:00</div><input id="timerInput" type="number" min="1" max="7200" value="300" style="max-width:180px;text-align:center"><div class="row" style="justify-content:center;margin-top:12px"><button class="primary" onclick="startTimer()">▶️</button><button class="primary" onclick="pauseTimer()">⏸️</button><button class="primary" onclick="resetTimer()">↺</button></div></div></section>
+<section id="diagOverlay" class="overlay"><div class="overlay-head"><strong>🧪 Diagnostic</strong><button onclick="closeOverlay('diagOverlay')">✕</button></div><div id="diag" class="overlay-body"></div></section>
+<section id="alert"><div class="alertbox"><h2>🔔 RAPPEL</h2><p id="alertText"></p><button class="primary" style="width:100%" onclick="closeAlert()">OK</button></div></section>
+<div id="toast" class="toast"></div>
+<section id="wall"><button class="wall-exit" onclick="stopWall()">✕</button><div id="wallTime" class="wall-time">00:00</div><div id="wallDate" class="wall-date">...</div><div class="wall-weather"><div id="wallIcon" class="wall-icon">⛅</div><div><div id="wallTemp" class="wall-temp">--°C</div><div id="wallDesc" class="wall-desc">...</div></div></div><div id="wallNext" class="wall-next">Aucun événement prochain.</div></section>
 
 <script>
 "use strict";
-const S={tasks:"wd_tasks_v41",reminders:"wd_reminders_v41",note:"wd_note_v41",drawing:"wd_drawing_v41",theme:"wd_theme_v41"};
-const $=id=>document.getElementById(id);
-const load=(k,f)=>{try{const x=localStorage.getItem(k);return x===null?f:JSON.parse(x)}catch(e){return f}};
-const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
-let tasks=load(S.tasks,[]), reminders=load(S.reminders,[]);
-let loc={lat:null,lon:null,city:"Localisation inconnue"}, weather=null, wall=false, lastInteraction=Date.now();
-let feedbackTimer=null, lastWeather=0, lastLocation=0, reminderTimer=null;
+const K={tasks:"wd5_tasks",rem:"wd5_reminders",events:"wd5_events",note:"wd5_note",draw:"wd5_draw",theme:"wd5_theme"},$=id=>document.getElementById(id);
+const read=(k,f)=>{try{let v=localStorage.getItem(k);return v===null?f:JSON.parse(v)}catch(e){return f}},write=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+let tasks=read(K.tasks,[]),reminders=read(K.rem,[]),events=read(K.events,[]),geo={lat:null,lon:null,city:"Localisation inconnue"},weather=null,lastWeather=0,lastGeo=0,idleTimer,wall=false;
+if(localStorage.getItem(K.theme)==="dark")document.body.classList.add("dark");
+function toggleTheme(){document.body.classList.toggle("dark");localStorage.setItem(K.theme,document.body.classList.contains("dark")?"dark":"light")}
+function toast(s){$("toast").textContent=s;$("toast").style.display="block";clearTimeout(window.tt);window.tt=setTimeout(()=>$("toast").style.display="none",2000)}
+function toggleSection(id){$(id).classList.toggle("open");registerTouch()}
+function updateClock(){let n=new Date(),t=n.toLocaleTimeString("fr-CA",{hour:"2-digit",minute:"2-digit"}),d=n.toLocaleDateString("fr-CA",{weekday:"long",day:"numeric",month:"long",year:"numeric"});$("heroTime").textContent=t;$("heroDate").textContent=d;$("wallTime").textContent=t;$("wallDate").textContent=d;checkReminders();renderNext()}setInterval(updateClock,1000);updateClock();
 
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
-function clockUpdate(){
- const n=new Date(), t=n.toLocaleTimeString("fr-CA",{hour:"2-digit",minute:"2-digit"}), d=n.toLocaleDateString("fr-CA",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
- $("clock").textContent=t;$("date").textContent=d;$("wallTime").textContent=t;$("wallDate").textContent=d;checkReminders();updateWallNext()
-}
-setInterval(clockUpdate,1000);clockUpdate();
+function renderTasks(){let l=$("taskList"),p=tasks.filter(t=>!t.done);$("taskCount").textContent=p.length+" à faire";l.innerHTML=tasks.length?"":'<div class="small">Aucune tâche.</div>';tasks.forEach(t=>{let d=document.createElement("div");d.className="task"+(t.done?" done":"");d.innerHTML=`<button class="check" onclick="toggleTask(${t.id})">${t.done?"✓":""}</button><div class="txt">${esc(t.text)}</div><button class="trash" onclick="deleteTask(${t.id})">🗑️</button>`;l.appendChild(d)})}
+function addTask(){let x=$("taskInput").value.trim();if(!x)return;tasks.push({id:Date.now(),text:x,done:false});write(K.tasks,tasks);$("taskInput").value="";renderTasks();renderNext();toast("Tâche ajoutée ✓")}
+function toggleTask(id){tasks=tasks.map(t=>t.id===id?{...t,done:!t.done}:t);write(K.tasks,tasks);renderTasks();renderNext()}
+function deleteTask(id){tasks=tasks.filter(t=>t.id!==id);write(K.tasks,tasks);renderTasks();renderNext()}renderTasks();
 
-function toggleTheme(){document.body.classList.toggle("dark");localStorage.setItem(S.theme,document.body.classList.contains("dark")?"dark":"light")}
-if(localStorage.getItem(S.theme)==="dark")document.body.classList.add("dark");
+function addReminder(){let text=$("remText").value.trim(),v=$("remTime").value,time=new Date(v).getTime();if(!text||!v||!Number.isFinite(time)||time<=Date.now()){toast("Choisis un texte et une heure future");return}reminders.push({id:Date.now(),text,time,done:false});reminders.sort((a,b)=>a.time-b.time);write(K.rem,reminders);$("remText").value="";$("remTime").value="";renderReminders();renderNext();toast("Rappel ajouté ✓")}
+function renderReminders(){let l=$("remList");l.innerHTML=reminders.length?"":'<div class="small">Aucun rappel.</div>';reminders.forEach(r=>{let d=document.createElement("div");d.className="rem";d.innerHTML=`<strong>${new Date(r.time).toLocaleString("fr-CA",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</strong><br>${esc(r.text)} ${r.done?"<span class='small'>(déclenché)</span>":""} <button class="trash" onclick="deleteReminder(${r.id})">🗑️</button>`;l.appendChild(d)})}
+function deleteReminder(id){reminders=reminders.filter(r=>r.id!==id);write(K.rem,reminders);renderReminders();renderNext()}
+function checkReminders(){let ch=false;reminders.forEach(r=>{if(!r.done&&r.time<=Date.now()){r.done=true;ch=true;triggerAlert(r.text)}});if(ch){write(K.rem,reminders);renderReminders();renderNext()}}function triggerAlert(t){$("alertText").textContent=t;$("alert").classList.add("active");if(navigator.vibrate)try{navigator.vibrate([250,120,250,120,600])}catch(e){}if("Notification"in window&&Notification.permission==="granted")try{new Notification("Wall Dashboard",{body:t})}catch(e){}}function closeAlert(){$("alert").classList.remove("active")}renderReminders();
 
-function addTask(){const i=$("taskInput"),text=i.value.trim();if(!text)return;tasks.push({id:Date.now(),text,completed:false});save(S.tasks,tasks);i.value="";renderTasks();updateWallNext();feedback("Tâche ajoutée ✓")}
-function toggleTask(id){tasks=tasks.map(t=>t.id===id?{...t,completed:!t.completed}:t);save(S.tasks,tasks);renderTasks();updateWallNext()}
-function deleteTask(id){tasks=tasks.filter(t=>t.id!==id);save(S.tasks,tasks);renderTasks();updateWallNext()}
-function renderTasks(){const l=$("taskList");l.innerHTML=tasks.length?"":"<div style='color:var(--muted);padding:10px 0'>Aucune tâche.</div>";tasks.forEach(t=>{const d=document.createElement("div");d.className="task"+(t.completed?" completed":"");d.innerHTML=`<button class="task-check" onclick="toggleTask(${t.id})">${t.completed?"✓":""}</button><div class="task-text">${esc(t.text)}</div><button class="delete-button" onclick="deleteTask(${t.id})">🗑️</button>`;l.appendChild(d)})}
-renderTasks();
+function today(){return new Date().toISOString().slice(0,10)}
+function addEvent(){let text=$("eventText").value.trim(),time=$("eventTime").value;if(!text||!time)return;events.push({id:Date.now(),date:today(),text,time});write(K.events,events);$("eventText").value="";$("eventTime").value="";renderEvents();renderNext();toast("Événement ajouté ✓")}
+function renderEvents(){let l=$("calendarList"),a=events.filter(e=>e.date===today()).sort((x,y)=>x.time.localeCompare(y.time));l.innerHTML=a.length?"":'<div class="small">Rien de prévu aujourd’hui.</div>';a.forEach(e=>{let d=document.createElement("div");d.className="event";d.innerHTML=`<strong>${esc(e.time)}</strong> — ${esc(e.text)} <button class="trash" onclick="deleteEvent(${e.id})">🗑️</button>`;l.appendChild(d)})}
+function deleteEvent(id){events=events.filter(e=>e.id!==id);write(K.events,events);renderEvents();renderNext()}renderEvents();
+function renderNext(){let a=[];reminders.filter(r=>!r.done&&r.time>Date.now()).forEach(r=>a.push({time:r.time,text:"🔔 "+r.text}));events.filter(e=>e.date===today()).forEach(e=>{let [h,m]=e.time.split(":").map(Number),d=new Date();d.setHours(h,m,0,0);if(d>Date.now())a.push({time:d.getTime(),text:"📅 "+e.text})});a.sort((x,y)=>x.time-y.time);if(a.length){let x=a[0],s=new Date(x.time).toLocaleTimeString("fr-CA",{hour:"2-digit",minute:"2-digit"});$("heroNext").textContent=x.text+" • "+s;$("wallNext").textContent="Prochain : "+x.text+" • "+s}else{let t=tasks.find(x=>!x.done),s=t?"☑️ À faire : "+t.text:"Aucun événement prochain.";$("heroNext").textContent=s;$("wallNext").textContent=s}}
 
-function addReminder(){
- const text=$("reminderText").value.trim(), value=$("reminderDate").value;
- if(!text||!value){showAlert("Entre un texte et une date pour le rappel.");return}
- const time=new Date(value).getTime();
- if(!Number.isFinite(time)||time<=Date.now()){showAlert("Choisis une heure située dans le futur.");return}
- reminders.push({id:Date.now(),text,time,triggered:false});reminders.sort((a,b)=>a.time-b.time);save(S.reminders,reminders);$("reminderText").value="";$("reminderDate").value="";renderReminders();updateWallNext();feedback("Rappel programmé ✓")
-}
-function deleteReminder(id){reminders=reminders.filter(r=>r.id!==id);save(S.reminders,reminders);renderReminders();updateWallNext()}
-function renderReminders(){
- const l=$("reminderList");l.innerHTML="";
- if(!reminders.length){l.innerHTML="<div style='color:var(--muted)'>Aucun rappel.</div>";return}
- reminders.forEach(r=>{const d=new Date(r.time),el=document.createElement("div");el.className="reminder";el.innerHTML=`<div class="reminder-controls"><div><div class="reminder-time">${d.toLocaleString("fr-CA",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</div><div>${esc(r.text)}${r.triggered?" <small>(déclenché)</small>":""}</div></div><button class="delete-button" onclick="deleteReminder(${r.id})">🗑️</button></div>`;l.appendChild(el)})
-}
-renderReminders();
+function weatherText(c){let m={0:["☀️","Ciel dégagé"],1:["🌤️","Plutôt dégagé"],2:["⛅","Partiellement nuageux"],3:["☁️","Nuageux"],45:["🌫️","Brouillard"],48:["🌫️","Brouillard givrant"],51:["🌦️","Bruine légère"],53:["🌦️","Bruine"],55:["🌧️","Bruine forte"],61:["🌦️","Pluie légère"],63:["🌧️","Pluie"],65:["🌧️","Forte pluie"],71:["🌨️","Neige légère"],73:["🌨️","Neige"],75:["❄️","Forte neige"],80:["🌦️","Averses"],81:["🌧️","Averses"],82:["⛈️","Fortes averses"],95:["⛈️","Orage"],96:["⛈️","Orage"],99:["⛈️","Orage"]};return m[c]||["🌡️","Conditions inconnues"]}
+async function loadWeather(force=false){if(geo.lat===null)return;if(!force&&Date.now()-lastWeather<1800000)return;lastWeather=Date.now();try{let r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${geo.lat}&longitude=${geo.lon}&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5`);if(!r.ok)throw Error();weather=await r.json();let c=weather.current,w=weatherText(c.weather_code);$("heroIcon").textContent=w[0];$("heroTemp").textContent=Math.round(c.temperature_2m)+"°C";$("heroDesc").textContent=w[1];$("wallIcon").textContent=w[0];$("wallTemp").textContent=Math.round(c.temperature_2m)+"°C";$("wallDesc").textContent=w[1];$("weatherDetails").textContent=`Humidité ${c.relative_humidity_2m}% • Vent ${Math.round(c.wind_speed_10m)} km/h`;$("forecast").innerHTML="";weather.daily.time.forEach((day,i)=>{let q=weatherText(weather.daily.weather_code[i]),dt=new Date(day+"T12:00:00"),lab=i?"":"";lab=i===0?"Aujourd'hui":dt.toLocaleDateString("fr-CA",{weekday:"short"});let e=document.createElement("div");e.className="fday";e.innerHTML=`<strong>${lab}</strong><div class="ficon">${q[0]}</div><div>${Math.round(weather.daily.temperature_2m_max[i])}° / ${Math.round(weather.daily.temperature_2m_min[i])}°</div>`;$("forecast").appendChild(e)})}catch(e){$("heroDesc").textContent="Météo indisponible";$("weatherDetails").textContent="Connexion Internet requise."}}
+async function updateLocation(force=false){if(!navigator.geolocation){$("heroLocation").textContent="📍 Localisation indisponible";return}if(!force&&Date.now()-lastGeo<3600000)return;lastGeo=Date.now();navigator.geolocation.getCurrentPosition(async p=>{geo.lat=p.coords.latitude;geo.lon=p.coords.longitude;try{let r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${geo.lat}&lon=${geo.lon}&zoom=10&addressdetails=1`),a=(await r.json()).address||{};geo.city=a.city||a.town||a.village||a.municipality||a.county||a.state||"Lieu inconnu"}catch(e){geo.city="Position trouvée"}$("heroLocation").textContent="📍 "+geo.city;loadWeather(true)},()=>{$("heroLocation").textContent="📍 Autorisation de localisation requise"},{enableHighAccuracy:false,timeout:15000,maximumAge:1800000})}updateLocation(true);
 
-function checkReminders(){
- let changed=false;
- reminders.forEach(r=>{if(!r.triggered&&r.time<=Date.now()){r.triggered=true;changed=true;triggerReminder(r.text)}})
- if(changed){save(S.reminders,reminders);renderReminders()}
-}
-function triggerReminder(text){
- showAlert(text);
- if("vibrate"in navigator)try{navigator.vibrate([300,150,300,150,600])}catch(e){}
- if("Notification"in window&&Notification.permission==="granted")try{new Notification("Wall Dashboard",{body:text})}catch(e){}
-}
-async function requestNotifications(){
- if(!("Notification"in window)){showAlert("Les notifications système ne sont pas disponibles. Les alertes intégrées fonctionnent quand même.");return}
- try{const p=await Notification.requestPermission();feedback(p==="granted"?"Notifications activées ✓":"Notifications non autorisées.")}catch(e){feedback("Notifications non disponibles.")}
-}
-
-function weatherText(c){const m={0:["☀️","Ciel dégagé"],1:["🌤️","Principalement dégagé"],2:["⛅","Partiellement nuageux"],3:["☁️","Nuageux"],45:["🌫️","Brouillard"],48:["🌫️","Brouillard givrant"],51:["🌦️","Bruine légère"],53:["🌦️","Bruine"],55:["🌧️","Bruine forte"],61:["🌦️","Pluie légère"],63:["🌧️","Pluie"],65:["🌧️","Forte pluie"],71:["🌨️","Neige légère"],73:["🌨️","Neige"],75:["❄️","Forte neige"],80:["🌦️","Averses"],81:["🌧️","Averses"],82:["⛈️","Fortes averses"],95:["⛈️","Orage"],96:["⛈️","Orage avec grêle"],99:["⛈️","Orage fort"]};return m[c]||["🌡️","Conditions inconnues"]}
-async function loadWeather(force=false){
- if(loc.lat===null)return;
- if(!force&&Date.now()-lastWeather<30*60*1000)return;
- lastWeather=Date.now();
- try{
-  const u=`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5`;
-  const r=await fetch(u);if(!r.ok)throw Error("weather");weather=await r.json();
-  const c=weather.current,x=weatherText(c.weather_code);$("weatherIcon").textContent=x[0];$("temperature").textContent=Math.round(c.temperature_2m)+"°C";$("weatherDescription").textContent=`${x[1]} • Humidité ${c.relative_humidity_2m}% • Vent ${Math.round(c.wind_speed_10m)} km/h`;
-  $("wallTemperature").textContent="🌡️ "+Math.round(c.temperature_2m)+"°C";$("wallWeather").textContent=x[0]+" "+x[1];
-  const f=$("forecast");f.innerHTML="";weather.daily.time.forEach((day,i)=>{const x2=weatherText(weather.daily.weather_code[i]),date=new Date(day+"T12:00:00"),label=i===0?"Aujourd'hui":date.toLocaleDateString("fr-CA",{weekday:"short"});const el=document.createElement("div");el.className="forecast-item";el.innerHTML=`<strong>${label}</strong><div class="forecast-icon">${x2[0]}</div><div>${Math.round(weather.daily.temperature_2m_max[i])}° / ${Math.round(weather.daily.temperature_2m_min[i])}°</div>`;f.appendChild(el)})
- }catch(e){$("weatherDescription").textContent="Météo temporairement indisponible."}
-}
-function setLocation(t){$("location").textContent="📍 "+t;$("wallLocation").textContent="📍 "+t}
-async function reverseGeocode(){
- if(loc.lat===null)return;
- try{
-  const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(loc.lat)}&lon=${encodeURIComponent(loc.lon)}&zoom=10&addressdetails=1`,{headers:{Accept:"application/json"}});
-  if(!r.ok)throw Error("geo");const a=(await r.json()).address||{};loc.city=a.city||a.town||a.village||a.municipality||a.county||a.state||"Lieu inconnu";setLocation(loc.city)
- }catch(e){setLocation("Localisation obtenue")}
-}
-function getLocation(force=false){
- if(!("geolocation"in navigator)){setLocation("Localisation non disponible");return}
- if(!force&&Date.now()-lastLocation<60*60*1000)return;
- lastLocation=Date.now();
- navigator.geolocation.getCurrentPosition(p=>{loc.lat=p.coords.latitude;loc.lon=p.coords.longitude;reverseGeocode();loadWeather(true)},()=>setLocation("Localisation non autorisée"),{enableHighAccuracy:false,timeout:15000,maximumAge:30*60*1000})
-}
-
-function saveNote(){localStorage.setItem(S.note,$("textNote").value);feedback("Note sauvegardée ✓")}
-function openTextNote(){$("fullNote").value=localStorage.getItem(S.note)||"";$("noteOverlay").classList.add("active")}
-function saveFullNote(){localStorage.setItem(S.note,$("fullNote").value);$("textNote").value=$("fullNote").value;feedback("Note sauvegardée ✓")}
-$("textNote").value=localStorage.getItem(S.note)||"";
-
-const canvas=$("drawingPad"),ctx=canvas.getContext("2d");let drawing=false,pen="#000",eraser=false;
-function resizeCanvas(){const r=canvas.getBoundingClientRect();const old=canvas.width&&canvas.height?canvas.toDataURL():null;const ratio=Math.max(1,window.devicePixelRatio||1);canvas.width=r.width*ratio;canvas.height=r.height*ratio;ctx.setTransform(ratio,0,0,ratio,0,0);ctx.lineCap="round";ctx.lineJoin="round";ctx.lineWidth=4;if(old){const im=new Image();im.onload=()=>ctx.drawImage(im,0,0,r.width,r.height);im.src=old}}
-function openDrawing(){$("drawingOverlay").classList.add("active");setTimeout(()=>{resizeCanvas();loadDrawing()},40)}
-function closeDrawing(){saveDrawing();$("drawingOverlay").classList.remove("active")}
-function pos(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
-canvas.addEventListener("pointerdown",e=>{e.preventDefault();drawing=true;canvas.setPointerCapture?.(e.pointerId);const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)});
-canvas.addEventListener("pointermove",e=>{if(!drawing)return;e.preventDefault();const p=pos(e);ctx.globalCompositeOperation=eraser?"destination-out":"source-over";ctx.strokeStyle=pen;ctx.lineWidth=eraser?25:4;ctx.lineTo(p.x,p.y);ctx.stroke()});
-["pointerup","pointercancel","pointerleave"].forEach(ev=>canvas.addEventListener(ev,()=>{if(drawing){drawing=false;saveDrawing()}}));
-function setPen(c){pen=c;eraser=false}function setEraser(){eraser=true}
-function clearCanvas(){if(!confirm("Effacer complètement le bloc-notes ?"))return;const r=canvas.getBoundingClientRect();ctx.clearRect(0,0,r.width,r.height);localStorage.removeItem(S.drawing)}
-function saveDrawing(){try{localStorage.setItem(S.drawing,canvas.toDataURL("image/png"))}catch(e){}}
-function loadDrawing(){const s=localStorage.getItem(S.drawing);if(!s)return;const im=new Image();im.onload=()=>{const r=canvas.getBoundingClientRect();ctx.drawImage(im,0,0,r.width,r.height)};im.src=s}
-
-function startWallMode(){wall=true;$("wallMode").classList.add("active");updateWallNext();enterFullscreen()}
-function stopWallMode(){wall=false;$("wallMode").classList.remove("active");exitFullscreen()}
-function updateWallNext(){
- const r=reminders.filter(x=>!x.triggered&&x.time>Date.now()).sort((a,b)=>a.time-b.time)[0];
- if(r){$("wallNext").textContent="🔔 Prochain rappel : "+r.text+" • "+new Date(r.time).toLocaleTimeString("fr-CA",{hour:"2-digit",minute:"2-digit"});return}
- const t=tasks.find(x=>!x.completed);$("wallNext").textContent=t?"☑️ À faire : "+t.text:"Aucun événement prochain."
-}
-function registerInteraction(){
- lastInteraction=Date.now();
- if(wall)return;
- clearTimeout(window.idleTimer);
- window.idleTimer=setTimeout(()=>{if(Date.now()-lastInteraction>=5*60*1000)startWallMode()},5*60*1000)
-}
-["pointerdown","touchstart","keydown"].forEach(e=>document.addEventListener(e,registerInteraction,{passive:true}));registerInteraction();
-
-async function enterFullscreen(){try{if(!document.fullscreenElement&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen()}catch(e){}}
-async function exitFullscreen(){try{if(document.fullscreenElement&&document.exitFullscreen)await document.exitFullscreen()}catch(e){}}
-function showAlert(m){$("alertMessage").textContent=m;$("alertBox").classList.add("active")}
-function closeAlert(){$("alertBox").classList.remove("active")}
-function feedback(m){clearTimeout(feedbackTimer);$("miniFeedback").textContent=m;$("miniFeedback").style.display="block";feedbackTimer=setTimeout(()=>$("miniFeedback").style.display="none",2200)}
+function saveNote(){localStorage.setItem(K.note,$("quickNote").value);$("fullNote").value=$("quickNote").value;toast("Note sauvegardée ✓")}function openNote(){$("fullNote").value=localStorage.getItem(K.note)||$("quickNote").value||"";$("noteOverlay").classList.add("active")}function saveFullNote(){localStorage.setItem(K.note,$("fullNote").value);$("quickNote").value=$("fullNote").value;toast("Note sauvegardée ✓")}$("quickNote").value=localStorage.getItem(K.note)||"";
 function closeOverlay(id){$(id).classList.remove("active")}
 
-function openDiagnostics(){
- const tests=[
- ["localStorage",typeof localStorage!=="undefined"],
- ["Géolocalisation","geolocation"in navigator],
- ["Canvas tactile",!!canvas.getContext],
- ["Plein écran",!!document.documentElement.requestFullscreen],
- ["Notifications","Notification"in window],
- ["Vibration","vibrate"in navigator],
- ["Fetch / Internet","fetch"in window],
- ["Tâches sauvegardées",Array.isArray(tasks)],
- ["Rappels sauvegardés",Array.isArray(reminders)],
- ["Notes",localStorage.getItem(S.note)!==null]
- ];
- $("diagnosticContent").innerHTML=`<div class="card"><div class="card-title">État du système</div>${tests.map(t=>`<div class="test-row"><span>${t[0]}</span><span class="${t[1]?"ok":"warning"}">${t[1]?"OK ✓":"LIMITÉ"}</span></div>`).join("")}</div>
- <div class="card" style="margin-top:15px"><div class="card-title">Données</div><p>Tâches : ${tasks.length}</p><p>Rappels : ${reminders.length}</p><p>Ville : ${esc(loc.city)}</p><p>GPS : ${loc.lat!==null?"disponible":"non disponible"}</p><p>Météo : ${weather?"chargée ✓":"non chargée"}</p></div>
- <button class="primary" onclick="requestNotifications()" style="width:100%;margin-top:15px">🔔 Autoriser/tester notifications</button>
- <button class="primary" onclick="showAlert('Ceci est une alerte de test. Le système fonctionne.')" style="width:100%;margin-top:10px">🚨 Tester une alerte</button>
- <button class="primary" onclick="testReminderNow()" style="width:100%;margin-top:10px">⏱️ Tester le rappel maintenant</button>
- <button class="primary" onclick="getLocation(true)" style="width:100%;margin-top:10px">📍 Retester la localisation</button>
- <button class="primary" onclick="loadWeather(true)" style="width:100%;margin-top:10px">🌤️ Retester la météo</button>`
- $("diagnosticsOverlay").classList.add("active")
-}
-function testReminderNow(){const r={id:Date.now(),text:"Rappel de test",time:Date.now(),triggered:false};reminders.push(r);checkReminders();renderReminders();updateWallNext()}
+const canvas=$("drawCanvas"),ctx=canvas.getContext("2d");let drawing=false,pen="#000",eraseMode=false;
+function sizeCanvas(){let r=canvas.getBoundingClientRect(),old=canvas.width?canvas.toDataURL():null,ratio=Math.max(1,devicePixelRatio||1);canvas.width=r.width*ratio;canvas.height=r.height*ratio;ctx.setTransform(ratio,0,0,ratio,0,0);ctx.lineCap="round";ctx.lineJoin="round";if(old){let im=new Image();im.onload=()=>ctx.drawImage(im,0,0,r.width,r.height);im.src=old}}
+function openDrawing(){$("drawOverlay").classList.add("active");setTimeout(()=>{sizeCanvas();loadDrawing()},50)}function closeDrawing(){saveDrawing();closeOverlay("drawOverlay")}function setPen(c){pen=c;eraseMode=false}function erase(){eraseMode=true}function clearDraw(){if(confirm("Effacer le dessin ?")){let r=canvas.getBoundingClientRect();ctx.clearRect(0,0,r.width,r.height);localStorage.removeItem(K.draw)}}function saveDrawing(){try{localStorage.setItem(K.draw,canvas.toDataURL())}catch(e){}}function loadDrawing(){let s=localStorage.getItem(K.draw);if(!s)return;let im=new Image();im.onload=()=>{let r=canvas.getBoundingClientRect();ctx.drawImage(im,0,0,r.width,r.height)};im.src=s}function point(e){let r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
+canvas.addEventListener("pointerdown",e=>{drawing=true;let p=point(e);ctx.beginPath();ctx.moveTo(p.x,p.y)});canvas.addEventListener("pointermove",e=>{if(!drawing)return;let p=point(e);ctx.globalCompositeOperation=eraseMode?"destination-out":"source-over";ctx.strokeStyle=pen;ctx.lineWidth=eraseMode?24:4;ctx.lineTo(p.x,p.y);ctx.stroke()});["pointerup","pointercancel","pointerleave"].forEach(x=>canvas.addEventListener(x,()=>{if(drawing){drawing=false;saveDrawing()}}));
 
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(wall)stopWallMode();document.querySelectorAll(".overlay.active").forEach(x=>x.classList.remove("active"));closeAlert()}})
-document.addEventListener("visibilitychange",()=>{if(!document.hidden){checkReminders();getLocation(false);loadWeather(false)}})
-window.addEventListener("resize",()=>{if($("drawingOverlay").classList.contains("active"))resizeCanvas()});
-setInterval(()=>{if(!document.hidden)checkReminders()},1000);
-setInterval(()=>{if(!document.hidden)loadWeather(false)},5*60*1000);
-setInterval(()=>{if(!document.hidden)getLocation(false)},10*60*1000);
+let timerSeconds=300,timerId=null;function openTimer(){$("timerOverlay").classList.add("active");resetTimer()}function startTimer(){if(timerId)return;if(timerSeconds<=0)timerSeconds=parseInt($("timerInput").value||300);timerId=setInterval(()=>{timerSeconds--;renderTimer();if(timerSeconds<=0){clearInterval(timerId);timerId=null;triggerAlert("Le minuteur est terminé.")}},1000)}function pauseTimer(){clearInterval(timerId);timerId=null}function resetTimer(){pauseTimer();timerSeconds=Math.max(1,parseInt($("timerInput").value||300));renderTimer()}function renderTimer(){let m=Math.floor(timerSeconds/60),s=timerSeconds%60;$("timerDisplay").textContent=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")}
 
-function init(){renderTasks();renderReminders();getLocation(true);updateWallNext();console.log("Wall Dashboard V4.1 OK")}
-init();
+async function enterFullscreen(){try{if(!document.fullscreenElement&&document.documentElement.requestFullscreen){await document.documentElement.requestFullscreen();toast("Plein écran activé")}}catch(e){toast("Plein écran non disponible")}}async function exitFullscreen(){try{if(document.fullscreenElement)await document.exitFullscreen()}catch(e){}}
+function startWall(){wall=true;$("wall").classList.add("active");renderNext();enterFullscreen()}function stopWall(){wall=false;$("wall").classList.remove("active");exitFullscreen()}
+function registerTouch(){if(wall)return;clearTimeout(idleTimer);idleTimer=setTimeout(()=>startWall(),300000)}["pointerdown","touchstart","keydown"].forEach(e=>document.addEventListener(e,registerTouch,{passive:true}));registerTouch();
+
+async function diagnostics(){let a=[["Stockage local",!!localStorage],["Géolocalisation",!!navigator.geolocation],["Internet/fetch",!!fetch],["Canvas tactile",!!canvas.getContext],["Plein écran",!!document.documentElement.requestFullscreen],["Notifications","Notification"in window],["Vibration","vibrate"in navigator]];$("diag").innerHTML=`<div class="panel"><div class="panel-title">Tests V5</div>${a.map(x=>`<div style="padding:10px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between">${x[0]} <strong style="color:${x[1]?"#19733b":"#b36b00"}">${x[1]?"OK ✓":"LIMITÉ"}</strong></div>`).join("")}</div><div class="panel" style="margin-top:10px"><div class="panel-title">État</div><p>Tâches : ${tasks.length}</p><p>Rappels : ${reminders.length}</p><p>Événements : ${events.length}</p><p>Ville : ${esc(geo.city)}</p><p>Météo : ${weather?"chargée ✓":"en attente"}</p></div><button class="primary" style="width:100%;margin-top:10px" onclick="triggerAlert('Ceci est une alerte de test.')">🚨 Tester une alerte</button><button class="primary" style="width:100%;margin-top:10px" onclick="requestNotifications()">🔔 Notifications</button><button class="primary" style="width:100%;margin-top:10px" onclick="updateLocation(true)">📍 Retester localisation</button><button class="primary" style="width:100%;margin-top:10px" onclick="loadWeather(true)">🌤️ Retester météo</button>`;$("diagOverlay").classList.add("active")}
+async function requestNotifications(){if(!("Notification"in window)){toast("Notifications système indisponibles");return}try{let p=await Notification.requestPermission();toast(p==="granted"?"Notifications activées ✓":"Notifications non autorisées")}catch(e){toast("Notifications indisponibles")}}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){checkReminders();loadWeather(false);updateLocation(false)}});window.addEventListener("resize",()=>{if($("drawOverlay").classList.contains("active"))sizeCanvas()});document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(wall)stopWall();document.querySelectorAll(".overlay.active").forEach(x=>x.classList.remove("active"));closeAlert()}});setInterval(()=>{if(!document.hidden)checkReminders()},1000);setInterval(()=>{if(!document.hidden)loadWeather(false)},300000);setInterval(()=>{if(!document.hidden)updateLocation(false)},600000);
 </script>
 </body>
 </html>

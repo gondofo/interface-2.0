@@ -2,106 +2,42 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-
 <meta name="viewport"
-      content="width=device-width,
-               initial-scale=1,
-               maximum-scale=1,
-               user-scalable=no,
-               viewport-fit=cover">
+      content="width=device-width, initial-scale=1.0,
+               maximum-scale=1.0, user-scalable=no">
 
 <meta name="theme-color" content="#002366">
 
-<title>Wall OS V4</title>
+<title>Wall Dashboard V4</title>
 
 <style>
-
-/* =========================================================
-   WALL OS V4
-   COLORS
-========================================================= */
-
 :root {
     --blue: #002366;
-    --blue-dark: #00163f;
-    --blue-deep: #000817;
-
+    --blue-light: #123f8f;
     --silver: #bcbfc2;
-
-    --white: #ffffff;
-
-    --bg: #f3f5f7;
-    --panel: #ffffff;
-    --panel2: #e8ebee;
-
-    --text: #002366;
+    --bg: #eef1f4;
+    --card: #ffffff;
+    --text: #17202a;
     --muted: #66717d;
-
-    --green: #31c875;
-    --orange: #ffad42;
-    --red: #ff6262;
-
-    --border: rgba(0,35,102,.12);
-
-    --shadow:
-        0 10px 35px rgba(0,0,0,.12);
+    --border: rgba(0,35,102,.15);
+    --danger: #c62828;
+    --success: #19733b;
+    --shadow: 0 8px 25px rgba(0,35,102,.12);
 }
-
-body.dark {
-    --bg: #000b1d;
-    --panel: #00183f;
-    --panel2: #002050;
-
-    --text: #ffffff;
-    --muted: #bcbfc2;
-
-    --border: rgba(188,191,194,.16);
-
-    --shadow:
-        0 10px 40px rgba(0,0,0,.35);
-}
-
-body.night {
-    --bg: #00040c;
-    --panel: #000c20;
-    --panel2: #001126;
-
-    --text: #dce7fa;
-    --muted: #8493aa;
-}
-
-/* =========================================================
-   RESET
-========================================================= */
 
 * {
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
 }
 
-html,
-body {
+html, body {
     margin: 0;
-    padding: 0;
-
     width: 100%;
-    min-height: 100%;
-
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif;
     background: var(--bg);
     color: var(--text);
-
-    font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
-    transition:
-        background .3s,
-        color .3s;
-}
-
-body {
-    overflow-x: hidden;
 }
 
 button,
@@ -111,1516 +47,821 @@ select {
     font: inherit;
 }
 
-/* =========================================================
+button {
+    cursor: pointer;
+    border: 0;
+}
+
+body.dark {
+    --bg: #07111f;
+    --card: #101d2e;
+    --text: #f1f4f7;
+    --muted: #9ca9b7;
+    --border: rgba(188,191,194,.16);
+    --shadow: 0 8px 25px rgba(0,0,0,.35);
+}
+
+/* =========================
    APP
-========================================================= */
+========================= */
 
 #app {
     width: 100%;
-    max-width: 900px;
-
-    margin: auto;
-
-    padding:
-        env(safe-area-inset-top)
-        15px
-        100px
-        15px;
+    height: 100%;
+    position: relative;
 }
 
-/* =========================================================
-   HEADER
-========================================================= */
-
-.header {
-    padding:
-        15px 5px 20px;
+#dashboard {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px;
+    padding-bottom: 90px;
+    transition: opacity .25s ease;
 }
 
-.header-top {
+.topbar {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.brand {
+    color: var(--blue);
+    font-weight: 800;
+    font-size: 18px;
+}
+
+.dark .brand {
+    color: #b7cdf8;
+}
+
+.icon-button {
+    min-width: 48px;
+    min-height: 48px;
+    border-radius: 14px;
+    background: var(--card);
+    color: var(--blue);
+    box-shadow: var(--shadow);
+    font-size: 21px;
+}
+
+.dark .icon-button {
+    color: #d7e4ff;
+}
+
+/* =========================
+   CLOCK
+========================= */
+
+.clock-card {
+    background: var(--blue);
+    color: white;
+    border-radius: 24px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+    margin-bottom: 14px;
 }
 
 .clock {
-    font-size:
-        clamp(55px, 16vw, 105px);
-
-    font-weight: 300;
-
-    letter-spacing:
-        -5px;
-
-    line-height:
-        .85;
+    font-size: clamp(52px, 14vw, 105px);
+    font-weight: 800;
+    letter-spacing: -3px;
+    line-height: 1;
 }
 
 .date {
-    margin-top: 13px;
-
-    color:
-        var(--muted);
-
-    font-size: 17px;
-
-    text-transform:
-        capitalize;
+    margin-top: 9px;
+    font-size: clamp(16px, 4vw, 23px);
+    opacity: .9;
+    text-transform: capitalize;
 }
 
 .location {
-    margin-top: 10px;
-
+    margin-top: 12px;
     font-size: 15px;
-
-    color:
-        var(--silver);
+    opacity: .85;
 }
 
-.location small {
-    display: block;
-
-    margin-top: 3px;
-
-    color:
-        var(--muted);
-
-    font-size: 10px;
-}
-
-/* =========================================================
-   FLOATING CONTROLS
-========================================================= */
-
-.header-button {
-    width: 48px;
-    height: 48px;
-
-    border: 1px solid var(--border);
-
-    border-radius: 50%;
-
-    background:
-        var(--panel);
-
-    color:
-        var(--text);
-
-    box-shadow:
-        var(--shadow);
-
-    font-size: 20px;
-}
-
-/* =========================================================
-   MAIN NAVIGATION
-========================================================= */
-
-.main-nav {
-    position: fixed;
-
-    left: 50%;
-    bottom: 15px;
-
-    transform:
-        translateX(-50%);
-
-    z-index: 500;
-
-    display: flex;
-
-    gap: 5px;
-
-    padding: 7px;
-
-    border-radius: 22px;
-
-    background:
-        rgba(0,35,102,.94);
-
-    box-shadow:
-        0 8px 35px
-        rgba(0,0,0,.35);
-
-    backdrop-filter:
-        blur(15px);
-}
-
-.nav-button {
-    min-width: 49px;
-    height: 49px;
-
-    border-radius: 16px;
-
-    border: 0;
-
-    background:
-        transparent;
-
-    color:
-        white;
-
-    font-size: 20px;
-}
-
-.nav-button.active {
-    background:
-        rgba(188,191,194,.23);
-}
-
-/* =========================================================
-   CARDS
-========================================================= */
+/* =========================
+   GRID
+========================= */
 
 .grid {
     display: grid;
-
-    grid-template-columns:
-        repeat(2, minmax(0, 1fr));
-
-    gap: 13px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
 }
 
 .card {
-    background:
-        var(--panel);
-
-    border:
-        1px solid var(--border);
-
-    border-radius:
-        21px;
-
-    padding:
-        17px;
-
-    box-shadow:
-        var(--shadow);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+    min-width: 0;
 }
 
 .card.full {
-    grid-column:
-        1 / -1;
+    grid-column: 1 / -1;
 }
 
 .card-title {
-    color:
-        var(--silver);
-
-    font-size:
-        11px;
-
-    letter-spacing:
-        1.5px;
-
-    text-transform:
-        uppercase;
-
-    font-weight:
-        bold;
-
-    margin-bottom:
-        15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 13px;
+    color: var(--blue);
+    font-weight: 800;
+    font-size: 17px;
 }
 
-/* =========================================================
+.dark .card-title {
+    color: #b7cdf8;
+}
+
+/* =========================
    WEATHER
-========================================================= */
+========================= */
 
 .weather-main {
-    display:
-        flex;
-
-    justify-content:
-        space-between;
-
-    align-items:
-        center;
-}
-
-.temperature {
-    font-size:
-        clamp(50px, 12vw, 80px);
-
-    font-weight:
-        300;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .weather-icon {
-    font-size:
-        55px;
+    font-size: 47px;
+}
+
+.temperature {
+    font-size: 40px;
+    font-weight: 800;
 }
 
 .weather-description {
-    color:
-        var(--muted);
-
-    margin-top:
-        5px;
+    color: var(--muted);
+    margin-top: 4px;
 }
-
-.weather-stats {
-    display:
-        grid;
-
-    grid-template-columns:
-        repeat(3,1fr);
-
-    gap:
-        7px;
-
-    margin-top:
-        17px;
-}
-
-.stat {
-    padding:
-        10px 5px;
-
-    border-radius:
-        13px;
-
-    background:
-        var(--panel2);
-
-    text-align:
-        center;
-}
-
-.stat small {
-    display:
-        block;
-
-    color:
-        var(--muted);
-
-    font-size:
-        10px;
-
-    margin-bottom:
-        5px;
-}
-
-/* =========================================================
-   FORECAST
-========================================================= */
 
 .forecast {
-    display:
-        grid;
-
-    grid-template-columns:
-        repeat(5,1fr);
-
-    gap:
-        5px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin-top: 15px;
+    padding-bottom: 3px;
 }
 
-.forecast-day {
-    text-align:
-        center;
-
-    padding:
-        9px 2px;
-
-    border-radius:
-        12px;
-
-    background:
-        var(--panel2);
-}
-
-.forecast-name {
-    color:
-        var(--muted);
-
-    font-size:
-        10px;
+.forecast-item {
+    min-width: 80px;
+    text-align: center;
+    background: rgba(188,191,194,.18);
+    border-radius: 12px;
+    padding: 9px 5px;
+    font-size: 12px;
 }
 
 .forecast-icon {
-    font-size:
-        24px;
-
-    margin:
-        7px 0;
+    font-size: 24px;
+    margin: 4px 0;
 }
 
-.forecast-temp {
-    font-size:
-        11px;
-}
-
-/* =========================================================
-   SUN
-========================================================= */
-
-.sun-row {
-    display:
-        grid;
-
-    grid-template-columns:
-        1fr 1fr;
-
-    gap:
-        8px;
-}
-
-.sun-item {
-    background:
-        var(--panel2);
-
-    border-radius:
-        14px;
-
-    padding:
-        13px;
-
-    text-align:
-        center;
-}
-
-.sun-icon {
-    font-size:
-        27px;
-}
-
-.sun-time {
-    margin-top:
-        5px;
-
-    font-size:
-        18px;
-}
-
-/* =========================================================
-   UPCOMING
-========================================================= */
-
-.upcoming {
-    display:
-        flex;
-
-    flex-direction:
-        column;
-
-    gap:
-        7px;
-}
-
-.upcoming-item {
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    gap:
-        10px;
-
-    padding:
-        11px;
-
-    border-radius:
-        13px;
-
-    background:
-        var(--panel2);
-}
-
-.upcoming-icon {
-    font-size:
-        22px;
-}
-
-.upcoming-content {
-    flex:
-        1;
-}
-
-.upcoming-time {
-    color:
-        var(--silver);
-
-    font-size:
-        12px;
-
-    font-weight:
-        bold;
-}
-
-.upcoming-text {
-    margin-top:
-        3px;
-
-    font-size:
-        14px;
-}
-
-/* =========================================================
+/* =========================
    TASKS
-========================================================= */
+========================= */
 
 .input-row {
-    display:
-        flex;
-
-    gap:
-        7px;
+    display: flex;
+    gap: 8px;
 }
 
 .input-row input {
-    flex:
-        1;
+    flex: 1;
+    min-width: 0;
 }
 
 input,
 textarea,
 select {
-    width:
-        100%;
-
-    background:
-        var(--panel2);
-
-    color:
-        var(--text);
-
-    border:
-        1px solid var(--border);
-
-    border-radius:
-        12px;
-
-    padding:
-        12px;
-
-    outline:
-        none;
+    width: 100%;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 12px;
+    outline: none;
 }
 
-textarea {
-    min-height:
-        140px;
-
-    resize:
-        vertical;
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: var(--blue);
 }
 
-button.primary {
-    background:
-        var(--blue);
+.primary {
+    background: var(--blue);
+    color: white;
+    border-radius: 12px;
+    padding: 12px 15px;
+    font-weight: 700;
+}
 
-    color:
-        white;
-
-    border:
-        0;
-
-    border-radius:
-        12px;
-
-    padding:
-        12px 17px;
-
-    font-weight:
-        bold;
+.task-list {
+    margin-top: 12px;
 }
 
 .task {
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    gap:
-        9px;
-
-    margin-top:
-        7px;
-
-    padding:
-        10px;
-
-    background:
-        var(--panel2);
-
-    border-radius:
-        12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
 }
 
-.task-checkbox {
-    width:
-        22px;
-
-    height:
-        22px;
+.task:last-child {
+    border-bottom: 0;
 }
 
-.task-content {
-    flex:
-        1;
+.task-check {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    border-radius: 8px;
+    border: 2px solid var(--blue);
+    background: transparent;
 }
 
-.task.done .task-content {
-    color:
-        var(--muted);
-
-    text-decoration:
-        line-through;
+.task.completed .task-check {
+    background: var(--blue);
+    color: white;
 }
 
-.priority {
-    font-size:
-        10px;
-
-    padding:
-        4px 6px;
-
-    border-radius:
-        7px;
-
-    background:
-        var(--blue);
-
-    color:
-        white;
+.task-text {
+    flex: 1;
+    word-break: break-word;
 }
 
-.delete {
-    background:
-        transparent;
-
-    border:
-        0;
-
-    color:
-        var(--red);
-
-    padding:
-        5px;
+.task.completed .task-text {
+    text-decoration: line-through;
+    opacity: .5;
 }
 
-/* =========================================================
+.delete-button {
+    background: transparent;
+    color: var(--danger);
+    font-size: 18px;
+    padding: 8px;
+}
+
+/* =========================
    REMINDERS
-========================================================= */
+========================= */
 
 .reminder {
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    gap:
-        10px;
-
-    margin-top:
-        7px;
-
-    padding:
-        11px;
-
-    background:
-        var(--panel2);
-
-    border-radius:
-        12px;
-}
-
-.reminder-info {
-    flex:
-        1;
+    padding: 12px;
+    border-radius: 13px;
+    background: rgba(188,191,194,.18);
+    margin-bottom: 8px;
 }
 
 .reminder-time {
-    color:
-        var(--silver);
-
-    font-weight:
-        bold;
+    font-weight: 800;
+    color: var(--blue);
 }
 
-/* =========================================================
-   OFFLINE
-========================================================= */
-
-.connection {
-    text-align:
-        center;
-
-    font-size:
-        11px;
-
-    color:
-        var(--muted);
-
-    margin-top:
-        18px;
+.dark .reminder-time {
+    color: #b7cdf8;
 }
 
-.online {
-    color:
-        var(--green);
+.reminder.passed {
+    opacity: .45;
 }
 
-.offline {
-    color:
-        var(--orange);
+.reminder-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
 }
 
-/* =========================================================
-   MODALS
-========================================================= */
+/* =========================
+   NOTES
+========================= */
 
-.modal {
-    position:
-        fixed;
-
-    inset:
-        0;
-
-    z-index:
-        1000;
-
-    display:
-        none;
-
-    align-items:
-        flex-end;
-
-    justify-content:
-        center;
-
-    background:
-        rgba(0,0,0,.75);
+.note-preview {
+    min-height: 80px;
+    white-space: pre-wrap;
+    color: var(--text);
 }
 
-.modal.open {
-    display:
-        flex;
+.note-save {
+    margin-top: 8px;
 }
 
-.modal-box {
-    width:
-        100%;
+/* =========================
+   QUICK ACTIONS
+========================= */
 
-    max-width:
-        900px;
-
-    max-height:
-        92vh;
-
-    overflow-y:
-        auto;
-
-    padding:
-        20px;
-
-    background:
-        var(--panel);
-
-    border-radius:
-        25px 25px 0 0;
+.actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 9px;
 }
 
-.modal-header {
-    display:
-        flex;
-
-    justify-content:
-        space-between;
-
-    align-items:
-        center;
-
-    margin-bottom:
-        20px;
+.action {
+    min-height: 55px;
+    border-radius: 14px;
+    background: var(--blue);
+    color: white;
+    font-weight: 700;
 }
 
-.modal-header h2 {
-    margin:
-        0;
+/* =========================
+   BOTTOM BAR
+========================= */
+
+.bottom-bar {
+    position: fixed;
+    bottom: 10px;
+    left: 12px;
+    right: 12px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 7px;
+    z-index: 30;
 }
 
-.setting {
-    margin-bottom:
-        16px;
+.bottom-bar button {
+    min-height: 50px;
+    border-radius: 14px;
+    background: var(--blue);
+    color: white;
+    font-size: 18px;
 }
 
-.setting label {
-    display:
-        block;
+/* =========================
+   FULLSCREEN OVERLAY
+========================= */
 
-    color:
-        var(--muted);
-
-    font-size:
-        12px;
-
-    margin-bottom:
-        7px;
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: none;
+    background: var(--bg);
 }
 
-.setting-row {
-    display:
-        grid;
-
-    grid-template-columns:
-        1fr 1fr;
-
-    gap:
-        8px;
+.overlay.active {
+    display: block;
 }
 
-.danger-button {
-    background:
-        #7b1d1d;
-
-    color:
-        white;
+.overlay-header {
+    height: 65px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--blue);
+    color: white;
 }
 
-/* =========================================================
-   FULLSCREEN CONTROL BAR
-========================================================= */
-
-.fullscreen-bar {
-    position:
-        fixed;
-
-    left:
-        50%;
-
-    top:
-        12px;
-
-    transform:
-        translateX(-50%)
-        translateY(-130%);
-
-    z-index:
-        900;
-
-    display:
-        flex;
-
-    gap:
-        5px;
-
-    padding:
-        6px;
-
-    border-radius:
-        18px;
-
-    background:
-        rgba(0,35,102,.96);
-
-    box-shadow:
-        0 8px 30px
-        rgba(0,0,0,.4);
-
-    transition:
-        transform .25s;
+.overlay-content {
+    height: calc(100% - 65px);
+    overflow: auto;
+    padding: 15px;
 }
 
-.fullscreen-bar.visible {
-    transform:
-        translateX(-50%)
-        translateY(0);
+/* =========================
+   DRAWING PAD
+========================= */
+
+#drawingPad {
+    background: white;
+    border-radius: 14px;
+    width: 100%;
+    height: calc(100% - 65px);
+    touch-action: none;
+    display: block;
 }
 
-.fs-button {
-    min-width:
-        48px;
-
-    height:
-        48px;
-
-    background:
-        transparent;
-
-    color:
-        white;
-
-    border:
-        0;
-
-    border-radius:
-        13px;
-
-    font-size:
-        19px;
+.drawing-toolbar {
+    height: 65px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 8px;
+    background: var(--blue);
 }
 
-.fs-button:active {
-    background:
-        rgba(255,255,255,.15);
+.pen {
+    min-width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: 3px solid white;
 }
 
-/* =========================================================
-   AMBIENT MODE
-========================================================= */
-
-#ambient {
-    position:
-        fixed;
-
-    inset:
-        0;
-
-    z-index:
-        2000;
-
-    display:
-        none;
-
-    flex-direction:
-        column;
-
-    justify-content:
-        space-between;
-
-    align-items:
-        center;
-
-    text-align:
-        center;
-
-    padding:
-        7vh 5vw 4vh;
-
-    overflow:
-        hidden;
-
-    background:
-        radial-gradient(
-            circle at center,
-            #00409d 0%,
-            #002366 34%,
-            #000713 100%
-        );
-
-    color:
-        white;
+.pen-black {
+    background: #000;
 }
 
-#ambient.active {
-    display:
-        flex;
+.pen-red {
+    background: #e53935;
 }
 
-.ambient-clock {
-    font-size:
-        clamp(90px, 25vw, 210px);
+.pen-blue {
+    background: #1565c0;
+}
 
-    font-weight:
-        300;
+.eraser {
+    min-width: 60px;
+    height: 45px;
+    border-radius: 12px;
+    background: white;
+    color: black;
+}
 
-    letter-spacing:
-        -8px;
+/* =========================
+   WALL MODE
+========================= */
 
-    line-height:
-        .82;
+#wallMode {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: none;
+    background: #02060b;
+    color: white;
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+}
 
+#wallMode.active {
+    display: flex;
+}
+
+.wall-time {
+    font-size: clamp(80px, 22vw, 220px);
+    line-height: .9;
+    font-weight: 900;
+    letter-spacing: -7px;
     text-shadow:
-        0 0 7px white,
-        0 0 25px white,
-        0 0 55px var(--silver),
-        0 0 100px var(--silver);
-
-    animation:
-        glow 3s ease-in-out
-        infinite alternate;
+        0 0 10px rgba(255,255,255,.8),
+        0 0 30px rgba(255,255,255,.5);
 }
 
-@keyframes glow {
-
-    from {
-        text-shadow:
-            0 0 7px white,
-            0 0 25px white,
-            0 0 50px var(--silver);
-    }
-
-    to {
-        text-shadow:
-            0 0 10px white,
-            0 0 35px white,
-            0 0 75px var(--silver),
-            0 0 120px var(--silver);
-    }
+.wall-date {
+    font-size: clamp(17px, 4vw, 32px);
+    margin-top: 18px;
+    opacity: .9;
 }
 
-.ambient-date {
-    margin-top:
-        20px;
-
-    font-size:
-        clamp(17px, 4vw, 27px);
-
-    color:
-        var(--silver);
-
-    text-shadow:
-        0 0 20px var(--silver);
+.wall-info {
+    margin-top: 35px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    font-size: clamp(16px, 4vw, 26px);
+    font-weight: 700;
 }
 
-.ambient-weather {
-    display:
-        flex;
-
-    flex-direction:
-        column;
-
-    align-items:
-        center;
-
-    gap:
-        8px;
+.wall-info span {
+    padding: 8px 15px;
+    border-radius: 30px;
+    background: rgba(255,255,255,.08);
 }
 
-.ambient-weather-row {
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    gap:
-        18px;
+.wall-next {
+    position: absolute;
+    bottom: 18px;
+    left: 20px;
+    right: 20px;
+    font-size: 14px;
+    opacity: .6;
 }
 
-.ambient-icon {
-    font-size:
-        clamp(45px, 10vw, 80px);
-
-    filter:
-        drop-shadow(
-            0 0 20px white
-        );
+.wall-exit {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.08);
+    color: white;
+    font-size: 20px;
 }
 
-.ambient-temp {
-    font-size:
-        clamp(65px, 15vw, 110px);
+/* =========================
+   ALERT
+========================= */
 
-    font-weight:
-        300;
-
-    text-shadow:
-        0 0 10px white,
-        0 0 35px var(--silver);
+#alertBox {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    display: none;
+    background: rgba(0,0,0,.88);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
 }
 
-.ambient-description {
-    font-size:
-        clamp(16px, 4vw, 25px);
-
-    color:
-        var(--silver);
+#alertBox.active {
+    display: flex;
 }
 
-.ambient-stats {
-    display:
-        flex;
-
-    flex-wrap:
-        wrap;
-
-    justify-content:
-        center;
-
-    gap:
-        18px;
-
-    font-size:
-        clamp(13px, 3vw, 18px);
-}
-
-.ambient-important {
-    min-height:
-        28px;
-
-    max-width:
-        90%;
-
-    color:
-        white;
-
-    font-size:
-        clamp(14px, 3vw, 20px);
-
-    text-shadow:
-        0 0 12px white,
-        0 0 25px var(--silver);
-}
-
-.ambient-location {
-    color:
-        var(--silver);
-
-    font-size:
-        12px;
-}
-
-/* =========================================================
-   ALERT OVERLAY
-========================================================= */
-
-#alertOverlay {
-    position:
-        fixed;
-
-    inset:
-        0;
-
-    z-index:
-        3000;
-
-    display:
-        none;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    padding:
-        20px;
-
-    background:
-        rgba(0,0,0,.85);
-}
-
-#alertOverlay.show {
-    display:
-        flex;
-}
-
-.alert-box {
-    width:
-        min(650px, 95vw);
-
-    padding:
-        30px;
-
-    text-align:
-        center;
-
-    border-radius:
-        28px;
-
-    background:
-        var(--panel);
-
-    border:
-        3px solid var(--silver);
-
-    box-shadow:
-        0 0 60px
-        rgba(188,191,194,.6);
-}
-
-.alert-icon {
-    font-size:
-        60px;
+.alert-inner {
+    width: 100%;
+    max-width: 500px;
+    background: var(--card);
+    border-radius: 25px;
+    padding: 28px;
+    text-align: center;
+    border: 4px solid var(--blue);
+    animation: pulse .8s infinite alternate;
 }
 
 .alert-title {
-    font-size:
-        25px;
-
-    margin:
-        12px 0;
+    font-size: 30px;
+    font-weight: 900;
+    color: var(--blue);
 }
 
 .alert-message {
-    font-size:
-        20px;
-
-    color:
-        var(--muted);
-
-    margin-bottom:
-        20px;
+    margin: 15px 0;
+    font-size: 21px;
 }
 
-/* =========================================================
-   TOAST
-========================================================= */
-
-#toast {
-    position:
-        fixed;
-
-    left:
-        50%;
-
-    bottom:
-        90px;
-
-    transform:
-        translateX(-50%)
-        translateY(20px);
-
-    z-index:
-        4000;
-
-    opacity:
-        0;
-
-    pointer-events:
-        none;
-
-    padding:
-        12px 18px;
-
-    border-radius:
-        15px;
-
-    background:
-        var(--blue);
-
-    color:
-        white;
-
-    transition:
-        .25s;
-}
-
-#toast.show {
-    opacity:
-        1;
-
-    transform:
-        translateX(-50%)
-        translateY(0);
-}
-
-/* =========================================================
-   RESPONSIVE
-========================================================= */
-
-@media (max-width: 550px) {
-
-    .grid {
-        grid-template-columns:
-            1fr;
+@keyframes pulse {
+    from {
+        transform: scale(1);
     }
-
-    .card.full {
-        grid-column:
-            auto;
+    to {
+        transform: scale(1.025);
     }
-
-    .main-nav {
-        max-width:
-            calc(100% - 18px);
-
-        overflow-x:
-            auto;
-    }
-
 }
 
-@media (orientation: landscape) {
+/* =========================
+   DIAGNOSTICS
+========================= */
 
-    #app {
-        max-width:
-            1200px;
+.test-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.ok {
+    color: var(--success);
+    font-weight: 800;
+}
+
+.warning {
+    color: #b36b00;
+    font-weight: 800;
+}
+
+/* =========================
+   DESKTOP / LANDSCAPE
+========================= */
+
+@media (min-width: 800px) {
+    #dashboard {
+        padding: 24px;
+        padding-bottom: 100px;
     }
 
     .grid {
-        grid-template-columns:
-            repeat(3,1fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .clock-card {
+        padding: 28px;
     }
 
     .card.full {
-        grid-column:
-            1 / -1;
+        grid-column: span 2;
     }
 
+    .actions {
+        grid-template-columns: repeat(4, 1fr);
+    }
 }
 
+/* =========================
+   REDUCED MOTION
+========================= */
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
 </style>
 </head>
 
 <body>
 
-<!-- =======================================================
-     MAIN APPLICATION
-======================================================= -->
-
 <div id="app">
 
-    <header class="header">
+    <!-- =====================
+         DASHBOARD
+    ====================== -->
 
-        <div class="header-top">
+    <main id="dashboard">
 
-            <div>
+        <div class="topbar">
+            <div class="brand">WALL DASHBOARD</div>
 
-                <div
-                    id="clock"
-                    class="clock">
-                    --:--
-                </div>
-
-                <div
-                    id="date"
-                    class="date">
-                    Chargement...
-                </div>
-
-                <div
-                    id="location"
-                    class="location">
-                    📍 Localisation...
-                </div>
-
-            </div>
-
-            <button
-                class="header-button"
-                onclick="openSettings()">
-                ⚙️
+            <button class="icon-button"
+                    onclick="toggleTheme()"
+                    aria-label="Changer le thème">
+                🌙
             </button>
-
         </div>
 
-    </header>
+        <section class="clock-card">
 
+            <div id="clock" class="clock">00:00</div>
 
-    <!-- ===================================================
-         DASHBOARD GRID
-    =================================================== -->
-
-    <main class="grid">
-
-        <!-- WEATHER -->
-
-        <section class="card">
-
-            <div class="card-title">
-                Météo actuelle
-            </div>
-
-            <div class="weather-main">
-
-                <div>
-
-                    <div
-                        id="temperature"
-                        class="temperature">
-                        --°
-                    </div>
-
-                    <div
-                        id="weatherDescription"
-                        class="weather-description">
-                        Chargement...
-                    </div>
-
-                </div>
-
-                <div
-                    id="weatherIcon"
-                    class="weather-icon">
-                    🌤️
-                </div>
-
-            </div>
-
-            <div class="weather-stats">
-
-                <div class="stat">
-                    <small>Ressenti</small>
-                    <span id="feels">--°</span>
-                </div>
-
-                <div class="stat">
-                    <small>Humidité</small>
-                    <span id="humidity">--%</span>
-                </div>
-
-                <div class="stat">
-                    <small>Vent</small>
-                    <span id="wind">-- km/h</span>
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- FORECAST -->
-
-        <section class="card">
-
-            <div class="card-title">
-                Prévisions
-            </div>
-
-            <div
-                id="forecast"
-                class="forecast">
+            <div id="date" class="date">
                 Chargement...
             </div>
 
-        </section>
-
-
-        <!-- SUN -->
-
-        <section class="card">
-
-            <div class="card-title">
-                Soleil
+            <div id="location"
+                 class="location">
+                📍 Localisation...
             </div>
 
-            <div class="sun-row">
+        </section>
 
-                <div class="sun-item">
+        <section class="grid">
 
-                    <div class="sun-icon">
-                        🌅
+            <!-- WEATHER -->
+
+            <div class="card full">
+
+                <div class="card-title">
+                    <span>🌤️ Météo</span>
+                    <button onclick="loadWeather()"
+                            style="background:transparent;font-size:18px;">
+                        🔄
+                    </button>
+                </div>
+
+                <div class="weather-main">
+
+                    <div id="weatherIcon"
+                         class="weather-icon">
+                        ⛅
                     </div>
 
                     <div>
-                        Lever
-                    </div>
+                        <div id="temperature"
+                             class="temperature">
+                            --°C
+                        </div>
 
-                    <div
-                        id="sunrise"
-                        class="sun-time">
-                        --
-                    </div>
-
-                </div>
-
-                <div class="sun-item">
-
-                    <div class="sun-icon">
-                        🌇
-                    </div>
-
-                    <div>
-                        Coucher
-                    </div>
-
-                    <div
-                        id="sunset"
-                        class="sun-time">
-                        --
+                        <div id="weatherDescription"
+                             class="weather-description">
+                            Chargement...
+                        </div>
                     </div>
 
                 </div>
 
-            </div>
-
-        </section>
-
-
-        <!-- UPCOMING -->
-
-        <section class="card full">
-
-            <div class="card-title">
-                À venir
-            </div>
-
-            <div
-                id="upcoming"
-                class="upcoming">
-
-                <div
-                    style="color:var(--muted)">
-                    Rien d'important pour le moment.
+                <div id="forecast"
+                     class="forecast">
                 </div>
 
             </div>
 
-        </section>
+            <!-- TASKS -->
 
+            <div class="card">
 
-        <!-- NOTES -->
+                <div class="card-title">
+                    <span>☑️ Tâches</span>
+                </div>
 
-        <section class="card">
+                <div class="input-row">
 
-            <div class="card-title">
-                📝 Notes
+                    <input id="taskInput"
+                           type="text"
+                           placeholder="Nouvelle tâche">
+
+                    <button class="primary"
+                            onclick="addTask()">
+                        +
+                    </button>
+
+                </div>
+
+                <div id="taskList"
+                     class="task-list">
+                </div>
+
             </div>
 
-            <textarea
-                id="notes"
-                placeholder="Écrivez ici..."></textarea>
+            <!-- REMINDERS -->
 
-        </section>
+            <div class="card">
 
+                <div class="card-title">
+                    <span>🔔 Rappels</span>
+                </div>
 
-        <!-- TASKS -->
+                <div class="input-row"
+                     style="display:block;">
 
-        <section class="card">
+                    <input id="reminderText"
+                           type="text"
+                           placeholder="Rappel">
 
-            <div class="card-title">
-                ✅ Tâches
+                    <input id="reminderDate"
+                           type="datetime-local"
+                           style="margin-top:7px;">
+
+                    <button class="primary"
+                            onclick="addReminder()"
+                            style="width:100%;margin-top:7px;">
+                        Ajouter le rappel
+                    </button>
+
+                </div>
+
+                <div id="reminderList"
+                     style="margin-top:12px;">
+                </div>
+
             </div>
 
-            <div class="input-row">
+            <!-- NOTE -->
 
-                <input
-                    id="taskInput"
-                    placeholder="Nouvelle tâche...">
+            <div class="card">
 
-                <button
-                    class="primary"
-                    onclick="addTask()">
-                    +
+                <div class="card-title">
+                    <span>📝 Note</span>
+
+                    <button onclick="openTextNote()"
+                            style="background:transparent;font-size:18px;">
+                        ⛶
+                    </button>
+                </div>
+
+                <textarea id="textNote"
+                          rows="5"
+                          placeholder="Écris quelque chose..."></textarea>
+
+                <button class="primary note-save"
+                        onclick="saveNote()">
+                    💾 Sauvegarder
                 </button>
 
             </div>
 
-            <div
-                id="tasks"
-                style="margin-top:10px">
-            </div>
+            <!-- ACTIONS -->
 
-        </section>
+            <div class="card">
 
+                <div class="card-title">
+                    <span>⚡ Actions</span>
+                </div>
 
-        <!-- REMINDERS -->
+                <div class="actions">
 
-        <section class="card full">
+                    <button class="action"
+                            onclick="openDrawing()">
+                        ✍️ Écrire
+                    </button>
 
-            <div class="card-title">
-                🔔 Rappels
-            </div>
+                    <button class="action"
+                            onclick="enterFullscreen()">
+                        ⛶ Plein écran
+                    </button>
 
-            <div class="input-row">
+                    <button class="action"
+                            onclick="startWallMode()">
+                        🧱 Mode mur
+                    </button>
 
-                <input
-                    id="reminderText"
-                    placeholder="Rappel...">
+                    <button class="action"
+                            onclick="openDiagnostics()">
+                        🧪 Tests
+                    </button>
 
-                <input
-                    id="reminderTime"
-                    type="time"
-                    style="max-width:140px">
+                </div>
 
-                <button
-                    class="primary"
-                    onclick="addReminder()">
-                    +
-                </button>
-
-            </div>
-
-            <div
-                id="reminders"
-                style="margin-top:10px">
             </div>
 
         </section>
@@ -1628,790 +869,290 @@ button.primary {
     </main>
 
 
-    <div
-        id="connection"
-        class="connection">
-        ● Connexion en attente...
-    </div>
+    <!-- =====================
+         BOTTOM BAR
+    ====================== -->
 
-</div>
+    <nav class="bottom-bar">
 
+        <button onclick="openDrawing()">
+            ✍️
+        </button>
 
-<!-- =======================================================
-     NAVIGATION
-======================================================= -->
+        <button onclick="openTextNote()">
+            📝
+        </button>
 
-<nav class="main-nav">
+        <button onclick="startWallMode()">
+            🕐
+        </button>
 
-    <button
-        class="nav-button active"
-        onclick="goHome()">
-        🏠
-    </button>
+        <button onclick="enterFullscreen()">
+            ⛶
+        </button>
 
-    <button
-        class="nav-button"
-        onclick="scrollToCard('weatherDescription')">
-        🌤️
-    </button>
-
-    <button
-        class="nav-button"
-        onclick="scrollToCard('tasks')">
-        ✅
-    </button>
-
-    <button
-        class="nav-button"
-        onclick="scrollToCard('reminders')">
-        🔔
-    </button>
-
-    <button
-        class="nav-button"
-        onclick="scrollToCard('notes')">
-        📝
-    </button>
-
-    <button
-        class="nav-button"
-        onclick="openSettings()">
-        ⚙️
-    </button>
-
-    <button
-        class="nav-button"
-        onclick="enterAmbient()">
-        🌙
-    </button>
-
-</nav>
+    </nav>
 
 
-<!-- =======================================================
-     FULLSCREEN CONTROL BAR
-======================================================= -->
+    <!-- =====================
+         TEXT NOTE FULLSCREEN
+    ====================== -->
 
-<div
-    id="fullscreenBar"
-    class="fullscreen-bar">
+    <section id="noteOverlay"
+             class="overlay">
 
-    <button
-        class="fs-button"
-        onclick="goHome()">
-        🏠
-    </button>
+        <div class="overlay-header">
 
-    <button
-        class="fs-button"
-        onclick="openSettings()">
-        ⚙️
-    </button>
+            <strong>📝 Bloc-notes</strong>
 
-    <button
-        class="fs-button"
-        onclick="enterAmbient()">
-        🌙
-    </button>
-
-    <button
-        class="fs-button"
-        onclick="toggleFullscreen()">
-        ⛶
-    </button>
-
-    <button
-        class="fs-button"
-        onclick="exitFullscreen()">
-        ◀
-    </button>
-
-</div>
-
-
-<!-- =======================================================
-     AMBIENT SCREEN
-======================================================= -->
-
-<div
-    id="ambient"
-    onclick="wakeAmbient()">
-
-    <div>
-
-        <div
-            id="ambientClock"
-            class="ambient-clock">
-            --:--
-        </div>
-
-        <div
-            id="ambientDate"
-            class="ambient-date">
-            --
-        </div>
-
-    </div>
-
-
-    <div class="ambient-weather">
-
-        <div class="ambient-weather-row">
-
-            <div
-                id="ambientIcon"
-                class="ambient-icon">
-                ☀️
-            </div>
-
-            <div
-                id="ambientTemp"
-                class="ambient-temp">
-                --°
-            </div>
-
-        </div>
-
-        <div
-            id="ambientDescription"
-            class="ambient-description">
-            --
-        </div>
-
-        <div class="ambient-stats">
-
-            <span id="ambientFeels">
-                Ressenti --
-            </span>
-
-            <span id="ambientHumidity">
-                💧 --%
-            </span>
-
-            <span id="ambientWind">
-                💨 -- km/h
-            </span>
-
-        </div>
-
-    </div>
-
-
-    <div
-        id="ambientImportant"
-        class="ambient-important">
-    </div>
-
-
-    <div
-        id="ambientLocation"
-        class="ambient-location">
-        📍 --
-    </div>
-
-</div>
-
-
-<!-- =======================================================
-     SETTINGS MODAL
-======================================================= -->
-
-<div
-    id="settingsModal"
-    class="modal"
-    onclick="closeSettingsOutside(event)">
-
-    <div
-        class="modal-box"
-        onclick="event.stopPropagation()">
-
-        <div class="modal-header">
-
-            <h2>
-                ⚙️ Réglages
-            </h2>
-
-            <button
-                class="primary"
-                onclick="closeSettings()">
+            <button onclick="closeOverlay('noteOverlay')"
+                    style="background:transparent;color:white;font-size:25px;">
                 ✕
             </button>
 
         </div>
 
+        <div class="overlay-content">
 
-        <div class="setting">
+            <textarea id="fullNote"
+                      style="height:85%;font-size:20px;"
+                      placeholder="Écris ta note ici..."></textarea>
 
-            <label>
-                Apparence
-            </label>
-
-            <select
-                id="theme"
-                onchange="changeSetting('theme',this.value)">
-
-                <option value="light">
-                    ☀️ Clair
-                </option>
-
-                <option value="dark">
-                    🌙 Sombre
-                </option>
-
-                <option value="auto">
-                    🌓 Automatique
-                </option>
-
-            </select>
-
-        </div>
-
-
-        <div class="setting">
-
-            <label>
-                Format de l'heure
-            </label>
-
-            <select
-                id="clockFormat"
-                onchange="
-                    changeSetting(
-                        'clockFormat',
-                        this.value
-                    )">
-
-                <option value="24">
-                    24 heures
-                </option>
-
-                <option value="12">
-                    12 heures
-                </option>
-
-            </select>
-
-        </div>
-
-
-        <div class="setting">
-
-            <label>
-                Température
-            </label>
-
-            <select
-                id="unit"
-                onchange="
-                    changeSetting(
-                        'unit',
-                        this.value
-                    )">
-
-                <option value="c">
-                    Celsius °C
-                </option>
-
-                <option value="f">
-                    Fahrenheit °F
-                </option>
-
-            </select>
-
-        </div>
-
-
-        <div class="setting">
-
-            <label>
-                Passage automatique en veille
-            </label>
-
-            <select
-                id="sleep"
-                onchange="
-                    changeSetting(
-                        'sleep',
-                        this.value
-                    )">
-
-                <option value="1">
-                    1 minute
-                </option>
-
-                <option value="2">
-                    2 minutes
-                </option>
-
-                <option value="5">
-                    5 minutes
-                </option>
-
-                <option value="10">
-                    10 minutes
-                </option>
-
-                <option value="0">
-                    Désactivé
-                </option>
-
-            </select>
-
-        </div>
-
-
-        <div class="setting">
-
-            <label>
-                Actualisation météo
-            </label>
-
-            <select
-                id="refresh"
-                onchange="
-                    changeSetting(
-                        'refresh',
-                        this.value
-                    )">
-
-                <option value="5">
-                    5 minutes
-                </option>
-
-                <option value="15">
-                    15 minutes
-                </option>
-
-                <option value="30">
-                    30 minutes
-                </option>
-
-                <option value="60">
-                    1 heure
-                </option>
-
-            </select>
-
-        </div>
-
-
-        <div class="setting">
-
-            <label>
-                Luminosité visuelle du mode veille
-            </label>
-
-            <input
-                id="ambientBrightness"
-                type="range"
-                min="70"
-                max="100"
-                value="100"
-                oninput="
-                    changeAmbientBrightness(
-                        this.value
-                    )">
-
-        </div>
-
-
-        <div class="setting">
-
-            <label>
-                Test des rappels
-            </label>
-
-            <button
-                class="primary"
-                style="width:100%"
-                onclick="testReminder()">
-
-                🧪 Tester un rappel dans 10 secondes
-
+            <button class="primary"
+                    onclick="saveFullNote()"
+                    style="width:100%;margin-top:10px;">
+                💾 Sauvegarder
             </button>
 
         </div>
 
+    </section>
 
-        <div class="setting">
 
-            <label>
-                Notifications du navigateur
-            </label>
+    <!-- =====================
+         DRAWING
+    ====================== -->
 
-            <button
-                class="primary"
-                style="width:100%"
-                onclick="
-                    requestNotifications()
-                ">
+    <section id="drawingOverlay"
+             class="overlay">
 
-                🔔 Autoriser les notifications
+        <div class="drawing-toolbar">
 
+            <button class="pen pen-black"
+                    onclick="setPen('#000000')">
+            </button>
+
+            <button class="pen pen-red"
+                    onclick="setPen('#e53935')">
+            </button>
+
+            <button class="pen pen-blue"
+                    onclick="setPen('#1565c0')">
+            </button>
+
+            <button class="eraser"
+                    onclick="setEraser()">
+                🧽 Gomme
+            </button>
+
+            <button class="eraser"
+                    onclick="clearCanvas()">
+                🗑️ Effacer
+            </button>
+
+            <button class="eraser"
+                    onclick="saveDrawing()">
+                💾 Sauver
+            </button>
+
+            <button class="eraser"
+                    onclick="closeDrawing()">
+                ✕ Fermer
             </button>
 
         </div>
 
+        <canvas id="drawingPad"></canvas>
 
-        <div class="setting">
-
-            <label>
-                Plein écran
-            </label>
-
-            <button
-                class="primary"
-                style="width:100%"
-                onclick="
-                    toggleFullscreen()
-                ">
-
-                ⛶ Activer / désactiver le plein écran
-
-            </button>
-
-        </div>
+    </section>
 
 
-        <div class="setting">
+    <!-- =====================
+         WALL MODE
+    ====================== -->
 
-            <label>
-                Données
-            </label>
+    <section id="wallMode">
 
-            <div class="setting-row">
-
-                <button
-                    class="primary"
-                    onclick="exportData()">
-
-                    📤 Exporter
-
-                </button>
-
-                <button
-                    class="primary"
-                    onclick="
-                        document
-                        .getElementById(
-                            'importFile'
-                        )
-                        .click()
-                    ">
-
-                    📥 Importer
-
-                </button>
-
-            </div>
-
-            <input
-                id="importFile"
-                type="file"
-                accept=".json"
-                style="display:none"
-                onchange="importData(event)">
-
-        </div>
-
-
-        <div class="setting">
-
-            <label>
-                Réinitialisation
-            </label>
-
-            <button
-                class="danger-button"
-                style="width:100%"
-                onclick="resetEverything()">
-
-                🗑️ Réinitialiser les données
-
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- =======================================================
-     ALERT
-======================================================= -->
-
-<div
-    id="alertOverlay">
-
-    <div class="alert-box">
-
-        <div class="alert-icon">
-            🔔
-        </div>
-
-        <div class="alert-title">
-            Rappel
-        </div>
-
-        <div
-            id="alertMessage"
-            class="alert-message">
-            --
-        </div>
-
-        <button
-            class="primary"
-            onclick="closeAlert()">
-
-            OK
-
+        <button class="wall-exit"
+                onclick="stopWallMode()">
+            ✕
         </button>
 
-    </div>
+        <div id="wallTime"
+             class="wall-time">
+            00:00
+        </div>
 
-</div>
+        <div id="wallDate"
+             class="wall-date">
+            ...
+        </div>
+
+        <div class="wall-info">
+
+            <span id="wallTemperature">
+                🌡️ --°C
+            </span>
+
+            <span id="wallWeather">
+                ⛅ ...
+            </span>
+
+            <span id="wallLocation">
+                📍 ...
+            </span>
+
+        </div>
+
+        <div id="wallNext"
+             class="wall-next">
+            Aucun événement prochain.
+        </div>
+
+    </section>
 
 
-<!-- =======================================================
-     TOAST
-======================================================= -->
+    <!-- =====================
+         ALERT
+    ====================== -->
 
-<div id="toast">
-    --
+    <section id="alertBox">
+
+        <div class="alert-inner">
+
+            <div class="alert-title">
+                🔔 RAPPEL
+            </div>
+
+            <div id="alertMessage"
+                 class="alert-message">
+            </div>
+
+            <button class="primary"
+                    onclick="closeAlert()"
+                    style="width:100%;">
+                OK
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================
+         DIAGNOSTICS
+    ====================== -->
+
+    <section id="diagnosticsOverlay"
+             class="overlay">
+
+        <div class="overlay-header">
+
+            <strong>🧪 Diagnostic V4</strong>
+
+            <button onclick="closeOverlay('diagnosticsOverlay')"
+                    style="background:transparent;color:white;font-size:25px;">
+                ✕
+            </button>
+
+        </div>
+
+        <div id="diagnosticContent"
+             class="overlay-content">
+        </div>
+
+    </section>
+
 </div>
 
 
 <script>
+/* =========================================================
+   WALL DASHBOARD V4
+   Vanilla JavaScript
+   ========================================================= */
+
 
 /* =========================================================
-   CONFIGURATION
+   STORAGE
 ========================================================= */
 
-const DEFAULTS = {
-
-    theme: "dark",
-
-    clockFormat: "24",
-
-    unit: "c",
-
-    sleep: "2",
-
-    refresh: "15",
-
-    ambientBrightness: 100
-
+const STORAGE = {
+    tasks: "wallDashboard_tasks_v4",
+    reminders: "wallDashboard_reminders_v4",
+    note: "wallDashboard_note_v4",
+    drawing: "wallDashboard_drawing_v4",
+    theme: "wallDashboard_theme_v4",
+    settings: "wallDashboard_settings_v4"
 };
+
+function loadJSON(key, fallback) {
+
+    try {
+
+        const value = localStorage.getItem(key);
+
+        if (!value) {
+            return fallback;
+        }
+
+        return JSON.parse(value);
+
+    } catch (error) {
+
+        console.warn("Storage error:", error);
+
+        return fallback;
+    }
+}
+
+function saveJSON(key, value) {
+
+    try {
+
+        localStorage.setItem(
+            key,
+            JSON.stringify(value)
+        );
+
+    } catch (error) {
+
+        console.warn("Impossible de sauvegarder:", error);
+    }
+}
 
 
 /* =========================================================
    STATE
 ========================================================= */
 
-let settings =
-    loadJSON(
-        "wall_v4_settings",
-        DEFAULTS
-    );
+let tasks = loadJSON(STORAGE.tasks, []);
 
-let tasks =
-    loadJSON(
-        "wall_v4_tasks",
-        []
-    );
+let reminders = loadJSON(STORAGE.reminders, []);
 
-let reminders =
-    loadJSON(
-        "wall_v4_reminders",
-        []
-    );
+let currentLocation = {
+    latitude: null,
+    longitude: null,
+    city: "Localisation inconnue"
+};
 
-let weather =
-    loadJSON(
-        "wall_v4_weather",
-        null
-    );
+let weatherData = null;
 
-let locationData =
-    loadJSON(
-        "wall_v4_location",
-        null
-    );
+let wallModeActive = false;
 
+let lastInteraction = Date.now();
 
-let ambientMode =
-    false;
-
-let inactivityTimer =
-    null;
-
-let refreshTimer =
-    null;
-
-let lastReminderCheck =
-    "";
-
-let notificationAudio =
-    null;
-
-
-/* =========================================================
-   LOCAL STORAGE HELPERS
-========================================================= */
-
-function loadJSON(
-    key,
-    fallback
-) {
-
-    try {
-
-        const value =
-            localStorage.getItem(key);
-
-        return value
-            ? JSON.parse(value)
-            : fallback;
-
-    } catch {
-
-        return fallback;
-
-    }
-
-}
-
-
-function saveJSON(
-    key,
-    value
-) {
-
-    localStorage.setItem(
-        key,
-        JSON.stringify(value)
-    );
-
-}
-
-
-/* =========================================================
-   SETTINGS
-========================================================= */
-
-function saveSettings() {
-
-    saveJSON(
-        "wall_v4_settings",
-        settings
-    );
-
-}
-
-
-function changeSetting(
-    key,
-    value
-) {
-
-    settings[key] =
-        value;
-
-    saveSettings();
-
-    applySettings();
-
-}
-
-
-function applySettings() {
-
-    document.body.classList.remove(
-        "dark",
-        "night"
-    );
-
-
-    if (
-        settings.theme ===
-        "dark"
-    ) {
-
-        document.body.classList.add(
-            "dark"
-        );
-
-    }
-
-
-    if (
-        settings.theme ===
-        "auto"
-    ) {
-
-        if (
-            window.matchMedia(
-                "(prefers-color-scheme: dark)"
-            ).matches
-        ) {
-
-            document.body.classList.add(
-                "dark"
-            );
-
-        }
-
-    }
-
-
-    document.getElementById(
-        "theme"
-    ).value =
-        settings.theme;
-
-
-    document.getElementById(
-        "clockFormat"
-    ).value =
-        settings.clockFormat;
-
-
-    document.getElementById(
-        "unit"
-    ).value =
-        settings.unit;
-
-
-    document.getElementById(
-        "sleep"
-    ).value =
-        settings.sleep;
-
-
-    document.getElementById(
-        "refresh"
-    ).value =
-        settings.refresh;
-
-
-    document.getElementById(
-        "ambientBrightness"
-    ).value =
-        settings.ambientBrightness;
-
-
-    restartWeatherTimer();
-
-    resetInactivityTimer();
-
-    if (weather) {
-
-        renderWeather();
-
-    }
-
-}
+let idleTimeout = null;
 
 
 /* =========================================================
@@ -2420,2840 +1161,1834 @@ function applySettings() {
 
 function updateClock() {
 
-    const now =
-        new Date();
+    const now = new Date();
 
+    const time = now.toLocaleTimeString(
+        "fr-CA",
+        {
+            hour: "2-digit",
+            minute: "2-digit"
+        }
+    );
 
-    const options = {
+    const date = now.toLocaleDateString(
+        "fr-CA",
+        {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+        }
+    );
 
-        hour:
-            "2-digit",
+    document.getElementById("clock").textContent = time;
 
-        minute:
-            "2-digit",
+    document.getElementById("date").textContent = date;
 
-        hour12:
-            settings.clockFormat ===
-            "12"
+    document.getElementById("wallTime").textContent = time;
 
-    };
+    document.getElementById("wallDate").textContent = date;
 
-
-    const time =
-        now.toLocaleTimeString(
-            "fr-CA",
-            options
-        );
-
-
-    const date =
-        now.toLocaleDateString(
-            "fr-CA",
-            {
-                weekday:
-                    "long",
-
-                day:
-                    "numeric",
-
-                month:
-                    "long",
-
-                year:
-                    "numeric"
-            }
-        );
-
-
-    document.getElementById(
-        "clock"
-    ).textContent =
-        time;
-
-
-    document.getElementById(
-        "date"
-    ).textContent =
-        date;
-
-
-    document.getElementById(
-        "ambientClock"
-    ).textContent =
-        time;
-
-
-    document.getElementById(
-        "ambientDate"
-    ).textContent =
-        date;
-
+    updateWallNext();
 
     checkReminders();
-
-    updateUpcoming();
-
 }
 
+setInterval(updateClock, 1000);
 
-setInterval(
-    updateClock,
-    1000
-);
+updateClock();
 
 
 /* =========================================================
-   NOTES
+   THEME
 ========================================================= */
 
-const notes =
-    document.getElementById(
-        "notes"
+function loadTheme() {
+
+    const theme = localStorage.getItem(
+        STORAGE.theme
     );
 
+    if (theme === "dark") {
 
-notes.value =
-    localStorage.getItem(
-        "wall_v4_notes"
-    ) || "";
-
-
-notes.addEventListener(
-    "input",
-    () => {
-
-        localStorage.setItem(
-            "wall_v4_notes",
-            notes.value
-        );
+        document.body.classList.add("dark");
 
     }
-);
+}
+
+function toggleTheme() {
+
+    document.body.classList.toggle("dark");
+
+    const dark =
+        document.body.classList.contains("dark");
+
+    localStorage.setItem(
+        STORAGE.theme,
+        dark ? "dark" : "light"
+    );
+}
+
+loadTheme();
 
 
 /* =========================================================
    TASKS
 ========================================================= */
 
-function saveTasks() {
-
-    saveJSON(
-        "wall_v4_tasks",
-        tasks
-    );
-
-}
-
-
 function addTask() {
 
     const input =
-        document.getElementById(
-            "taskInput"
-        );
-
+        document.getElementById("taskInput");
 
     const text =
         input.value.trim();
 
-
-    if (!text)
+    if (!text) {
         return;
-
+    }
 
     tasks.push({
 
-        id:
-            crypto.randomUUID
-            ? crypto.randomUUID()
-            : Date.now().toString(),
+        id: Date.now(),
 
-        text:
+        text: text,
 
-            text,
+        completed: false,
 
-        done:
-            false,
-
-        created:
-            Date.now()
+        createdAt: Date.now()
 
     });
 
+    saveJSON(STORAGE.tasks, tasks);
 
     input.value = "";
 
-    saveTasks();
-
     renderTasks();
 
-    showToast(
-        "Tâche ajoutée ✓"
-    );
-
+    showMiniFeedback("Tâche ajoutée ✓");
 }
 
 
-document
-    .getElementById(
-        "taskInput"
-    )
-    .addEventListener(
-        "keydown",
-        e => {
+function toggleTask(id) {
 
-            if (
-                e.key ===
-                "Enter"
-            ) {
+    tasks = tasks.map(task => {
 
-                addTask();
+        if (task.id === id) {
 
-            }
+            return {
+                ...task,
+                completed: !task.completed
+            };
 
         }
-    );
 
+        return task;
+    });
 
-function toggleTask(
-    id
-) {
-
-    const task =
-        tasks.find(
-            t => t.id === id
-        );
-
-
-    if (!task)
-        return;
-
-
-    task.done =
-        !task.done;
-
-
-    saveTasks();
+    saveJSON(STORAGE.tasks, tasks);
 
     renderTasks();
 
+    updateWallNext();
 }
 
 
-function deleteTask(
-    id
-) {
+function deleteTask(id) {
 
     tasks =
-        tasks.filter(
-            t => t.id !== id
-        );
+        tasks.filter(task => task.id !== id);
 
-
-    saveTasks();
+    saveJSON(STORAGE.tasks, tasks);
 
     renderTasks();
 
+    updateWallNext();
 }
 
 
 function renderTasks() {
 
-    const container =
-        document.getElementById(
-            "tasks"
-        );
+    const list =
+        document.getElementById("taskList");
 
+    list.innerHTML = "";
 
-    container.innerHTML =
-        "";
+    if (tasks.length === 0) {
 
-
-    if (!tasks.length) {
-
-        container.innerHTML =
-            `<div style="
-                color:var(--muted);
-                font-size:13px;
-            ">
-                Aucune tâche.
-            </div>`;
-
-        updateUpcoming();
+        list.innerHTML =
+            '<div style="color:var(--muted);padding:10px 0;">Aucune tâche.</div>';
 
         return;
-
     }
 
+    tasks.forEach(task => {
 
-    tasks.forEach(
-        task => {
+        const div =
+            document.createElement("div");
 
-            const div =
-                document.createElement(
-                    "div"
-                );
+        div.className =
+            "task" +
+            (task.completed ? " completed" : "");
 
+        div.innerHTML = `
 
-            div.className =
-                "task " +
-                (
-                    task.done
-                    ? "done"
-                    : ""
-                );
+            <button
+                class="task-check"
+                onclick="toggleTask(${task.id})">
+                ${task.completed ? "✓" : ""}
+            </button>
 
+            <div class="task-text">
+                ${escapeHTML(task.text)}
+            </div>
 
-            div.innerHTML = `
+            <button
+                class="delete-button"
+                onclick="deleteTask(${task.id})">
+                🗑️
+            </button>
+        `;
 
-                <input
-                    class="task-checkbox"
-                    type="checkbox"
-                    ${task.done ? "checked" : ""}
-                    onchange="
-                        toggleTask('${task.id}')
-                    ">
-
-                <div
-                    class="task-content">
-
-                    ${escapeHTML(
-                        task.text
-                    )}
-
-                </div>
-
-                ${
-                    !task.done
-                    ? `<span class="priority">
-                        À faire
-                       </span>`
-                    : ""
-                }
-
-                <button
-                    class="delete"
-                    onclick="
-                        deleteTask('${task.id}')
-                    ">
-                    ✕
-                </button>
-
-            `;
-
-
-            container.appendChild(
-                div
-            );
-
-        }
-    );
-
-
-    updateUpcoming();
-
+        list.appendChild(div);
+    });
 }
+
+renderTasks();
 
 
 /* =========================================================
    REMINDERS
 ========================================================= */
 
-function saveReminders() {
-
-    saveJSON(
-        "wall_v4_reminders",
-        reminders
-    );
-
-}
-
-
 function addReminder() {
 
     const text =
-        document.getElementById(
-            "reminderText"
-        )
-        .value
-        .trim();
+        document
+            .getElementById("reminderText")
+            .value
+            .trim();
 
+    const date =
+        document.getElementById("reminderDate").value;
 
-    const time =
-        document.getElementById(
-            "reminderTime"
-        )
-        .value;
+    if (!text || !date) {
 
-
-    if (
-        !text ||
-        !time
-    ) {
-
-        showToast(
-            "Entrez un texte et une heure."
+        showAlert(
+            "Il faut entrer un texte et une date."
         );
 
         return;
-
     }
 
+    const timestamp =
+        new Date(date).getTime();
+
+    if (timestamp <= Date.now()) {
+
+        showAlert(
+            "Choisis une heure située dans le futur."
+        );
+
+        return;
+    }
 
     reminders.push({
 
-        id:
-            crypto.randomUUID
-            ? crypto.randomUUID()
-            : Date.now().toString(),
+        id: Date.now(),
 
-        text:
-            text,
+        text: text,
 
-        time:
-            time,
+        time: timestamp,
 
-        lastTriggered:
-            "",
-
-        created:
-            Date.now()
+        triggered: false
 
     });
 
+    reminders.sort(
+        (a,b) => a.time - b.time
+    );
+
+    saveJSON(
+        STORAGE.reminders,
+        reminders
+    );
 
     document.getElementById(
         "reminderText"
-    ).value =
-        "";
-
+    ).value = "";
 
     document.getElementById(
-        "reminderTime"
-    ).value =
-        "";
-
-
-    saveReminders();
+        "reminderDate"
+    ).value = "";
 
     renderReminders();
 
-    requestNotifications();
+    updateWallNext();
 
-    showToast(
-        "Rappel enregistré ✓"
+    showMiniFeedback(
+        "Rappel programmé ✓"
     );
-
 }
 
 
-function deleteReminder(
-    id
-) {
+function deleteReminder(id) {
 
     reminders =
         reminders.filter(
-            r => r.id !== id
+            reminder => reminder.id !== id
         );
 
-
-    saveReminders();
+    saveJSON(
+        STORAGE.reminders,
+        reminders
+    );
 
     renderReminders();
 
+    updateWallNext();
 }
 
 
 function renderReminders() {
 
-    const container =
+    const list =
         document.getElementById(
-            "reminders"
+            "reminderList"
         );
 
+    list.innerHTML = "";
 
-    container.innerHTML =
-        "";
+    if (reminders.length === 0) {
 
-
-    if (!reminders.length) {
-
-        container.innerHTML =
-            `<div style="
-                color:var(--muted);
-                font-size:13px;
-            ">
-                Aucun rappel.
-            </div>`;
-
-        updateUpcoming();
+        list.innerHTML =
+            '<div style="color:var(--muted);">Aucun rappel.</div>';
 
         return;
-
     }
 
+    reminders.forEach(reminder => {
 
-    reminders
-        .slice()
-        .sort(
-            (a,b) =>
-                a.time.localeCompare(
-                    b.time
-                )
-        )
-        .forEach(
-            reminder => {
+        const date =
+            new Date(reminder.time);
 
-                const div =
-                    document.createElement(
-                        "div"
-                    );
+        const passed =
+            reminder.time <= Date.now();
 
+        const div =
+            document.createElement("div");
 
-                div.className =
-                    "reminder";
+        div.className =
+            "reminder" +
+            (passed ? " passed" : "");
 
+        div.innerHTML = `
 
-                div.innerHTML = `
+            <div class="reminder-controls">
 
-                    <div
-                        class="reminder-info">
+                <div>
 
-                        <div>
-                            🔔
-                            ${escapeHTML(
-                                reminder.text
-                            )}
-                        </div>
-
-                        <div
-                            class="reminder-time">
-                            ${reminder.time}
-                        </div>
-
+                    <div class="reminder-time">
+                        ${date.toLocaleString("fr-CA", {
+                            day:"2-digit",
+                            month:"2-digit",
+                            hour:"2-digit",
+                            minute:"2-digit"
+                        })}
                     </div>
 
-                    <button
-                        class="delete"
-                        onclick="
-                            deleteReminder(
-                                '${reminder.id}'
-                            )
-                        ">
-                        ✕
-                    </button>
+                    <div>
+                        ${escapeHTML(reminder.text)}
+                    </div>
 
-                `;
+                </div>
 
+                <button
+                    class="delete-button"
+                    onclick="deleteReminder(${reminder.id})">
+                    🗑️
+                </button>
 
-                container.appendChild(
-                    div
-                );
+            </div>
+        `;
 
-            }
-        );
-
-
-    updateUpcoming();
-
+        list.appendChild(div);
+    });
 }
+
+renderReminders();
 
 
 /* =========================================================
-   RELIABLE REMINDER ENGINE
+   REMINDER ENGINE
 ========================================================= */
 
 function checkReminders() {
 
-    const now =
-        new Date();
+    let changed = false;
 
+    reminders.forEach(reminder => {
 
-    const dateKey =
-        localDateKey(
-            now
+        if (
+            !reminder.triggered &&
+            reminder.time <= Date.now()
+        ) {
+
+            reminder.triggered = true;
+
+            changed = true;
+
+            triggerReminder(
+                reminder.text
+            );
+        }
+    });
+
+    if (changed) {
+
+        saveJSON(
+            STORAGE.reminders,
+            reminders
         );
 
-
-    const currentMinutes =
-        now.getHours() * 60 +
-        now.getMinutes();
-
-
-    const currentSeconds =
-        now.getSeconds();
-
-
-    reminders.forEach(
-        reminder => {
-
-            const parts =
-                reminder.time
-                    .split(":")
-                    .map(Number);
-
-
-            if (
-                parts.length !== 2
-            )
-                return;
-
-
-            const targetMinutes =
-                parts[0] * 60 +
-                parts[1];
-
-
-            const difference =
-                targetMinutes -
-                currentMinutes;
-
-
-            /*
-             * Déclenchement uniquement
-             * dans la fenêtre de la minute.
-             */
-
-            if (
-                difference === 0 &&
-                currentSeconds < 5
-            ) {
-
-                const triggerKey =
-                    dateKey +
-                    "_" +
-                    reminder.time;
-
-
-                if (
-                    reminder.lastTriggered !==
-                    triggerKey
-                ) {
-
-                    reminder.lastTriggered =
-                        triggerKey;
-
-
-                    saveReminders();
-
-                    fireReminder(
-                        reminder
-                    );
-
-                }
-
-            }
-
-        }
-    );
-
+        renderReminders();
+    }
 }
 
 
-/* =========================================================
-   FIRE REMINDER
-========================================================= */
+function triggerReminder(text) {
 
-function fireReminder(
-    reminder
-) {
+    showAlert(text);
 
     /*
-     * 1. Gros affichage visuel.
-     */
-
-    document.getElementById(
-        "alertMessage"
-    ).textContent =
-        reminder.text;
-
-
-    document.getElementById(
-        "alertOverlay"
-    ).classList.add(
-        "show"
-    );
-
-
-    /*
-     * 2. Son.
-     */
-
-    playAlarm();
-
-
-    /*
-     * 3. Vibration si la tablette
-     *    l'autorise.
-     */
-
-    if (
-        navigator.vibrate
-    ) {
-
-        navigator.vibrate([
-            300,
-            150,
-            300,
-            150,
-            500
-        ]);
-
-    }
-
-
-    /*
-     * 4. Notification navigateur.
-     */
+      Notification système :
+      elle est seulement complémentaire.
+      L'alerte intégrée à l'écran reste le système principal.
+    */
 
     if (
         "Notification" in window &&
-        Notification.permission ===
-        "granted"
+        Notification.permission === "granted"
     ) {
 
         try {
 
             new Notification(
-                "🔔 Rappel",
+                "Wall Dashboard",
                 {
-                    body:
-                        reminder.text
+                    body: text
                 }
             );
 
-        } catch {}
+        } catch (error) {
 
+            console.log(
+                "Notification non disponible."
+            );
+        }
     }
-
-}
-
-
-function closeAlert() {
-
-    document.getElementById(
-        "alertOverlay"
-    ).classList.remove(
-        "show"
-    );
-
-    stopAlarm();
-
-}
-
-
-/* =========================================================
-   TEST REMINDER
-========================================================= */
-
-function testReminder() {
-
-    const id =
-        "test-" +
-        Date.now();
-
-
-    const reminder = {
-
-        id:
-            id,
-
-        text:
-            "Ceci est un rappel de test.",
-
-        time:
-            new Date()
-                .toTimeString()
-                .slice(0,5),
-
-        lastTriggered:
-            ""
-
-    };
-
-
-    showToast(
-        "Test programmé dans 10 secondes..."
-    );
-
-
-    setTimeout(
-        () => {
-
-            fireReminder(
-                reminder
-            );
-
-        },
-        10000
-    );
-
-}
-
-
-/* =========================================================
-   ALARM SOUND
-========================================================= */
-
-function playAlarm() {
-
-    try {
-
-        const AudioContext =
-            window.AudioContext ||
-            window.webkitAudioContext;
-
-
-        if (!AudioContext)
-            return;
-
-
-        const ctx =
-            new AudioContext();
-
-
-        let count =
-            0;
-
-
-        function beep() {
-
-            if (count >= 3) {
-
-                ctx.close();
-
-                return;
-
-            }
-
-
-            const osc =
-                ctx.createOscillator();
-
-
-            const gain =
-                ctx.createGain();
-
-
-            osc.frequency.value =
-                count % 2 === 0
-                ? 880
-                : 660;
-
-
-            gain.gain.setValueAtTime(
-                .0001,
-                ctx.currentTime
-            );
-
-
-            gain.gain.exponentialRampToValueAtTime(
-                .25,
-                ctx.currentTime + .03
-            );
-
-
-            gain.gain.exponentialRampToValueAtTime(
-                .0001,
-                ctx.currentTime + .35
-            );
-
-
-            osc.connect(gain);
-
-            gain.connect(
-                ctx.destination
-            );
-
-
-            osc.start();
-
-            osc.stop(
-                ctx.currentTime +
-                .35
-            );
-
-
-            count++;
-
-
-            setTimeout(
-                beep,
-                450
-            );
-
-        }
-
-
-        beep();
-
-    } catch {}
-
-}
-
-
-function stopAlarm() {}
-
-
-/* =========================================================
-   UPCOMING ENGINE
-========================================================= */
-
-function updateUpcoming() {
-
-    const container =
-        document.getElementById(
-            "upcoming"
-        );
-
-
-    const items = [];
-
-
-    const now =
-        new Date();
-
-
-    const currentMinutes =
-        now.getHours() * 60 +
-        now.getMinutes();
-
-
-    reminders.forEach(
-        reminder => {
-
-            const p =
-                reminder.time
-                    .split(":")
-                    .map(Number);
-
-
-            const minutes =
-                p[0] * 60 +
-                p[1];
-
-
-            let diff =
-                minutes -
-                currentMinutes;
-
-
-            if (diff < 0)
-                diff += 1440;
-
-
-            items.push({
-
-                type:
-                    "reminder",
-
-                text:
-                    reminder.text,
-
-                time:
-                    reminder.time,
-
-                diff:
-                    diff
-
-            });
-
-        }
-    );
-
-
-    tasks
-        .filter(
-            task =>
-                !task.done
-        )
-        .forEach(
-            task => {
-
-                items.push({
-
-                    type:
-                        "task",
-
-                    text:
-                        task.text,
-
-                    time:
-                        "",
-
-                    diff:
-                        10000
-
-                });
-
-            }
-        );
-
-
-    items.sort(
-        (a,b) =>
-            a.diff -
-            b.diff
-    );
-
-
-    const selected =
-        items.slice(0,3);
-
-
-    if (!selected.length) {
-
-        container.innerHTML =
-            `<div style="
-                color:var(--muted);
-                font-size:13px;
-            ">
-                ✓ Rien d'urgent.
-            </div>`;
-
-        updateAmbientImportant();
-
-        return;
-
-    }
-
-
-    container.innerHTML =
-        "";
-
-
-    selected.forEach(
-        item => {
-
-            const div =
-                document.createElement(
-                    "div"
-                );
-
-
-            div.className =
-                "upcoming-item";
-
-
-            div.innerHTML = `
-
-                <div class="upcoming-icon">
-
-                    ${
-                        item.type ===
-                        "reminder"
-                        ? "🔔"
-                        : "☐"
-                    }
-
-                </div>
-
-                <div class="upcoming-content">
-
-                    ${
-                        item.time
-                        ? `<div
-                            class="upcoming-time">
-                            ${item.time}
-                           </div>`
-                        : `<div
-                            class="upcoming-time">
-                            TÂCHE
-                           </div>`
-                    }
-
-                    <div
-                        class="upcoming-text">
-
-                        ${escapeHTML(
-                            item.text
-                        )}
-
-                    </div>
-
-                </div>
-
-            `;
-
-
-            container.appendChild(
-                div
-            );
-
-        }
-    );
-
-
-    updateAmbientImportant();
-
-}
-
-
-/* =========================================================
-   AMBIENT PRIORITY
-========================================================= */
-
-function updateAmbientImportant() {
-
-    const element =
-        document.getElementById(
-            "ambientImportant"
-        );
-
-
-    const now =
-        new Date();
-
-
-    const currentMinutes =
-        now.getHours() * 60 +
-        now.getMinutes();
-
-
-    const upcoming =
-        reminders
-            .map(
-                r => {
-
-                    const p =
-                        r.time
-                            .split(":")
-                            .map(Number);
-
-
-                    let diff =
-                        p[0] * 60 +
-                        p[1] -
-                        currentMinutes;
-
-
-                    if (diff < 0)
-                        diff += 1440;
-
-
-                    return {
-
-                        ...r,
-
-                        diff
-
-                    };
-
-                }
-            )
-            .sort(
-                (a,b) =>
-                    a.diff -
-                    b.diff
-            );
-
 
     /*
-     * Priorité 1 :
-     * rappel dans les 60 prochaines minutes.
-     */
+      Vibration si la tablette le permet.
+    */
 
-    if (
-        upcoming.length &&
-        upcoming[0].diff <= 60
-    ) {
+    if ("vibrate" in navigator) {
 
-        element.textContent =
-            "🔔 " +
-            upcoming[0].time +
-            " · " +
-            upcoming[0].text;
+        try {
 
-        return;
+            navigator.vibrate([
+                300,
+                150,
+                300,
+                150,
+                500
+            ]);
 
+        } catch (error) {}
     }
-
-
-    /*
-     * Priorité 2 :
-     * première tâche.
-     */
-
-    const task =
-        tasks.find(
-            t =>
-                !t.done
-        );
-
-
-    if (task) {
-
-        element.textContent =
-            "☐ " +
-            task.text;
-
-        return;
-
-    }
-
-
-    element.textContent =
-        "";
-
 }
 
-
-/* =========================================================
-   GEOLOCATION
-========================================================= */
-
-function getLocation() {
-
-    if (
-        !navigator.geolocation
-    ) {
-
-        setLocationText(
-            "Localisation indisponible"
-        );
-
-        return;
-
-    }
-
-
-    navigator.geolocation.getCurrentPosition(
-
-        async position => {
-
-            const lat =
-                position.coords.latitude;
-
-
-            const lon =
-                position.coords.longitude;
-
-
-            try {
-
-                await reverseGeocode(
-                    lat,
-                    lon
-                );
-
-            } catch {
-
-                setLocationText(
-                    "Position détectée"
-                );
-
-            }
-
-
-            loadWeather(
-                lat,
-                lon
-            );
-
-        },
-
-        error => {
-
-            let message =
-                "Autorisation de localisation nécessaire";
-
-
-            if (
-                error.code ===
-                3
-            ) {
-
-                message =
-                    "Localisation trop lente";
-
-            }
-
-
-            setLocationText(
-                message
-            );
-
-        },
-
-        {
-
-            enableHighAccuracy:
-                false,
-
-            timeout:
-                15000,
-
-            maximumAge:
-                600000
-
-        }
-
-    );
-
-}
-
-
-/* =========================================================
-   REVERSE GEOCODING
-========================================================= */
-
-async function reverseGeocode(
-    lat,
-    lon
-) {
-
-    const url =
-        "https://nominatim.openstreetmap.org/reverse" +
-
-        "?format=jsonv2" +
-
-        "&lat=" +
-        encodeURIComponent(lat) +
-
-        "&lon=" +
-        encodeURIComponent(lon) +
-
-        "&zoom=10" +
-
-        "&addressdetails=1" +
-
-        "&accept-language=fr";
-
-
-    const response =
-        await fetch(
-            url
-        );
-
-
-    if (!response.ok)
-        throw new Error(
-            "Geocoding failed"
-        );
-
-
-    const data =
-        await response.json();
-
-
-    const address =
-        data.address || {};
-
-
-    /*
-     * On cherche le meilleur nom
-     * de ville disponible.
-     */
-
-    const city =
-        address.city ||
-        address.town ||
-        address.village ||
-        address.municipality ||
-        address.county ||
-        "Localisation inconnue";
-
-
-    const region =
-        address.state ||
-        address.province ||
-        "";
-
-
-    const country =
-        address.country ||
-        "";
-
-
-    locationData = {
-
-        city:
-            city,
-
-        region:
-            region,
-
-        country:
-            country,
-
-        lat:
-            lat,
-
-        lon:
-            lon,
-
-        display:
-            city +
-            (
-                region
-                ? ", " + region
-                : ""
-            )
-
-    };
-
-
-    saveJSON(
-        "wall_v4_location",
-        locationData
-    );
-
-
-    setLocationText(
-        locationData.display
-    );
-
-}
-
-
-function setLocationText(
-    text
-) {
-
-    document.getElementById(
-        "location"
-    ).innerHTML =
-        "📍 " +
-        escapeHTML(text);
-
-    document.getElementById(
-        "ambientLocation"
-    ).textContent =
-        "📍 " +
-        text;
-
-}
-
-
-/* =========================================================
-   WEATHER
-========================================================= */
-
-async function loadWeather(
-    lat,
-    lon
-) {
-
-    try {
-
-        const url =
-            "https://api.open-meteo.com/v1/forecast" +
-
-            "?latitude=" +
-            encodeURIComponent(lat) +
-
-            "&longitude=" +
-            encodeURIComponent(lon) +
-
-            "&current=" +
-
-            "temperature_2m," +
-            "relative_humidity_2m," +
-            "apparent_temperature," +
-            "weather_code," +
-            "wind_speed_10m," +
-            "precipitation" +
-
-            "&hourly=" +
-
-            "precipitation_probability," +
-            "precipitation" +
-
-            "&daily=" +
-
-            "weather_code," +
-            "temperature_2m_max," +
-            "temperature_2m_min," +
-            "sunrise," +
-            "sunset," +
-            "precipitation_probability_max" +
-
-            "&timezone=auto" +
-
-            "&forecast_days=5";
-
-
-        const response =
-            await fetch(
-                url
-            );
-
-
-        if (!response.ok)
-            throw new Error();
-
-
-        weather =
-            await response.json();
-
-
-        weather.lastUpdated =
-            Date.now();
-
-
-        saveJSON(
-            "wall_v4_weather",
-            weather
-        );
-
-
-        renderWeather();
-
-        updateConnection(
-            true
-        );
-
-    } catch {
-
-        updateConnection(
-            false
-        );
-
-
-        /*
-         * Si les dernières données
-         * existent, on les conserve.
-         */
-
-        if (weather) {
-
-            renderWeather();
-
-        }
-
-    }
-
-}
-
-
-/* =========================================================
-   WEATHER RENDER
-========================================================= */
-
-function renderWeather() {
-
-    if (!weather)
-        return;
-
-
-    const current =
-        weather.current;
-
-
-    let temp =
-        current.temperature_2m;
-
-
-    let feels =
-        current.apparent_temperature;
-
-
-    if (
-        settings.unit ===
-        "f"
-    ) {
-
-        temp =
-            cToF(temp);
-
-        feels =
-            cToF(feels);
-
-    }
-
-
-    document.getElementById(
-        "temperature"
-    ).textContent =
-        Math.round(temp) +
-        "°";
-
-
-    document.getElementById(
-        "feels"
-    ).textContent =
-        Math.round(feels) +
-        "°";
-
-
-    document.getElementById(
-        "humidity"
-    ).textContent =
-        current.relative_humidity_2m +
-        "%";
-
-
-    document.getElementById(
-        "wind"
-    ).textContent =
-        Math.round(
-            current.wind_speed_10m
-        ) +
-        " km/h";
-
-
-    document.getElementById(
-        "weatherIcon"
-    ).textContent =
-        weatherIcon(
-            current.weather_code
-        );
-
-
-    document.getElementById(
-        "weatherDescription"
-    ).textContent =
-        weatherDescription(
-            current.weather_code
-        );
-
-
-    /*
-     * Forecast
-     */
-
-    const forecast =
-        document.getElementById(
-            "forecast"
-        );
-
-
-    forecast.innerHTML =
-        "";
-
-
-    for (
-        let i = 0;
-        i < 5;
-        i++
-    ) {
-
-        let max =
-            weather.daily
-                .temperature_2m_max[i];
-
-
-        let min =
-            weather.daily
-                .temperature_2m_min[i];
-
-
-        if (
-            settings.unit ===
-            "f"
-        ) {
-
-            max =
-                cToF(max);
-
-            min =
-                cToF(min);
-
-        }
-
-
-        const day =
-            new Date(
-                weather.daily.time[i]
-            )
-            .toLocaleDateString(
-                "fr-CA",
-                {
-                    weekday:
-                        "short"
-                }
-            );
-
-
-        forecast.innerHTML += `
-
-            <div
-                class="forecast-day">
-
-                <div
-                    class="forecast-name">
-                    ${day}
-                </div>
-
-                <div
-                    class="forecast-icon">
-
-                    ${weatherIcon(
-                        weather.daily
-                            .weather_code[i]
-                    )}
-
-                </div>
-
-                <div
-                    class="forecast-temp">
-
-                    ${Math.round(max)}°
-                    /
-                    ${Math.round(min)}°
-
-                </div>
-
-            </div>
-
-        `;
-
-    }
-
-
-    /*
-     * Soleil
-     */
-
-    document.getElementById(
-        "sunrise"
-    ).textContent =
-        formatTime(
-            weather.daily.sunrise[0]
-        );
-
-
-    document.getElementById(
-        "sunset"
-    ).textContent =
-        formatTime(
-            weather.daily.sunset[0]
-        );
-
-
-    /*
-     * Ambient
-     */
-
-    document.getElementById(
-        "ambientIcon"
-    ).textContent =
-        weatherIcon(
-            current.weather_code
-        );
-
-
-    document.getElementById(
-        "ambientTemp"
-    ).textContent =
-        Math.round(temp) +
-        "°";
-
-
-    document.getElementById(
-        "ambientDescription"
-    ).textContent =
-        weatherDescription(
-            current.weather_code
-        );
-
-
-    document.getElementById(
-        "ambientFeels"
-    ).textContent =
-        "Ressenti " +
-        Math.round(feels) +
-        "°";
-
-
-    document.getElementById(
-        "ambientHumidity"
-    ).textContent =
-        "💧 " +
-        current.relative_humidity_2m +
-        "%";
-
-
-    document.getElementById(
-        "ambientWind"
-    ).textContent =
-        "💨 " +
-        Math.round(
-            current.wind_speed_10m
-        ) +
-        " km/h";
-
-
-    updateAmbientImportant();
-
-}
-
-
-/* =========================================================
-   WEATHER REFRESH
-========================================================= */
-
-function restartWeatherTimer() {
-
-    clearInterval(
-        refreshTimer
-    );
-
-
-    refreshTimer =
-        setInterval(
-            () => {
-
-                if (
-                    locationData &&
-                    locationData.lat &&
-                    locationData.lon
-                ) {
-
-                    loadWeather(
-                        locationData.lat,
-                        locationData.lon
-                    );
-
-                } else {
-
-                    getLocation();
-
-                }
-
-            },
-
-            Number(
-                settings.refresh
-            ) *
-            60000
-
-        );
-
-}
-
-
-/* =========================================================
-   WEATHER HELPERS
-========================================================= */
-
-function cToF(c) {
-
-    return (
-        c * 9 / 5
-    ) + 32;
-
-}
-
-
-function weatherDescription(
-    code
-) {
-
-    if (code === 0)
-        return "Ciel dégagé";
-
-    if ([1,2].includes(code))
-        return "Partiellement nuageux";
-
-    if (code === 3)
-        return "Nuageux";
-
-    if ([45,48].includes(code))
-        return "Brouillard";
-
-    if ([51,53,55].includes(code))
-        return "Bruine";
-
-    if ([61,63,65].includes(code))
-        return "Pluie";
-
-    if ([71,73,75,77].includes(code))
-        return "Neige";
-
-    if ([80,81,82].includes(code))
-        return "Averses";
-
-    if ([95,96,99].includes(code))
-        return "Orage";
-
-    return "Conditions variables";
-
-}
-
-
-function weatherIcon(
-    code
-) {
-
-    if (code === 0)
-        return "☀️";
-
-    if ([1,2].includes(code))
-        return "🌤️";
-
-    if (code === 3)
-        return "☁️";
-
-    if ([45,48].includes(code))
-        return "🌫️";
-
-    if (
-        [
-            51,53,55,
-            61,63,65,
-            80,81,82
-        ].includes(code)
-    )
-        return "🌧️";
-
-    if (
-        [71,73,75,77]
-        .includes(code)
-    )
-        return "❄️";
-
-    if (
-        [95,96,99]
-        .includes(code)
-    )
-        return "⛈️";
-
-    return "🌤️";
-
-}
-
-
-function formatTime(
-    value
-) {
-
-    if (!value)
-        return "--";
-
-
-    return value
-        .split("T")[1]
-        .slice(0,5);
-
-}
-
-
-/* =========================================================
-   CONNECTION / OFFLINE
-========================================================= */
-
-function updateConnection(
-    online
-) {
-
-    const element =
-        document.getElementById(
-            "connection"
-        );
-
-
-    if (online) {
-
-        element.innerHTML =
-            `<span class="online">
-                ●
-             </span>
-             En ligne · météo actualisée`;
-
-    } else {
-
-        element.innerHTML =
-            `<span class="offline">
-                ●
-             </span>
-             Hors connexion · dernières données conservées`;
-
-    }
-
-}
-
-
-window.addEventListener(
-    "online",
-    () => {
-
-        updateConnection(
-            true
-        );
-
-        if (
-            locationData
-        ) {
-
-            loadWeather(
-                locationData.lat,
-                locationData.lon
-            );
-
-        }
-
-    }
-);
-
-
-window.addEventListener(
-    "offline",
-    () => {
-
-        updateConnection(
-            false
-        );
-
-    }
-);
-
-
-/* =========================================================
-   AMBIENT MODE
-========================================================= */
-
-function enterAmbient() {
-
-    ambientMode =
-        true;
-
-
-    updateAmbientImportant();
-
-
-    document.getElementById(
-        "ambient"
-    ).classList.add(
-        "active"
-    );
-
-
-    applyAmbientBrightness();
-
-}
-
-
-function wakeAmbient() {
-
-    ambientMode =
-        false;
-
-
-    document.getElementById(
-        "ambient"
-    ).classList.remove(
-        "active"
-    );
-
-
-    resetInactivityTimer();
-
-}
-
-
-/* =========================================================
-   INACTIVITY
-========================================================= */
-
-function resetInactivityTimer() {
-
-    clearTimeout(
-        inactivityTimer
-    );
-
-
-    if (
-        ambientMode
-    )
-        return;
-
-
-    if (
-        Number(
-            settings.sleep
-        ) === 0
-    )
-        return;
-
-
-    inactivityTimer =
-        setTimeout(
-            enterAmbient,
-
-            Number(
-                settings.sleep
-            ) *
-            60000
-        );
-
-}
-
-
-[
-    "touchstart",
-    "mousedown",
-    "keydown",
-    "scroll"
-].forEach(
-    eventName => {
-
-        document.addEventListener(
-            eventName,
-            resetInactivityTimer,
-            {
-                passive:
-                    true
-            }
-        );
-
-    }
-);
-
-
-/* =========================================================
-   AMBIENT BRIGHTNESS
-========================================================= */
-
-function changeAmbientBrightness(
-    value
-) {
-
-    settings.ambientBrightness =
-        Number(value);
-
-
-    saveSettings();
-
-    applyAmbientBrightness();
-
-}
-
-
-function applyAmbientBrightness() {
-
-    const brightness =
-        settings.ambientBrightness /
-        100;
-
-
-    document.getElementById(
-        "ambient"
-    ).style.filter =
-        `brightness(${brightness})`;
-
-}
-
-
-/* =========================================================
-   FULLSCREEN
-========================================================= */
-
-async function toggleFullscreen() {
-
-    try {
-
-        if (
-            !document.fullscreenElement
-        ) {
-
-            await document
-                .documentElement
-                .requestFullscreen();
-
-            showToast(
-                "Mode plein écran activé"
-            );
-
-        } else {
-
-            await document
-                .exitFullscreen();
-
-            showToast(
-                "Mode plein écran désactivé"
-            );
-
-        }
-
-    } catch {
-
-        showToast(
-            "Le navigateur ne permet pas le plein écran."
-        );
-
-    }
-
-}
-
-
-function exitFullscreen() {
-
-    if (
-        document.fullscreenElement
-    ) {
-
-        document.exitFullscreen();
-
-    }
-
-}
-
-
-document.addEventListener(
-    "fullscreenchange",
-    () => {
-
-        if (
-            document.fullscreenElement
-        ) {
-
-            showToast(
-                "Plein écran · touchez le haut pour les commandes"
-            );
-
-        }
-
-    }
-);
-
-
-/* =========================================================
-   FULLSCREEN CONTROLS
-========================================================= */
-
-let fsTimer =
-    null;
-
-
-document.addEventListener(
-    "touchstart",
-    event => {
-
-        if (
-            !document.fullscreenElement
-        )
-            return;
-
-
-        const y =
-            event.touches[0].clientY;
-
-
-        if (
-            y < 100
-        ) {
-
-            showFullscreenBar();
-
-        }
-
-    },
-    {
-        passive:
-            true
-    }
-);
-
-
-function showFullscreenBar() {
-
-    const bar =
-        document.getElementById(
-            "fullscreenBar"
-        );
-
-
-    bar.classList.add(
-        "visible"
-    );
-
-
-    clearTimeout(
-        fsTimer
-    );
-
-
-    fsTimer =
-        setTimeout(
-            () => {
-
-                bar.classList.remove(
-                    "visible"
-                );
-
-            },
-            4000
-        );
-
-}
-
-
-/* =========================================================
-   NAVIGATION
-========================================================= */
-
-function goHome() {
-
-    window.scrollTo({
-
-        top:
-            0,
-
-        behavior:
-            "smooth"
-
-    });
-
-}
-
-
-function scrollToCard(
-    id
-) {
-
-    const element =
-        document.getElementById(
-            id
-        );
-
-
-    if (!element)
-        return;
-
-
-    element.scrollIntoView({
-
-        behavior:
-            "smooth",
-
-        block:
-            "center"
-
-    });
-
-}
-
-
-/* =========================================================
-   SETTINGS MODAL
-========================================================= */
-
-function openSettings() {
-
-    document.getElementById(
-        "settingsModal"
-    ).classList.add(
-        "open"
-    );
-
-
-    if (
-        document.fullscreenElement
-    ) {
-
-        showFullscreenBar();
-
-    }
-
-}
-
-
-function closeSettings() {
-
-    document.getElementById(
-        "settingsModal"
-    ).classList.remove(
-        "open"
-    );
-
-}
-
-
-function closeSettingsOutside(
-    event
-) {
-
-    if (
-        event.target.id ===
-        "settingsModal"
-    ) {
-
-        closeSettings();
-
-    }
-
-}
-
-
-/* =========================================================
-   NOTIFICATIONS
-========================================================= */
 
 async function requestNotifications() {
 
-    if (
-        !("Notification" in window)
-    ) {
+    if (!("Notification" in window)) {
 
-        showToast(
-            "Notifications non disponibles dans ce navigateur."
+        showAlert(
+            "Les notifications système ne sont pas disponibles sur ce navigateur. Les alertes intégrées fonctionnent quand même."
         );
 
         return;
-
     }
-
 
     try {
 
         const result =
             await Notification.requestPermission();
 
+        if (result === "granted") {
 
-        if (
-            result ===
-            "granted"
-        ) {
-
-            showToast(
+            showMiniFeedback(
                 "Notifications activées ✓"
             );
 
         } else {
 
-            showToast(
-                "Notifications non autorisées."
+            showMiniFeedback(
+                "Notifications système non autorisées."
             );
-
         }
 
-    } catch {
+    } catch (error) {
 
-        showToast(
-            "Impossible d'activer les notifications."
-        );
-
+        console.log(error);
     }
-
 }
 
 
 /* =========================================================
-   EXPORT
+   WEATHER
+   Open-Meteo
 ========================================================= */
 
-function exportData() {
+function weatherCodeToText(code) {
 
-    const data = {
+    const map = {
 
-        version:
-            4,
+        0: ["☀️", "Ciel dégagé"],
 
-        exported:
-            new Date().toISOString(),
+        1: ["🌤️", "Principalement dégagé"],
 
-        settings:
-            settings,
+        2: ["⛅", "Partiellement nuageux"],
 
-        tasks:
-            tasks,
+        3: ["☁️", "Nuageux"],
 
-        reminders:
-            reminders,
+        45: ["🌫️", "Brouillard"],
 
-        notes:
-            notes.value,
+        48: ["🌫️", "Brouillard givrant"],
 
-        location:
-            locationData,
+        51: ["🌦️", "Bruine légère"],
 
-        weather:
-            weather
+        53: ["🌦️", "Bruine"],
+
+        55: ["🌧️", "Bruine forte"],
+
+        61: ["🌦️", "Pluie légère"],
+
+        63: ["🌧️", "Pluie"],
+
+        65: ["🌧️", "Forte pluie"],
+
+        71: ["🌨️", "Neige légère"],
+
+        73: ["🌨️", "Neige"],
+
+        75: ["❄️", "Forte neige"],
+
+        80: ["🌦️", "Averses"],
+
+        81: ["🌧️", "Averses"],
+
+        82: ["⛈️", "Fortes averses"],
+
+        95: ["⛈️", "Orage"],
+
+        96: ["⛈️", "Orage avec grêle"],
+
+        99: ["⛈️", "Orage fort"]
 
     };
 
+    return map[code] ||
+        ["🌡️", "Conditions inconnues"];
+}
 
-    const blob =
-        new Blob(
-            [
-                JSON.stringify(
-                    data,
-                    null,
-                    2
-                )
-            ],
-            {
-                type:
-                    "application/json"
-            }
+
+async function loadWeather() {
+
+    if (
+        currentLocation.latitude === null ||
+        currentLocation.longitude === null
+    ) {
+
+        return;
+    }
+
+    try {
+
+        const url =
+            "https://api.open-meteo.com/v1/forecast" +
+            "?latitude=" + currentLocation.latitude +
+            "&longitude=" + currentLocation.longitude +
+            "&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m" +
+            "&daily=weather_code,temperature_2m_max,temperature_2m_min" +
+            "&timezone=auto" +
+            "&forecast_days=5";
+
+        const response =
+            await fetch(url);
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Erreur météo"
+            );
+        }
+
+        weatherData =
+            await response.json();
+
+        const current =
+            weatherData.current;
+
+        const info =
+            weatherCodeToText(
+                current.weather_code
+            );
+
+        document.getElementById(
+            "weatherIcon"
+        ).textContent = info[0];
+
+        document.getElementById(
+            "temperature"
+        ).textContent =
+            Math.round(
+                current.temperature_2m
+            ) + "°C";
+
+        document.getElementById(
+            "weatherDescription"
+        ).textContent =
+            info[1] +
+            " • Humidité " +
+            current.relative_humidity_2m +
+            "% • Vent " +
+            Math.round(
+                current.wind_speed_10m
+            ) +
+            " km/h";
+
+        renderForecast();
+
+        document.getElementById(
+            "wallTemperature"
+        ).textContent =
+            "🌡️ " +
+            Math.round(
+                current.temperature_2m
+            ) +
+            "°C";
+
+        document.getElementById(
+            "wallWeather"
+        ).textContent =
+            info[0] +
+            " " +
+            info[1];
+
+    } catch (error) {
+
+        console.warn(
+            "Météo indisponible:",
+            error
         );
 
+        document.getElementById(
+            "weatherDescription"
+        ).textContent =
+            "Météo temporairement indisponible.";
+    }
+}
 
-    const url =
-        URL.createObjectURL(
-            blob
+
+function renderForecast() {
+
+    const container =
+        document.getElementById(
+            "forecast"
         );
 
+    container.innerHTML = "";
 
-    const a =
-        document.createElement(
-            "a"
-        );
+    if (!weatherData) {
+        return;
+    }
 
+    const daily =
+        weatherData.daily;
 
-    a.href =
-        url;
+    for (
+        let i = 0;
+        i < daily.time.length;
+        i++
+    ) {
 
+        const info =
+            weatherCodeToText(
+                daily.weather_code[i]
+            );
 
-    a.download =
-        "wall-os-backup.json";
+        const date =
+            new Date(
+                daily.time[i] + "T12:00:00"
+            );
 
+        const label =
+            i === 0
+                ? "Aujourd'hui"
+                : date.toLocaleDateString(
+                    "fr-CA",
+                    {
+                        weekday:"short"
+                    }
+                );
 
-    a.click();
+        const div =
+            document.createElement("div");
 
+        div.className =
+            "forecast-item";
 
-    URL.revokeObjectURL(
-        url
-    );
+        div.innerHTML = `
 
+            <strong>
+                ${label}
+            </strong>
 
-    showToast(
-        "Sauvegarde exportée ✓"
-    );
+            <div class="forecast-icon">
+                ${info[0]}
+            </div>
 
+            <div>
+                ${Math.round(
+                    daily.temperature_2m_max[i]
+                )}°
+                /
+                ${Math.round(
+                    daily.temperature_2m_min[i]
+                )}°
+            </div>
+        `;
+
+        container.appendChild(div);
+    }
 }
 
 
 /* =========================================================
-   IMPORT
+   LOCATION
 ========================================================= */
 
-function importData(
-    event
-) {
+function getLocation() {
 
-    const file =
-        event.target.files[0];
+    if (!navigator.geolocation) {
 
+        setLocationText(
+            "Localisation non disponible"
+        );
 
-    if (!file)
         return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+
+        position => {
+
+            currentLocation.latitude =
+                position.coords.latitude;
+
+            currentLocation.longitude =
+                position.coords.longitude;
+
+            reverseGeocode();
+
+            loadWeather();
+        },
+
+        error => {
+
+            console.warn(
+                "Erreur GPS:",
+                error
+            );
+
+            setLocationText(
+                "Localisation non autorisée"
+            );
+
+        },
+
+        {
+            enableHighAccuracy: false,
+
+            timeout: 15000,
+
+            maximumAge: 300000
+        }
+    );
+}
 
 
-    const reader =
-        new FileReader();
+async function reverseGeocode() {
 
+    const lat =
+        currentLocation.latitude;
 
-    reader.onload =
-        () => {
+    const lon =
+        currentLocation.longitude;
 
-            try {
+    if (lat === null || lon === null) {
+        return;
+    }
 
-                const data =
-                    JSON.parse(
-                        reader.result
-                    );
+    try {
 
+        const url =
+            "https://nominatim.openstreetmap.org/reverse" +
+            "?format=jsonv2" +
+            "&lat=" + encodeURIComponent(lat) +
+            "&lon=" + encodeURIComponent(lon) +
+            "&zoom=10" +
+            "&addressdetails=1";
 
-                if (
-                    data.settings
-                ) {
-
-                    settings =
-                        data.settings;
-
-                    saveSettings();
-
+        const response =
+            await fetch(url, {
+                headers: {
+                    "Accept":
+                        "application/json"
                 }
+            });
+
+        if (!response.ok) {
+            throw new Error(
+                "Reverse geocoding error"
+            );
+        }
+
+        const data =
+            await response.json();
+
+        const address =
+            data.address || {};
+
+        const city =
+            address.city ||
+            address.town ||
+            address.village ||
+            address.municipality ||
+            address.county ||
+            address.state ||
+            "Lieu inconnu";
+
+        currentLocation.city =
+            city;
+
+        setLocationText(city);
+
+    } catch (error) {
+
+        console.warn(
+            "Impossible de convertir les coordonnées en ville:",
+            error
+        );
+
+        setLocationText(
+            "Localisation obtenue"
+        );
+    }
+}
 
 
-                if (
-                    Array.isArray(
-                        data.tasks
-                    )
-                ) {
+function setLocationText(text) {
 
-                    tasks =
-                        data.tasks;
+    document.getElementById(
+        "location"
+    ).textContent =
+        "📍 " + text;
 
-                    saveTasks();
-
-                }
-
-
-                if (
-                    Array.isArray(
-                        data.reminders
-                    )
-                ) {
-
-                    reminders =
-                        data.reminders;
-
-                    saveReminders();
-
-                }
+    document.getElementById(
+        "wallLocation"
+    ).textContent =
+        "📍 " + text;
+}
 
 
-                if (
-                    typeof data.notes ===
-                    "string"
-                ) {
+/* =========================================================
+   NOTES TEXT
+========================================================= */
 
-                    notes.value =
-                        data.notes;
+function saveNote() {
 
-                    localStorage.setItem(
-                        "wall_v4_notes",
-                        data.notes
-                    );
+    const value =
+        document.getElementById(
+            "textNote"
+        ).value;
 
-                }
+    localStorage.setItem(
+        STORAGE.note,
+        value
+    );
 
-
-                if (
-                    data.location
-                ) {
-
-                    locationData =
-                        data.location;
-
-                    saveJSON(
-                        "wall_v4_location",
-                        locationData
-                    );
-
-                }
+    showMiniFeedback(
+        "Note sauvegardée ✓"
+    );
+}
 
 
-                if (
-                    data.weather
-                ) {
+function loadNote() {
 
-                    weather =
-                        data.weather;
+    const note =
+        localStorage.getItem(
+            STORAGE.note
+        ) || "";
 
-                    saveJSON(
-                        "wall_v4_weather",
-                        weather
-                    );
+    document.getElementById(
+        "textNote"
+    ).value = note;
+}
 
-                }
-
-
-                applySettings();
-
-                renderTasks();
-
-                renderReminders();
-
-                renderWeather();
+loadNote();
 
 
-                if (
-                    locationData
-                ) {
+function openTextNote() {
 
-                    setLocationText(
-                        locationData.display
-                    );
+    document.getElementById(
+        "fullNote"
+    ).value =
+        localStorage.getItem(
+            STORAGE.note
+        ) || "";
 
-                }
+    document.getElementById(
+        "noteOverlay"
+    ).classList.add("active");
+}
 
 
-                showToast(
-                    "Données restaurées ✓"
-                );
+function saveFullNote() {
+
+    const note =
+        document.getElementById(
+            "fullNote"
+        ).value;
+
+    localStorage.setItem(
+        STORAGE.note,
+        note
+    );
+
+    document.getElementById(
+        "textNote"
+    ).value = note;
+
+    showMiniFeedback(
+        "Note sauvegardée ✓"
+    );
+}
 
 
-            } catch {
+function closeOverlay(id) {
 
-                showToast(
-                    "Fichier invalide."
-                );
+    document
+        .getElementById(id)
+        .classList.remove("active");
+}
 
-            }
+
+/* =========================================================
+   DRAWING CANVAS
+========================================================= */
+
+const canvas =
+    document.getElementById(
+        "drawingPad"
+    );
+
+const ctx =
+    canvas.getContext("2d");
+
+let drawing = false;
+
+let currentPen = "#000000";
+
+let eraserMode = false;
+
+
+function resizeCanvas() {
+
+    const oldImage =
+        canvas.width > 0 &&
+        canvas.height > 0
+            ? canvas.toDataURL()
+            : null;
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+    const ratio =
+        window.devicePixelRatio || 1;
+
+    canvas.width =
+        rect.width * ratio;
+
+    canvas.height =
+        rect.height * ratio;
+
+    ctx.setTransform(
+        ratio,
+        0,
+        0,
+        ratio,
+        0,
+        0
+    );
+
+    ctx.lineCap = "round";
+
+    ctx.lineJoin = "round";
+
+    ctx.lineWidth = 4;
+
+    if (oldImage) {
+
+        const image =
+            new Image();
+
+        image.onload = () => {
+
+            ctx.drawImage(
+                image,
+                0,
+                0,
+                rect.width,
+                rect.height
+            );
 
         };
 
-
-    reader.readAsText(
-        file
-    );
-
+        image.src = oldImage;
+    }
 }
 
 
-/* =========================================================
-   RESET
-========================================================= */
+function openDrawing() {
 
-function resetEverything() {
+    document
+        .getElementById(
+            "drawingOverlay"
+        )
+        .classList.add("active");
+
+    setTimeout(() => {
+
+        resizeCanvas();
+
+        loadDrawing();
+
+    }, 50);
+}
+
+
+function closeDrawing() {
+
+    document
+        .getElementById(
+            "drawingOverlay"
+        )
+        .classList.remove("active");
+}
+
+
+function getPointerPosition(event) {
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+    return {
+
+        x:
+            event.clientX -
+            rect.left,
+
+        y:
+            event.clientY -
+            rect.top
+    };
+}
+
+
+function startDrawing(event) {
+
+    event.preventDefault();
+
+    drawing = true;
+
+    const point =
+        getPointerPosition(event);
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        point.x,
+        point.y
+    );
+}
+
+
+function draw(event) {
+
+    if (!drawing) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const point =
+        getPointerPosition(event);
+
+    ctx.globalCompositeOperation =
+        eraserMode
+            ? "destination-out"
+            : "source-over";
+
+    ctx.strokeStyle =
+        currentPen;
+
+    ctx.lineWidth =
+        eraserMode
+            ? 25
+            : 4;
+
+    ctx.lineTo(
+        point.x,
+        point.y
+    );
+
+    ctx.stroke();
+}
+
+
+function stopDrawing() {
+
+    if (!drawing) {
+        return;
+    }
+
+    drawing = false;
+
+    ctx.closePath();
+
+    saveDrawing();
+}
+
+
+canvas.addEventListener(
+    "pointerdown",
+    startDrawing
+);
+
+canvas.addEventListener(
+    "pointermove",
+    draw
+);
+
+canvas.addEventListener(
+    "pointerup",
+    stopDrawing
+);
+
+canvas.addEventListener(
+    "pointercancel",
+    stopDrawing
+);
+
+
+function setPen(color) {
+
+    currentPen = color;
+
+    eraserMode = false;
+}
+
+
+function setEraser() {
+
+    eraserMode = true;
+}
+
+
+function clearCanvas() {
 
     if (
         !confirm(
-            "Supprimer toutes les données du dashboard ?"
+            "Effacer complètement le bloc-notes ?"
         )
-    )
+    ) {
         return;
+    }
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+    ctx.clearRect(
+        0,
+        0,
+        rect.width,
+        rect.height
+    );
+
+    localStorage.removeItem(
+        STORAGE.drawing
+    );
+}
 
 
-    localStorage.clear();
+function saveDrawing() {
+
+    try {
+
+        localStorage.setItem(
+            STORAGE.drawing,
+            canvas.toDataURL(
+                "image/png",
+                .7
+            )
+        );
+
+    } catch (error) {
+
+        console.warn(
+            "Impossible de sauvegarder le dessin:",
+            error
+        );
+    }
+}
 
 
-    location.reload();
+function loadDrawing() {
 
+    const saved =
+        localStorage.getItem(
+            STORAGE.drawing
+        );
+
+    if (!saved) {
+        return;
+    }
+
+    const image =
+        new Image();
+
+    image.onload = () => {
+
+        const rect =
+            canvas.getBoundingClientRect();
+
+        ctx.drawImage(
+            image,
+            0,
+            0,
+            rect.width,
+            rect.height
+        );
+    };
+
+    image.src = saved;
 }
 
 
 /* =========================================================
-   TOAST
+   WALL MODE
 ========================================================= */
 
-let toastTimer =
-    null;
+function startWallMode() {
+
+    wallModeActive = true;
+
+    document
+        .getElementById("wallMode")
+        .classList.add("active");
+
+    updateWallNext();
+
+    /*
+      Tentative de plein écran.
+      Si le navigateur bloque la demande,
+      le mode mur fonctionne quand même.
+    */
+
+    enterFullscreen();
+}
 
 
-function showToast(
-    message
-) {
+function stopWallMode() {
 
-    const toast =
+    wallModeActive = false;
+
+    document
+        .getElementById("wallMode")
+        .classList.remove("active");
+
+    exitFullscreen();
+}
+
+
+function updateWallNext() {
+
+    const element =
         document.getElementById(
-            "toast"
+            "wallNext"
         );
 
+    const upcomingReminders =
+        reminders
+            .filter(
+                r =>
+                    !r.triggered &&
+                    r.time > Date.now()
+            )
+            .sort(
+                (a,b) =>
+                    a.time - b.time
+            );
 
-    toast.textContent =
-        message;
+    if (upcomingReminders.length > 0) {
 
+        const next =
+            upcomingReminders[0];
 
-    toast.classList.add(
-        "show"
-    );
+        const date =
+            new Date(next.time);
 
+        element.textContent =
+            "🔔 Prochain rappel : " +
+            next.text +
+            " • " +
+            date.toLocaleTimeString(
+                "fr-CA",
+                {
+                    hour:"2-digit",
+                    minute:"2-digit"
+                }
+            );
 
-    clearTimeout(
-        toastTimer
-    );
+        return;
+    }
 
-
-    toastTimer =
-        setTimeout(
-            () => {
-
-                toast.classList.remove(
-                    "show"
-                );
-
-            },
-            3000
+    const nextTask =
+        tasks.find(
+            task => !task.completed
         );
 
+    if (nextTask) {
+
+        element.textContent =
+            "☑️ À faire : " +
+            nextTask.text;
+
+        return;
+    }
+
+    element.textContent =
+        "Aucun événement prochain.";
 }
 
 
 /* =========================================================
-   ESCAPE HTML
+   AUTO WALL MODE
 ========================================================= */
 
-function escapeHTML(
-    value
-) {
+const IDLE_MINUTES = 5;
+
+function registerInteraction() {
+
+    lastInteraction =
+        Date.now();
+
+    if (wallModeActive) {
+        return;
+    }
+
+    clearTimeout(idleTimeout);
+
+    idleTimeout =
+        setTimeout(
+            checkIdle,
+            IDLE_MINUTES * 60 * 1000
+        );
+}
+
+
+function checkIdle() {
+
+    const elapsed =
+        Date.now() -
+        lastInteraction;
+
+    if (
+        elapsed >=
+        IDLE_MINUTES * 60 * 1000
+    ) {
+
+        startWallMode();
+
+    } else {
+
+        clearTimeout(
+            idleTimeout
+        );
+
+        idleTimeout =
+            setTimeout(
+                checkIdle,
+                IDLE_MINUTES * 60 * 1000 -
+                elapsed
+            );
+    }
+}
+
+
+[
+    "pointerdown",
+    "touchstart",
+    "keydown"
+].forEach(eventName => {
+
+    document.addEventListener(
+        eventName,
+        registerInteraction,
+        {
+            passive: true
+        }
+    );
+
+});
+
+registerInteraction();
+
+
+/* =========================================================
+   FULLSCREEN
+========================================================= */
+
+async function enterFullscreen() {
+
+    try {
+
+        if (
+            !document.fullscreenElement &&
+            document.documentElement.requestFullscreen
+        ) {
+
+            await document.documentElement
+                .requestFullscreen();
+
+        }
+
+    } catch (error) {
+
+        console.warn(
+            "Plein écran non disponible:",
+            error
+        );
+    }
+}
+
+
+async function exitFullscreen() {
+
+    try {
+
+        if (
+            document.fullscreenElement &&
+            document.exitFullscreen
+        ) {
+
+            await document.exitFullscreen();
+
+        }
+
+    } catch (error) {}
+}
+
+
+/* =========================================================
+   ALERT SYSTEM
+========================================================= */
+
+function showAlert(message) {
+
+    document.getElementById(
+        "alertMessage"
+    ).textContent = message;
+
+    document
+        .getElementById(
+            "alertBox"
+        )
+        .classList.add("active");
+
+    /*
+      Si on est en mode mur,
+      on garde le mode mural derrière
+      et l'alerte passe devant.
+    */
+}
+
+
+function closeAlert() {
+
+    document
+        .getElementById(
+            "alertBox"
+        )
+        .classList.remove("active");
+}
+
+
+/* =========================================================
+   MINI FEEDBACK
+========================================================= */
+
+let feedbackTimeout;
+
+function showMiniFeedback(message) {
+
+    clearTimeout(feedbackTimeout);
+
+    let box =
+        document.getElementById(
+            "miniFeedback"
+        );
+
+    if (!box) {
+
+        box =
+            document.createElement(
+                "div"
+            );
+
+        box.id =
+            "miniFeedback";
+
+        box.style.position =
+            "fixed";
+
+        box.style.left =
+            "50%";
+
+        box.style.bottom =
+            "80px";
+
+        box.style.transform =
+            "translateX(-50%)";
+
+        box.style.zIndex =
+            "1000";
+
+        box.style.background =
+            "#002366";
+
+        box.style.color =
+            "white";
+
+        box.style.padding =
+            "13px 20px";
+
+        box.style.borderRadius =
+            "15px";
+
+        box.style.fontWeight =
+            "700";
+
+        document.body.appendChild(
+            box
+        );
+    }
+
+    box.textContent = message;
+
+    box.style.display = "block";
+
+    feedbackTimeout =
+        setTimeout(() => {
+
+            box.style.display =
+                "none";
+
+        }, 2200);
+}
+
+
+/* =========================================================
+   DIAGNOSTICS
+========================================================= */
+
+function openDiagnostics() {
+
+    const content =
+        document.getElementById(
+            "diagnosticContent"
+        );
+
+    const tests = [
+
+        [
+            "localStorage",
+            typeof localStorage !== "undefined"
+        ],
+
+        [
+            "Géolocalisation",
+            "geolocation" in navigator
+        ],
+
+        [
+            "Canvas tactile",
+            !!canvas.getContext
+        ],
+
+        [
+            "Plein écran",
+            !!document.documentElement.requestFullscreen
+        ],
+
+        [
+            "Notifications",
+            "Notification" in window
+        ],
+
+        [
+            "Vibration",
+            "vibrate" in navigator
+        ],
+
+        [
+            "Fetch / Internet",
+            "fetch" in window
+        ],
+
+        [
+            "Tâches sauvegardées",
+            Array.isArray(tasks)
+        ],
+
+        [
+            "Rappels sauvegardés",
+            Array.isArray(reminders)
+        ],
+
+        [
+            "Note sauvegardée",
+            localStorage.getItem(STORAGE.note) !== null
+        ]
+
+    ];
+
+    content.innerHTML = `
+        <div class="card">
+            <div class="card-title">
+                État du système
+            </div>
+
+            ${tests.map(test => `
+
+                <div class="test-row">
+
+                    <span>
+                        ${test[0]}
+                    </span>
+
+                    <span class="${test[1] ? "ok" : "warning"}">
+                        ${test[1] ? "OK ✓" : "LIMITÉ"}
+                    </span>
+
+                </div>
+
+            `).join("")}
+
+        </div>
+
+        <div class="card" style="margin-top:15px;">
+
+            <div class="card-title">
+                Informations
+            </div>
+
+            <p>
+                Tâches : ${tasks.length}
+            </p>
+
+            <p>
+                Rappels : ${reminders.length}
+            </p>
+
+            <p>
+                Ville : ${escapeHTML(
+                    currentLocation.city
+                )}
+            </p>
+
+            <p>
+                GPS :
+                ${
+                    currentLocation.latitude !== null
+                    ? "disponible"
+                    : "non disponible"
+                }
+            </p>
+
+            <p>
+                Météo :
+                ${weatherData ? "chargée ✓" : "non chargée"}
+            </p>
+
+        </div>
+
+        <button
+            class="primary"
+            onclick="requestNotifications()"
+            style="width:100%;margin-top:15px;">
+            🔔 Tester / autoriser les notifications
+        </button>
+
+        <button
+            class="primary"
+            onclick="testAlert()"
+            style="width:100%;margin-top:10px;">
+            🚨 Tester une alerte
+        </button>
+
+        <button
+            class="primary"
+            onclick="testReminderNow()"
+            style="width:100%;margin-top:10px;">
+            ⏱️ Tester le système de rappel
+        </button>
+    `;
+
+    document
+        .getElementById(
+            "diagnosticsOverlay"
+        )
+        .classList.add("active");
+}
+
+
+function testAlert() {
+
+    showAlert(
+        "Ceci est une alerte de test. Le système fonctionne."
+    );
+}
+
+
+function testReminderNow() {
+
+    const testReminder = {
+
+        id: Date.now(),
+
+        text: "Rappel de test",
+
+        time: Date.now(),
+
+        triggered: false
+    };
+
+    reminders.push(
+        testReminder
+    );
+
+    checkReminders();
+
+    renderReminders();
+
+    updateWallNext();
+}
+
+
+/* =========================================================
+   SECURITY / TEXT ESCAPE
+========================================================= */
+
+function escapeHTML(value) {
 
     return String(value)
 
-        .replace(
-            /&/g,
-            "&amp;"
-        )
+        .replaceAll("&", "&amp;")
 
-        .replace(
-            /</g,
-            "&lt;"
-        )
+        .replaceAll("<", "&lt;")
 
-        .replace(
-            />/g,
-            "&gt;"
-        )
+        .replaceAll(">", "&gt;")
 
-        .replace(
-            /"/g,
-            "&quot;"
-        )
+        .replaceAll('"', "&quot;")
 
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
+        .replaceAll("'", "&#039;");
 }
 
 
 /* =========================================================
-   LOCAL DATE
+   KEYBOARD SHORTCUTS
 ========================================================= */
 
-function localDateKey(
-    date
-) {
+document.addEventListener(
+    "keydown",
+    event => {
 
-    const y =
-        date.getFullYear();
+        if (event.key === "Escape") {
 
+            if (wallModeActive) {
 
-    const m =
-        String(
-            date.getMonth() + 1
-        ).padStart(
-            2,
-            "0"
-        );
+                stopWallMode();
 
+                return;
+            }
 
-    const d =
-        String(
-            date.getDate()
-        ).padStart(
-            2,
-            "0"
-        );
+            document
+                .querySelectorAll(
+                    ".overlay.active"
+                )
+                .forEach(
+                    overlay =>
+                        overlay.classList.remove(
+                            "active"
+                        )
+                );
 
+            closeAlert();
+        }
 
-    return (
-        y +
-        "-" +
-        m +
-        "-" +
-        d
-    );
-
-}
+    }
+);
 
 
 /* =========================================================
-   NIGHT MODE
+   WEATHER AUTO REFRESH
 ========================================================= */
-
-function updateNightMode() {
-
-    if (
-        settings.theme !==
-        "auto"
-    )
-        return;
-
-
-    const hour =
-        new Date()
-            .getHours();
-
-
-    document.body.classList.toggle(
-        "night",
-
-        hour >= 23 ||
-        hour < 6
-    );
-
-}
-
 
 setInterval(
-    updateNightMode,
-    60000
+    () => {
+
+        if (
+            currentLocation.latitude !== null
+        ) {
+
+            loadWeather();
+        }
+
+    },
+    30 * 60 * 1000
+);
+
+
+/* =========================================================
+   LOCATION AUTO REFRESH
+========================================================= */
+
+setInterval(
+    getLocation,
+    60 * 60 * 1000
 );
 
 
@@ -5263,77 +2998,20 @@ setInterval(
 
 function initialize() {
 
-    applySettings();
-
-    updateClock();
-
-    updateNightMode();
-
     renderTasks();
 
     renderReminders();
 
-    updateUpcoming();
-
-    applyAmbientBrightness();
-
-
-    /*
-     * Restaurer la dernière
-     * localisation immédiatement.
-     */
-
-    if (
-        locationData &&
-        locationData.display
-    ) {
-
-        setLocationText(
-            locationData.display
-        );
-
-    }
-
-
-    /*
-     * Restaurer météo immédiatement.
-     */
-
-    if (weather) {
-
-        renderWeather();
-
-        updateConnection(
-            navigator.onLine
-        );
-
-    }
-
-
-    /*
-     * Puis obtenir une nouvelle
-     * localisation.
-     */
+    loadNote();
 
     getLocation();
 
+    updateWallNext();
 
-    restartWeatherTimer();
-
-    resetInactivityTimer();
-
-
-    /*
-     * Autorisation des notifications
-     * seulement après interaction.
-     */
-
+    console.log(
+        "Wall Dashboard V4 initialisé."
+    );
 }
-
-
-/* =========================================================
-   START
-========================================================= */
 
 initialize();
 

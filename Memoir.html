@@ -2547,6 +2547,34 @@ const actionsConnues = [
 ];
 
 
+/*
+ Mots vides (grammaticaux) : ils apparaissent avec presque
+ tout le vocabulaire et polluent les associations
+ sémantiques et le classement "connaissance forte" s'ils ne
+ sont pas amortis. Ils restent utilisés normalement pour les
+ n-grammes (nécessaires à la grammaire des phrases générées) ;
+ seul leur poids dans la couche sémantique est réduit.
+*/
+
+const motsVides = [
+
+    "le","la","les","un","une","des","de","du",
+    "et","à","dans","en","sur","pour","par","avec",
+    "ce","cet","cette","ces","il","elle","ils","elles",
+    "que","qui","quoi","dont","où","ne","pas","se",
+    "sa","son","ses","au","aux","ou","mais","donc",
+    "or","ni","car","y","on","nous","vous","je","tu",
+    "est","sont","être","avoir","a","ont","plus",
+    "très","comme","si","tout","tous","toute","toutes",
+    "leur","leurs","mon","ma","mes","ton","ta","tes",
+    "lui","eux","me","te","moi","toi","d'","l'","qu'","c'"
+
+];
+
+
+const PONDERATION_MOT_VIDE = .15;
+
+
 /* =========================================================
 APPRENDRE
 ========================================================= */
@@ -2936,12 +2964,46 @@ function apprendreSemantique(tokens){
 
             const b=tokens[j];
 
+            /*
+             Frontière de phrase : on n'associe pas des mots
+             de part et d'autre d'un point/!/? . Avant ce
+             correctif, "continue" sautait juste la ponctuation
+             sans empêcher la fenêtre de continuer au-delà,
+             ce qui reliait parfois des mots de deux phrases
+             différentes.
+            */
+
+            if(
+                [".","!","?"]
+                    .includes(b)
+            ){
+
+                break;
+
+            }
+
             if(isPonctuation(b)){
                 continue;
             }
 
-            const poids =
+            let poids =
                 1/(j-i);
+
+            /*
+             Amortissement des mots vides : "le", "de", "un"...
+             co-occurrent avec tout, donc sans amortissement
+             ils dominent les associations sémantiques.
+            */
+
+            if(
+                motsVides.includes(a) ||
+                motsVides.includes(b)
+            ){
+
+                poids *=
+                    PONDERATION_MOT_VIDE;
+
+            }
 
             ajouterAssociation(
                 a,
@@ -3396,19 +3458,40 @@ function profilConnaissance(mot){
         );
 
 
+    /*
+     Les mots vides sont mécaniquement très fréquents et
+     très répétés sans porter beaucoup de sens : sans cet
+     amortissement, ils seraient presque toujours classés
+     "connaissance forte", ce qui fausse la génération
+     (niveau "fort") et le "Vocabulaire dominant".
+    */
+
+    let importanceFinale = importance;
+    let confianceFinale = confiance;
+
+    if(
+        motsVides.includes(mot)
+    ){
+
+        importanceFinale *= .35;
+        confianceFinale *= .35;
+
+    }
+
+
     let niveau="faible";
 
     if(
-        importance>=.68 &&
-        confiance>=.60
+        importanceFinale>=.68 &&
+        confianceFinale>=.60
     ){
 
         niveau="fort";
 
     }
     else if(
-        importance>=.35 ||
-        confiance>=.35
+        importanceFinale>=.35 ||
+        confianceFinale>=.35
     ){
 
         niveau="moyen";
@@ -3428,9 +3511,9 @@ function profilConnaissance(mot){
 
         recenceScore,
 
-        importance,
+        importance:importanceFinale,
 
-        confiance,
+        confiance:confianceFinale,
 
         niveau
 
@@ -3552,6 +3635,36 @@ function choixPondere(options){
 SCORE SEMANTIQUE
 ========================================================= */
 
+/* =========================================================
+ECHELLE SEMANTIQUE
+========================================================= */
+
+/*
+ Les bonus "catégories/concepts/contexte communs" étaient des
+ constantes fixes (+2, +1.5, +.8), alors que le terme
+ "association directe" (Math.log1p(x)*4) et les scores de
+ fréquence croissent avec la taille du corpus appris. Résultat :
+ plus la mémoire grossit, plus ces bonus fixes deviennent
+ négligeables face aux scores bruts de fréquence.
+ Cette échelle les fait croître au même rythme (logarithmique)
+ que le corpus, pour garder un équilibre stable dans le temps.
+*/
+
+function echelleSemantique(){
+
+    const tokens =
+        Number(
+            memoire.statistiques.tokens || 0
+        );
+
+    return Math.max(
+        1,
+        Math.log1p(tokens)/6
+    );
+
+}
+
+
 function scoreSemantique(
     precedent,
     candidat,
@@ -3559,6 +3672,9 @@ function scoreSemantique(
 ){
 
     let score=0;
+
+    const echelle =
+        echelleSemantique();
 
 
     /* association directe */
@@ -3601,7 +3717,7 @@ function scoreSemantique(
             cat2[categorie]
         ){
 
-            score+=2;
+            score += 2*echelle;
 
         }
 
@@ -3628,7 +3744,7 @@ function scoreSemantique(
             con2[concept]
         ){
 
-            score+=1.5;
+            score += 1.5*echelle;
 
         }
 
@@ -3655,7 +3771,7 @@ function scoreSemantique(
             ctx2[ctx]
         ){
 
-            score+=.8;
+            score += .8*echelle;
 
         }
 

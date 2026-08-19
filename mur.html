@@ -7,73 +7,72 @@
       content="width=device-width,
                initial-scale=1,
                maximum-scale=1,
-               user-scalable=no">
+               user-scalable=no,
+               viewport-fit=cover">
 
 <meta name="theme-color" content="#002366">
 
-<title>Wall Dashboard V3</title>
+<title>Wall OS V4</title>
 
 <style>
 
-/* =====================================================
-   WALL DASHBOARD V3
-   BRAND COLORS
-===================================================== */
+/* =========================================================
+   WALL OS V4
+   COLORS
+========================================================= */
 
 :root {
     --blue: #002366;
-    --blue-dark: #001536;
-    --blue-deep: #000b1d;
+    --blue-dark: #00163f;
+    --blue-deep: #000817;
 
     --silver: #bcbfc2;
 
     --white: #ffffff;
 
-    --bg: #f1f3f5;
+    --bg: #f3f5f7;
     --panel: #ffffff;
-    --panel2: #e9ecef;
+    --panel2: #e8ebee;
 
     --text: #002366;
     --muted: #66717d;
 
+    --green: #31c875;
+    --orange: #ffad42;
+    --red: #ff6262;
+
     --border: rgba(0,35,102,.12);
 
-    --glow:
-        0 0 10px rgba(188,191,194,.55),
-        0 0 25px rgba(188,191,194,.30);
+    --shadow:
+        0 10px 35px rgba(0,0,0,.12);
 }
 
-/* =====================================================
-   DARK THEME
-===================================================== */
-
 body.dark {
-    --bg: #001536;
-    --panel: #002366;
-    --panel2: #001b4d;
+    --bg: #000b1d;
+    --panel: #00183f;
+    --panel2: #002050;
 
     --text: #ffffff;
     --muted: #bcbfc2;
 
     --border: rgba(188,191,194,.16);
+
+    --shadow:
+        0 10px 40px rgba(0,0,0,.35);
 }
 
-/* =====================================================
-   AUTO NIGHT
-===================================================== */
+body.night {
+    --bg: #00040c;
+    --panel: #000c20;
+    --panel2: #001126;
 
-body.night-mode {
-    --bg: #000714;
-    --panel: #000e27;
-    --panel2: #001536;
-
-    --text: #dce8ff;
-    --muted: #8d9bb3;
+    --text: #dce7fa;
+    --muted: #8493aa;
 }
 
-/* =====================================================
-   GLOBAL
-===================================================== */
+/* =========================================================
+   RESET
+========================================================= */
 
 * {
     box-sizing: border-box;
@@ -97,8 +96,8 @@ body {
         sans-serif;
 
     transition:
-        background .4s,
-        color .4s;
+        background .3s,
+        color .3s;
 }
 
 body {
@@ -109,81 +108,59 @@ button,
 input,
 textarea,
 select {
-    font-family: inherit;
+    font: inherit;
 }
 
-/* =====================================================
+/* =========================================================
    APP
-===================================================== */
+========================================================= */
 
-.app {
+#app {
     width: 100%;
-    max-width: 700px;
+    max-width: 900px;
 
     margin: auto;
 
-    padding: 12px 14px 30px;
+    padding:
+        env(safe-area-inset-top)
+        15px
+        100px
+        15px;
 }
 
-/* =====================================================
-   TOP BAR
-===================================================== */
-
-.topbar {
-    height: 45px;
-
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-}
-
-.top-button {
-    width: 42px;
-    height: 42px;
-
-    border-radius: 50%;
-
-    border:
-        1px solid var(--border);
-
-    background: var(--panel);
-
-    color: var(--text);
-
-    font-size: 19px;
-}
-
-/* =====================================================
+/* =========================================================
    HEADER
-===================================================== */
+========================================================= */
 
 .header {
     padding:
-        4px
-        4px
-        20px;
+        15px 5px 20px;
 }
 
-.time {
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.clock {
     font-size:
-        clamp(
-            52px,
-            17vw,
-            96px
-        );
+        clamp(55px, 16vw, 105px);
 
     font-weight: 300;
 
     letter-spacing:
-        -4px;
+        -5px;
 
-    line-height: .9;
+    line-height:
+        .85;
 }
 
 .date {
-    margin-top: 12px;
+    margin-top: 13px;
 
-    color: var(--muted);
+    color:
+        var(--muted);
 
     font-size: 17px;
 
@@ -192,43 +169,146 @@ select {
 }
 
 .location {
-    margin-top: 11px;
+    margin-top: 10px;
+
+    font-size: 15px;
 
     color:
         var(--silver);
-
-    font-size: 14px;
 }
 
-/* =====================================================
-   PANELS
-===================================================== */
+.location small {
+    display: block;
 
-.panel {
+    margin-top: 3px;
+
+    color:
+        var(--muted);
+
+    font-size: 10px;
+}
+
+/* =========================================================
+   FLOATING CONTROLS
+========================================================= */
+
+.header-button {
+    width: 48px;
+    height: 48px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 50%;
+
+    background:
+        var(--panel);
+
+    color:
+        var(--text);
+
+    box-shadow:
+        var(--shadow);
+
+    font-size: 20px;
+}
+
+/* =========================================================
+   MAIN NAVIGATION
+========================================================= */
+
+.main-nav {
+    position: fixed;
+
+    left: 50%;
+    bottom: 15px;
+
+    transform:
+        translateX(-50%);
+
+    z-index: 500;
+
+    display: flex;
+
+    gap: 5px;
+
+    padding: 7px;
+
+    border-radius: 22px;
+
+    background:
+        rgba(0,35,102,.94);
+
+    box-shadow:
+        0 8px 35px
+        rgba(0,0,0,.35);
+
+    backdrop-filter:
+        blur(15px);
+}
+
+.nav-button {
+    min-width: 49px;
+    height: 49px;
+
+    border-radius: 16px;
+
+    border: 0;
+
+    background:
+        transparent;
+
+    color:
+        white;
+
+    font-size: 20px;
+}
+
+.nav-button.active {
+    background:
+        rgba(188,191,194,.23);
+}
+
+/* =========================================================
+   CARDS
+========================================================= */
+
+.grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 13px;
+}
+
+.card {
     background:
         var(--panel);
 
     border:
         1px solid var(--border);
 
-    border-radius: 20px;
+    border-radius:
+        21px;
 
-    padding: 17px;
-
-    margin-bottom: 13px;
+    padding:
+        17px;
 
     box-shadow:
-        0 8px 30px
-        rgba(0,0,0,.15);
+        var(--shadow);
 }
 
-.panel-title {
+.card.full {
+    grid-column:
+        1 / -1;
+}
+
+.card-title {
     color:
         var(--silver);
 
-    font-size: 12px;
-
-    font-weight: bold;
+    font-size:
+        11px;
 
     letter-spacing:
         1.5px;
@@ -236,80 +316,94 @@ select {
     text-transform:
         uppercase;
 
-    margin-bottom: 15px;
+    font-weight:
+        bold;
+
+    margin-bottom:
+        15px;
 }
 
-/* =====================================================
+/* =========================================================
    WEATHER
-===================================================== */
+========================================================= */
 
 .weather-main {
-    display: flex;
-
-    align-items:
-        center;
+    display:
+        flex;
 
     justify-content:
         space-between;
+
+    align-items:
+        center;
 }
 
 .temperature {
-    font-size: 60px;
+    font-size:
+        clamp(50px, 12vw, 80px);
 
-    font-weight: 300;
+    font-weight:
+        300;
+}
+
+.weather-icon {
+    font-size:
+        55px;
 }
 
 .weather-description {
     color:
         var(--muted);
 
-    margin-top: 4px;
+    margin-top:
+        5px;
 }
 
-.weather-icon {
-    font-size: 58px;
-}
-
-.weather-extra {
+.weather-stats {
     display:
         grid;
 
     grid-template-columns:
         repeat(3,1fr);
 
-    gap: 8px;
+    gap:
+        7px;
 
-    margin-top: 18px;
+    margin-top:
+        17px;
 }
 
-.weather-stat {
-    background:
-        var(--panel2);
+.stat {
+    padding:
+        10px 5px;
 
     border-radius:
         13px;
 
-    padding:
-        11px 5px;
+    background:
+        var(--panel2);
 
     text-align:
         center;
 }
 
-.weather-stat small {
-    display: block;
+.stat small {
+    display:
+        block;
 
     color:
         var(--muted);
 
-    font-size: 11px;
+    font-size:
+        10px;
 
-    margin-bottom: 5px;
+    margin-bottom:
+        5px;
 }
 
-/* =====================================================
+/* =========================================================
    FORECAST
-===================================================== */
+========================================================= */
 
 .forecast {
     display:
@@ -318,155 +412,219 @@ select {
     grid-template-columns:
         repeat(5,1fr);
 
-    gap: 6px;
+    gap:
+        5px;
 }
 
 .forecast-day {
-    background:
-        var(--panel2);
+    text-align:
+        center;
+
+    padding:
+        9px 2px;
 
     border-radius:
         12px;
 
-    padding:
-        9px 3px;
-
-    text-align:
-        center;
+    background:
+        var(--panel2);
 }
 
-.forecast-day-name {
+.forecast-name {
     color:
         var(--muted);
 
-    font-size: 11px;
+    font-size:
+        10px;
 }
 
 .forecast-icon {
-    font-size: 25px;
+    font-size:
+        24px;
 
     margin:
         7px 0;
 }
 
 .forecast-temp {
-    font-size: 12px;
+    font-size:
+        11px;
 }
 
-/* =====================================================
-   NOTES
-===================================================== */
+/* =========================================================
+   SUN
+========================================================= */
+
+.sun-row {
+    display:
+        grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap:
+        8px;
+}
+
+.sun-item {
+    background:
+        var(--panel2);
+
+    border-radius:
+        14px;
+
+    padding:
+        13px;
+
+    text-align:
+        center;
+}
+
+.sun-icon {
+    font-size:
+        27px;
+}
+
+.sun-time {
+    margin-top:
+        5px;
+
+    font-size:
+        18px;
+}
+
+/* =========================================================
+   UPCOMING
+========================================================= */
+
+.upcoming {
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        7px;
+}
+
+.upcoming-item {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        10px;
+
+    padding:
+        11px;
+
+    border-radius:
+        13px;
+
+    background:
+        var(--panel2);
+}
+
+.upcoming-icon {
+    font-size:
+        22px;
+}
+
+.upcoming-content {
+    flex:
+        1;
+}
+
+.upcoming-time {
+    color:
+        var(--silver);
+
+    font-size:
+        12px;
+
+    font-weight:
+        bold;
+}
+
+.upcoming-text {
+    margin-top:
+        3px;
+
+    font-size:
+        14px;
+}
+
+/* =========================================================
+   TASKS
+========================================================= */
+
+.input-row {
+    display:
+        flex;
+
+    gap:
+        7px;
+}
+
+.input-row input {
+    flex:
+        1;
+}
+
+input,
+textarea,
+select {
+    width:
+        100%;
+
+    background:
+        var(--panel2);
+
+    color:
+        var(--text);
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        12px;
+
+    padding:
+        12px;
+
+    outline:
+        none;
+}
 
 textarea {
-    width: 100%;
-
     min-height:
-        145px;
+        140px;
 
     resize:
         vertical;
-
-    padding:
-        14px;
-
-    background:
-        var(--panel2);
-
-    color:
-        var(--text);
-
-    border:
-        1px solid var(--border);
-
-    border-radius:
-        13px;
-
-    outline:
-        none;
-
-    font-size:
-        16px;
 }
 
-/* =====================================================
-   INPUTS
-===================================================== */
-
-input,
-select {
-    background:
-        var(--panel2);
-
-    color:
-        var(--text);
-
-    border:
-        1px solid var(--border);
-
-    border-radius:
-        12px;
-
-    outline:
-        none;
-
-    padding:
-        13px;
-
-    font-size:
-        16px;
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-    border-color:
-        var(--silver);
-}
-
-button {
-    border: 0;
-
-    border-radius:
-        12px;
-
-    padding:
-        12px 15px;
-
+button.primary {
     background:
         var(--blue);
 
     color:
         white;
 
+    border:
+        0;
+
+    border-radius:
+        12px;
+
+    padding:
+        12px 17px;
+
     font-weight:
         bold;
-
-    font-size:
-        15px;
-}
-
-button:active {
-    transform:
-        scale(.97);
-}
-
-/* =====================================================
-   TASKS
-===================================================== */
-
-.task-input {
-    display:
-        flex;
-
-    gap: 8px;
-}
-
-.task-input input {
-    flex: 1;
-}
-
-.tasks {
-    margin-top: 12px;
 }
 
 .task {
@@ -476,98 +634,104 @@ button:active {
     align-items:
         center;
 
-    gap: 10px;
+    gap:
+        9px;
+
+    margin-top:
+        7px;
+
+    padding:
+        10px;
 
     background:
         var(--panel2);
-
-    padding:
-        11px;
-
-    margin-bottom:
-        7px;
 
     border-radius:
         12px;
 }
 
-.task input {
+.task-checkbox {
     width:
-        21px;
+        22px;
 
     height:
-        21px;
-
-    padding:
-        0;
+        22px;
 }
 
-.task-text {
-    flex: 1;
-
-    word-break:
-        break-word;
+.task-content {
+    flex:
+        1;
 }
 
-.task.done .task-text {
-    text-decoration:
-        line-through;
-
+.task.done .task-content {
     color:
         var(--muted);
+
+    text-decoration:
+        line-through;
+}
+
+.priority {
+    font-size:
+        10px;
+
+    padding:
+        4px 6px;
+
+    border-radius:
+        7px;
+
+    background:
+        var(--blue);
+
+    color:
+        white;
 }
 
 .delete {
     background:
         transparent;
 
+    border:
+        0;
+
     color:
-        #ff7070;
+        var(--red);
 
     padding:
         5px;
 }
 
-/* =====================================================
+/* =========================================================
    REMINDERS
-===================================================== */
+========================================================= */
 
-.reminder-input {
-    display:
-        grid;
-
-    grid-template-columns:
-        1fr 120px;
-
-    gap: 8px;
-}
-
-.reminder-list {
-    margin-top:
-        12px;
-}
-
-.reminder-item {
+.reminder {
     display:
         flex;
 
     align-items:
         center;
 
-    justify-content:
-        space-between;
+    gap:
+        10px;
 
-    background:
-        var(--panel2);
+    margin-top:
+        7px;
 
     padding:
         11px;
 
+    background:
+        var(--panel2);
+
     border-radius:
         12px;
+}
 
-    margin-bottom:
-        7px;
+.reminder-info {
+    flex:
+        1;
 }
 
 .reminder-time {
@@ -576,41 +740,49 @@ button:active {
 
     font-weight:
         bold;
-
-    margin-top:
-        3px;
 }
 
-/* =====================================================
-   STATUS
-===================================================== */
+/* =========================================================
+   OFFLINE
+========================================================= */
 
-.status {
+.connection {
     text-align:
         center;
+
+    font-size:
+        11px;
 
     color:
         var(--muted);
 
-    font-size:
-        11px;
+    margin-top:
+        18px;
 }
 
 .online {
     color:
-        #4ed994;
+        var(--green);
 }
 
-/* =====================================================
-   SETTINGS
-===================================================== */
+.offline {
+    color:
+        var(--orange);
+}
 
-.settings-overlay {
+/* =========================================================
+   MODALS
+========================================================= */
+
+.modal {
     position:
         fixed;
 
     inset:
         0;
+
+    z-index:
+        1000;
 
     display:
         none;
@@ -622,41 +794,38 @@ button:active {
         center;
 
     background:
-        rgba(0,0,0,.72);
-
-    z-index:
-        1000;
+        rgba(0,0,0,.75);
 }
 
-.settings-overlay.open {
+.modal.open {
     display:
         flex;
 }
 
-.settings {
+.modal-box {
     width:
         100%;
 
     max-width:
-        700px;
+        900px;
 
     max-height:
-        90vh;
+        92vh;
 
     overflow-y:
         auto;
+
+    padding:
+        20px;
 
     background:
         var(--panel);
 
     border-radius:
-        24px 24px 0 0;
-
-    padding:
-        20px;
+        25px 25px 0 0;
 }
 
-.settings-header {
+.modal-header {
     display:
         flex;
 
@@ -667,28 +836,17 @@ button:active {
         center;
 
     margin-bottom:
-        18px;
+        20px;
 }
 
-.settings-header h2 {
+.modal-header h2 {
     margin:
         0;
-
-    font-size:
-        21px;
-}
-
-.close-button {
-    background:
-        var(--panel2);
-
-    color:
-        var(--text);
 }
 
 .setting {
     margin-bottom:
-        17px;
+        16px;
 }
 
 .setting label {
@@ -699,40 +857,114 @@ button:active {
         var(--muted);
 
     font-size:
-        13px;
+        12px;
 
     margin-bottom:
         7px;
 }
 
-.setting select {
-    width:
-        100%;
-}
-
-.fullscreen-button {
-    width:
-        100%;
-
-    margin-top:
-        5px;
-}
-
-/* =====================================================
-   HIDDEN PANELS
-===================================================== */
-
-.hidden-panel {
+.setting-row {
     display:
-        none;
+        grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap:
+        8px;
 }
 
-/* =====================================================
-   AMBIENT / SLEEP SCREEN
-===================================================== */
+.danger-button {
+    background:
+        #7b1d1d;
 
-#ambientScreen {
+    color:
+        white;
+}
 
+/* =========================================================
+   FULLSCREEN CONTROL BAR
+========================================================= */
+
+.fullscreen-bar {
+    position:
+        fixed;
+
+    left:
+        50%;
+
+    top:
+        12px;
+
+    transform:
+        translateX(-50%)
+        translateY(-130%);
+
+    z-index:
+        900;
+
+    display:
+        flex;
+
+    gap:
+        5px;
+
+    padding:
+        6px;
+
+    border-radius:
+        18px;
+
+    background:
+        rgba(0,35,102,.96);
+
+    box-shadow:
+        0 8px 30px
+        rgba(0,0,0,.4);
+
+    transition:
+        transform .25s;
+}
+
+.fullscreen-bar.visible {
+    transform:
+        translateX(-50%)
+        translateY(0);
+}
+
+.fs-button {
+    min-width:
+        48px;
+
+    height:
+        48px;
+
+    background:
+        transparent;
+
+    color:
+        white;
+
+    border:
+        0;
+
+    border-radius:
+        13px;
+
+    font-size:
+        19px;
+}
+
+.fs-button:active {
+    background:
+        rgba(255,255,255,.15);
+}
+
+/* =========================================================
+   AMBIENT MODE
+========================================================= */
+
+#ambient {
     position:
         fixed;
 
@@ -758,43 +990,31 @@ button:active {
         center;
 
     padding:
-        8vh 5vw 4vh;
+        7vh 5vw 4vh;
+
+    overflow:
+        hidden;
 
     background:
         radial-gradient(
             circle at center,
-            #003b91 0%,
-            #002366 35%,
-            #000c20 100%
+            #00409d 0%,
+            #002366 34%,
+            #000713 100%
         );
 
     color:
-        #ffffff;
-
-    cursor:
-        pointer;
-
-    overflow:
-        hidden;
+        white;
 }
 
-#ambientScreen.active {
+#ambient.active {
     display:
         flex;
 }
 
-/* =====================================================
-   AMBIENT CLOCK
-===================================================== */
-
 .ambient-clock {
-
     font-size:
-        clamp(
-            90px,
-            25vw,
-            190px
-        );
+        clamp(90px, 25vw, 210px);
 
     font-weight:
         300;
@@ -803,100 +1023,52 @@ button:active {
         -8px;
 
     line-height:
-        .85;
-
-    color:
-        #ffffff;
+        .82;
 
     text-shadow:
-
-        0 0 5px
-        rgba(255,255,255,.95),
-
-        0 0 18px
-        rgba(188,191,194,.9),
-
-        0 0 40px
-        rgba(188,191,194,.65),
-
-        0 0 80px
-        rgba(188,191,194,.35);
+        0 0 7px white,
+        0 0 25px white,
+        0 0 55px var(--silver),
+        0 0 100px var(--silver);
 
     animation:
-        ambientGlow 4s
-        ease-in-out
+        glow 3s ease-in-out
         infinite alternate;
 }
 
-@keyframes ambientGlow {
+@keyframes glow {
 
     from {
         text-shadow:
-
-            0 0 5px
-            rgba(255,255,255,.95),
-
-            0 0 18px
-            rgba(188,191,194,.9),
-
-            0 0 40px
-            rgba(188,191,194,.65);
+            0 0 7px white,
+            0 0 25px white,
+            0 0 50px var(--silver);
     }
 
     to {
         text-shadow:
-
-            0 0 8px
-            rgba(255,255,255,1),
-
-            0 0 30px
-            rgba(255,255,255,.9),
-
-            0 0 60px
-            rgba(188,191,194,.8),
-
-            0 0 100px
-            rgba(188,191,194,.5);
+            0 0 10px white,
+            0 0 35px white,
+            0 0 75px var(--silver),
+            0 0 120px var(--silver);
     }
-
 }
-
-/* =====================================================
-   AMBIENT DATE
-===================================================== */
 
 .ambient-date {
-
     margin-top:
-        22px;
+        20px;
 
     font-size:
-        clamp(
-            17px,
-            4vw,
-            28px
-        );
+        clamp(17px, 4vw, 27px);
 
     color:
-        #bcbfc2;
+        var(--silver);
 
     text-shadow:
-        0 0 15px
-        rgba(188,191,194,.7);
+        0 0 20px var(--silver);
 }
 
-/* =====================================================
-   AMBIENT WEATHER
-===================================================== */
-
 .ambient-weather {
-
-    width:
-        100%;
-
-    max-width:
-        600px;
-
     display:
         flex;
 
@@ -911,9 +1083,105 @@ button:active {
 }
 
 .ambient-weather-row {
-
     display:
         flex;
+
+    align-items:
+        center;
+
+    gap:
+        18px;
+}
+
+.ambient-icon {
+    font-size:
+        clamp(45px, 10vw, 80px);
+
+    filter:
+        drop-shadow(
+            0 0 20px white
+        );
+}
+
+.ambient-temp {
+    font-size:
+        clamp(65px, 15vw, 110px);
+
+    font-weight:
+        300;
+
+    text-shadow:
+        0 0 10px white,
+        0 0 35px var(--silver);
+}
+
+.ambient-description {
+    font-size:
+        clamp(16px, 4vw, 25px);
+
+    color:
+        var(--silver);
+}
+
+.ambient-stats {
+    display:
+        flex;
+
+    flex-wrap:
+        wrap;
+
+    justify-content:
+        center;
+
+    gap:
+        18px;
+
+    font-size:
+        clamp(13px, 3vw, 18px);
+}
+
+.ambient-important {
+    min-height:
+        28px;
+
+    max-width:
+        90%;
+
+    color:
+        white;
+
+    font-size:
+        clamp(14px, 3vw, 20px);
+
+    text-shadow:
+        0 0 12px white,
+        0 0 25px var(--silver);
+}
+
+.ambient-location {
+    color:
+        var(--silver);
+
+    font-size:
+        12px;
+}
+
+/* =========================================================
+   ALERT OVERLAY
+========================================================= */
+
+#alertOverlay {
+    position:
+        fixed;
+
+    inset:
+        0;
+
+    z-index:
+        3000;
+
+    display:
+        none;
 
     align-items:
         center;
@@ -921,222 +1189,159 @@ button:active {
     justify-content:
         center;
 
-    gap:
-        18px;
+    padding:
+        20px;
+
+    background:
+        rgba(0,0,0,.85);
 }
 
-.ambient-weather-icon {
-
-    font-size:
-        clamp(
-            45px,
-            10vw,
-            75px
-        );
-
-    filter:
-        drop-shadow(
-            0 0 18px
-            rgba(255,255,255,.75)
-        );
-}
-
-.ambient-temperature {
-
-    font-size:
-        clamp(
-            55px,
-            14vw,
-            100px
-        );
-
-    font-weight:
-        300;
-
-    color:
-        #ffffff;
-
-    text-shadow:
-
-        0 0 8px
-        rgba(255,255,255,.9),
-
-        0 0 30px
-        rgba(188,191,194,.7);
-}
-
-.ambient-description {
-
-    font-size:
-        clamp(
-            16px,
-            4vw,
-            24px
-        );
-
-    color:
-        #bcbfc2;
-}
-
-/* =====================================================
-   AMBIENT STATS
-===================================================== */
-
-.ambient-stats {
-
+#alertOverlay.show {
     display:
         flex;
+}
 
-    justify-content:
+.alert-box {
+    width:
+        min(650px, 95vw);
+
+    padding:
+        30px;
+
+    text-align:
         center;
 
-    gap:
-        25px;
-
-    flex-wrap:
-        wrap;
-
-    color:
-        #ffffff;
-
-    font-size:
-        clamp(
-            13px,
-            3vw,
-            18px
-        );
-}
-
-.ambient-stat {
-    text-shadow:
-        0 0 12px
-        rgba(255,255,255,.7);
-}
-
-/* =====================================================
-   AMBIENT IMPORTANT INFO
-===================================================== */
-
-.ambient-important {
-
-    min-height:
+    border-radius:
         28px;
 
-    font-size:
-        clamp(
-            13px,
-            3vw,
-            19px
-        );
+    background:
+        var(--panel);
 
-    color:
-        #bcbfc2;
+    border:
+        3px solid var(--silver);
 
-    opacity:
-        .92;
-
-    text-shadow:
-        0 0 12px
-        rgba(188,191,194,.55);
-
-    transition:
-        opacity .4s;
+    box-shadow:
+        0 0 60px
+        rgba(188,191,194,.6);
 }
 
-.ambient-important:empty {
+.alert-icon {
+    font-size:
+        60px;
+}
+
+.alert-title {
+    font-size:
+        25px;
+
+    margin:
+        12px 0;
+}
+
+.alert-message {
+    font-size:
+        20px;
+
+    color:
+        var(--muted);
+
+    margin-bottom:
+        20px;
+}
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+#toast {
+    position:
+        fixed;
+
+    left:
+        50%;
+
+    bottom:
+        90px;
+
+    transform:
+        translateX(-50%)
+        translateY(20px);
+
+    z-index:
+        4000;
+
     opacity:
         0;
-}
 
-/* =====================================================
-   AMBIENT LOCATION
-===================================================== */
+    pointer-events:
+        none;
 
-.ambient-location {
+    padding:
+        12px 18px;
 
-    font-size:
-        12px;
+    border-radius:
+        15px;
+
+    background:
+        var(--blue);
 
     color:
-        rgba(188,191,194,.75);
+        white;
+
+    transition:
+        .25s;
 }
 
-/* =====================================================
-   FULLSCREEN
-===================================================== */
+#toast.show {
+    opacity:
+        1;
 
-body.fullscreen-ui .topbar {
-    display:
-        none;
+    transform:
+        translateX(-50%)
+        translateY(0);
 }
 
-body.fullscreen-ui .app {
-    padding-top:
-        8px;
-}
+/* =========================================================
+   RESPONSIVE
+========================================================= */
 
-/* =====================================================
-   LANDSCAPE
-===================================================== */
+@media (max-width: 550px) {
+
+    .grid {
+        grid-template-columns:
+            1fr;
+    }
+
+    .card.full {
+        grid-column:
+            auto;
+    }
+
+    .main-nav {
+        max-width:
+            calc(100% - 18px);
+
+        overflow-x:
+            auto;
+    }
+
+}
 
 @media (orientation: landscape) {
 
-    .app {
+    #app {
         max-width:
-            1100px;
+            1200px;
     }
 
-    .dashboard-grid {
-        display:
-            grid;
-
+    .grid {
         grid-template-columns:
-            1fr 1fr;
-
-        gap:
-            13px;
+            repeat(3,1fr);
     }
 
-}
-
-/* =====================================================
-   SMALL TABLETS
-===================================================== */
-
-@media (max-width:390px) {
-
-    .app {
-        padding:
-            10px;
-    }
-
-    .panel {
-        padding:
-            14px;
-
-        border-radius:
-            17px;
-    }
-
-    .ambient-clock {
-        letter-spacing:
-            -5px;
-    }
-
-}
-
-/* =====================================================
-   REDUCED MOTION
-===================================================== */
-
-@media (prefers-reduced-motion: reduce) {
-
-    * {
-        animation:
-            none !important;
-
-        transition:
-            none !important;
+    .card.full {
+        grid-column:
+            1 / -1;
     }
 
 }
@@ -1146,55 +1351,60 @@ body.fullscreen-ui .app {
 
 <body>
 
-<!-- ===================================================
-     NORMAL DASHBOARD
-=================================================== -->
+<!-- =======================================================
+     MAIN APPLICATION
+======================================================= -->
 
-<div class="app">
-
-    <div class="topbar">
-
-        <button
-            class="top-button"
-            onclick="openSettings()">
-            ⚙️
-        </button>
-
-    </div>
-
+<div id="app">
 
     <header class="header">
 
-        <div
-            id="time"
-            class="time">
-            --:--
-        </div>
+        <div class="header-top">
 
-        <div
-            id="date"
-            class="date">
-            Chargement...
-        </div>
+            <div>
 
-        <div
-            id="location"
-            class="location">
-            📍 Recherche de votre position...
+                <div
+                    id="clock"
+                    class="clock">
+                    --:--
+                </div>
+
+                <div
+                    id="date"
+                    class="date">
+                    Chargement...
+                </div>
+
+                <div
+                    id="location"
+                    class="location">
+                    📍 Localisation...
+                </div>
+
+            </div>
+
+            <button
+                class="header-button"
+                onclick="openSettings()">
+                ⚙️
+            </button>
+
         </div>
 
     </header>
 
 
-    <div class="dashboard-grid">
+    <!-- ===================================================
+         DASHBOARD GRID
+    =================================================== -->
+
+    <main class="grid">
 
         <!-- WEATHER -->
 
-        <section
-            class="panel"
-            id="weatherPanel">
+        <section class="card">
 
-            <div class="panel-title">
+            <div class="card-title">
                 Météo actuelle
             </div>
 
@@ -1224,19 +1434,19 @@ body.fullscreen-ui .app {
 
             </div>
 
-            <div class="weather-extra">
+            <div class="weather-stats">
 
-                <div class="weather-stat">
+                <div class="stat">
                     <small>Ressenti</small>
                     <span id="feels">--°</span>
                 </div>
 
-                <div class="weather-stat">
+                <div class="stat">
                     <small>Humidité</small>
                     <span id="humidity">--%</span>
                 </div>
 
-                <div class="weather-stat">
+                <div class="stat">
                     <small>Vent</small>
                     <span id="wind">-- km/h</span>
                 </div>
@@ -1248,18 +1458,89 @@ body.fullscreen-ui .app {
 
         <!-- FORECAST -->
 
-        <section
-            class="panel"
-            id="forecastPanel">
+        <section class="card">
 
-            <div class="panel-title">
+            <div class="card-title">
                 Prévisions
             </div>
 
             <div
                 id="forecast"
                 class="forecast">
-                <div>Chargement...</div>
+                Chargement...
+            </div>
+
+        </section>
+
+
+        <!-- SUN -->
+
+        <section class="card">
+
+            <div class="card-title">
+                Soleil
+            </div>
+
+            <div class="sun-row">
+
+                <div class="sun-item">
+
+                    <div class="sun-icon">
+                        🌅
+                    </div>
+
+                    <div>
+                        Lever
+                    </div>
+
+                    <div
+                        id="sunrise"
+                        class="sun-time">
+                        --
+                    </div>
+
+                </div>
+
+                <div class="sun-item">
+
+                    <div class="sun-icon">
+                        🌇
+                    </div>
+
+                    <div>
+                        Coucher
+                    </div>
+
+                    <div
+                        id="sunset"
+                        class="sun-time">
+                        --
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- UPCOMING -->
+
+        <section class="card full">
+
+            <div class="card-title">
+                À venir
+            </div>
+
+            <div
+                id="upcoming"
+                class="upcoming">
+
+                <div
+                    style="color:var(--muted)">
+                    Rien d'important pour le moment.
+                </div>
+
             </div>
 
         </section>
@@ -1267,39 +1548,35 @@ body.fullscreen-ui .app {
 
         <!-- NOTES -->
 
-        <section
-            class="panel"
-            id="notesPanel">
+        <section class="card">
 
-            <div class="panel-title">
+            <div class="card-title">
                 📝 Notes
             </div>
 
             <textarea
                 id="notes"
-                placeholder="Écrivez vos notes ici..."></textarea>
+                placeholder="Écrivez ici..."></textarea>
 
         </section>
 
 
         <!-- TASKS -->
 
-        <section
-            class="panel"
-            id="tasksPanel">
+        <section class="card">
 
-            <div class="panel-title">
+            <div class="card-title">
                 ✅ Tâches
             </div>
 
-            <div class="task-input">
+            <div class="input-row">
 
                 <input
                     id="taskInput"
-                    type="text"
                     placeholder="Nouvelle tâche...">
 
                 <button
+                    class="primary"
                     onclick="addTask()">
                     +
                 </button>
@@ -1308,7 +1585,7 @@ body.fullscreen-ui .app {
 
             <div
                 id="tasks"
-                class="tasks">
+                style="margin-top:10px">
             </div>
 
         </section>
@@ -1316,68 +1593,149 @@ body.fullscreen-ui .app {
 
         <!-- REMINDERS -->
 
-        <section
-            class="panel"
-            id="remindersPanel">
+        <section class="card full">
 
-            <div class="panel-title">
+            <div class="card-title">
                 🔔 Rappels
             </div>
 
-            <div class="reminder-input">
+            <div class="input-row">
 
                 <input
                     id="reminderText"
-                    type="text"
                     placeholder="Rappel...">
 
                 <input
                     id="reminderTime"
-                    type="time">
+                    type="time"
+                    style="max-width:140px">
+
+                <button
+                    class="primary"
+                    onclick="addReminder()">
+                    +
+                </button>
 
             </div>
 
-            <br>
-
-            <button
-                onclick="addReminder()">
-                Ajouter
-            </button>
-
             <div
                 id="reminders"
-                class="reminder-list">
+                style="margin-top:10px">
             </div>
 
         </section>
 
-    </div>
+    </main>
 
 
-    <div class="status">
-
-        <span class="online">
-            ●
-        </span>
-
-        Dashboard actif ·
-
-        <span id="lastUpdate">
-            météo en attente
-        </span>
-
+    <div
+        id="connection"
+        class="connection">
+        ● Connexion en attente...
     </div>
 
 </div>
 
 
-<!-- ===================================================
-     AMBIENT WALL MODE
-=================================================== -->
+<!-- =======================================================
+     NAVIGATION
+======================================================= -->
+
+<nav class="main-nav">
+
+    <button
+        class="nav-button active"
+        onclick="goHome()">
+        🏠
+    </button>
+
+    <button
+        class="nav-button"
+        onclick="scrollToCard('weatherDescription')">
+        🌤️
+    </button>
+
+    <button
+        class="nav-button"
+        onclick="scrollToCard('tasks')">
+        ✅
+    </button>
+
+    <button
+        class="nav-button"
+        onclick="scrollToCard('reminders')">
+        🔔
+    </button>
+
+    <button
+        class="nav-button"
+        onclick="scrollToCard('notes')">
+        📝
+    </button>
+
+    <button
+        class="nav-button"
+        onclick="openSettings()">
+        ⚙️
+    </button>
+
+    <button
+        class="nav-button"
+        onclick="enterAmbient()">
+        🌙
+    </button>
+
+</nav>
+
+
+<!-- =======================================================
+     FULLSCREEN CONTROL BAR
+======================================================= -->
 
 <div
-    id="ambientScreen"
-    onclick="wakeDashboard()">
+    id="fullscreenBar"
+    class="fullscreen-bar">
+
+    <button
+        class="fs-button"
+        onclick="goHome()">
+        🏠
+    </button>
+
+    <button
+        class="fs-button"
+        onclick="openSettings()">
+        ⚙️
+    </button>
+
+    <button
+        class="fs-button"
+        onclick="enterAmbient()">
+        🌙
+    </button>
+
+    <button
+        class="fs-button"
+        onclick="toggleFullscreen()">
+        ⛶
+    </button>
+
+    <button
+        class="fs-button"
+        onclick="exitFullscreen()">
+        ◀
+    </button>
+
+</div>
+
+
+<!-- =======================================================
+     AMBIENT SCREEN
+======================================================= -->
+
+<div
+    id="ambient"
+    onclick="wakeAmbient()">
 
     <div>
 
@@ -1402,18 +1760,17 @@ body.fullscreen-ui .app {
 
             <div
                 id="ambientIcon"
-                class="ambient-weather-icon">
+                class="ambient-icon">
                 ☀️
             </div>
 
             <div
-                id="ambientTemperature"
-                class="ambient-temperature">
+                id="ambientTemp"
+                class="ambient-temp">
                 --°
             </div>
 
         </div>
-
 
         <div
             id="ambientDescription"
@@ -1421,26 +1778,19 @@ body.fullscreen-ui .app {
             --
         </div>
 
-
         <div class="ambient-stats">
 
-            <div
-                id="ambientFeels"
-                class="ambient-stat">
+            <span id="ambientFeels">
                 Ressenti --
-            </div>
+            </span>
 
-            <div
-                id="ambientHumidity"
-                class="ambient-stat">
+            <span id="ambientHumidity">
                 💧 --%
-            </div>
+            </span>
 
-            <div
-                id="ambientWind"
-                class="ambient-stat">
+            <span id="ambientWind">
                 💨 -- km/h
-            </div>
+            </span>
 
         </div>
 
@@ -1456,33 +1806,33 @@ body.fullscreen-ui .app {
     <div
         id="ambientLocation"
         class="ambient-location">
-        📍 Position
+        📍 --
     </div>
 
 </div>
 
 
-<!-- ===================================================
-     SETTINGS
-=================================================== -->
+<!-- =======================================================
+     SETTINGS MODAL
+======================================================= -->
 
 <div
-    id="settingsOverlay"
-    class="settings-overlay"
+    id="settingsModal"
+    class="modal"
     onclick="closeSettingsOutside(event)">
 
     <div
-        class="settings"
+        class="modal-box"
         onclick="event.stopPropagation()">
 
-        <div class="settings-header">
+        <div class="modal-header">
 
             <h2>
                 ⚙️ Réglages
             </h2>
 
             <button
-                class="close-button"
+                class="primary"
                 onclick="closeSettings()">
                 ✕
             </button>
@@ -1497,8 +1847,8 @@ body.fullscreen-ui .app {
             </label>
 
             <select
-                id="themeSelect"
-                onchange="changeTheme(this.value)">
+                id="theme"
+                onchange="changeSetting('theme',this.value)">
 
                 <option value="light">
                     ☀️ Clair
@@ -1524,8 +1874,12 @@ body.fullscreen-ui .app {
             </label>
 
             <select
-                id="clockSelect"
-                onchange="changeClockFormat(this.value)">
+                id="clockFormat"
+                onchange="
+                    changeSetting(
+                        'clockFormat',
+                        this.value
+                    )">
 
                 <option value="24">
                     24 heures
@@ -1547,8 +1901,12 @@ body.fullscreen-ui .app {
             </label>
 
             <select
-                id="unitSelect"
-                onchange="changeTemperatureUnit(this.value)">
+                id="unit"
+                onchange="
+                    changeSetting(
+                        'unit',
+                        this.value
+                    )">
 
                 <option value="c">
                     Celsius °C
@@ -1566,27 +1924,31 @@ body.fullscreen-ui .app {
         <div class="setting">
 
             <label>
-                Passage en mode veille
+                Passage automatique en veille
             </label>
 
             <select
-                id="sleepSelect"
-                onchange="changeSleepTime(this.value)">
+                id="sleep"
+                onchange="
+                    changeSetting(
+                        'sleep',
+                        this.value
+                    )">
 
                 <option value="1">
-                    Après 1 minute
+                    1 minute
                 </option>
 
                 <option value="2">
-                    Après 2 minutes
+                    2 minutes
                 </option>
 
                 <option value="5">
-                    Après 5 minutes
+                    5 minutes
                 </option>
 
                 <option value="10">
-                    Après 10 minutes
+                    10 minutes
                 </option>
 
                 <option value="0">
@@ -1605,23 +1967,27 @@ body.fullscreen-ui .app {
             </label>
 
             <select
-                id="refreshSelect"
-                onchange="changeRefresh(this.value)">
+                id="refresh"
+                onchange="
+                    changeSetting(
+                        'refresh',
+                        this.value
+                    )">
 
                 <option value="5">
-                    Toutes les 5 minutes
+                    5 minutes
                 </option>
 
                 <option value="15">
-                    Toutes les 15 minutes
+                    15 minutes
                 </option>
 
                 <option value="30">
-                    Toutes les 30 minutes
+                    30 minutes
                 </option>
 
                 <option value="60">
-                    Toutes les heures
+                    1 heure
                 </option>
 
             </select>
@@ -1632,25 +1998,19 @@ body.fullscreen-ui .app {
         <div class="setting">
 
             <label>
-                Notes
+                Luminosité visuelle du mode veille
             </label>
 
-            <select
-                id="notesVisibility"
-                onchange="togglePanel(
-                    'notesPanel',
-                    this.value
-                )">
-
-                <option value="show">
-                    Afficher
-                </option>
-
-                <option value="hide">
-                    Masquer
-                </option>
-
-            </select>
+            <input
+                id="ambientBrightness"
+                type="range"
+                min="70"
+                max="100"
+                value="100"
+                oninput="
+                    changeAmbientBrightness(
+                        this.value
+                    )">
 
         </div>
 
@@ -1658,25 +2018,17 @@ body.fullscreen-ui .app {
         <div class="setting">
 
             <label>
-                Tâches
+                Test des rappels
             </label>
 
-            <select
-                id="tasksVisibility"
-                onchange="togglePanel(
-                    'tasksPanel',
-                    this.value
-                )">
+            <button
+                class="primary"
+                style="width:100%"
+                onclick="testReminder()">
 
-                <option value="show">
-                    Afficher
-                </option>
+                🧪 Tester un rappel dans 10 secondes
 
-                <option value="hide">
-                    Masquer
-                </option>
-
-            </select>
+            </button>
 
         </div>
 
@@ -1684,34 +2036,135 @@ body.fullscreen-ui .app {
         <div class="setting">
 
             <label>
-                Rappels
+                Notifications du navigateur
             </label>
 
-            <select
-                id="remindersVisibility"
-                onchange="togglePanel(
-                    'remindersPanel',
-                    this.value
-                )">
+            <button
+                class="primary"
+                style="width:100%"
+                onclick="
+                    requestNotifications()
+                ">
 
-                <option value="show">
-                    Afficher
-                </option>
+                🔔 Autoriser les notifications
 
-                <option value="hide">
-                    Masquer
-                </option>
-
-            </select>
+            </button>
 
         </div>
 
+
+        <div class="setting">
+
+            <label>
+                Plein écran
+            </label>
+
+            <button
+                class="primary"
+                style="width:100%"
+                onclick="
+                    toggleFullscreen()
+                ">
+
+                ⛶ Activer / désactiver le plein écran
+
+            </button>
+
+        </div>
+
+
+        <div class="setting">
+
+            <label>
+                Données
+            </label>
+
+            <div class="setting-row">
+
+                <button
+                    class="primary"
+                    onclick="exportData()">
+
+                    📤 Exporter
+
+                </button>
+
+                <button
+                    class="primary"
+                    onclick="
+                        document
+                        .getElementById(
+                            'importFile'
+                        )
+                        .click()
+                    ">
+
+                    📥 Importer
+
+                </button>
+
+            </div>
+
+            <input
+                id="importFile"
+                type="file"
+                accept=".json"
+                style="display:none"
+                onchange="importData(event)">
+
+        </div>
+
+
+        <div class="setting">
+
+            <label>
+                Réinitialisation
+            </label>
+
+            <button
+                class="danger-button"
+                style="width:100%"
+                onclick="resetEverything()">
+
+                🗑️ Réinitialiser les données
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =======================================================
+     ALERT
+======================================================= -->
+
+<div
+    id="alertOverlay">
+
+    <div class="alert-box">
+
+        <div class="alert-icon">
+            🔔
+        </div>
+
+        <div class="alert-title">
+            Rappel
+        </div>
+
+        <div
+            id="alertMessage"
+            class="alert-message">
+            --
+        </div>
 
         <button
-            class="fullscreen-button"
-            onclick="toggleFullscreen()">
+            class="primary"
+            onclick="closeAlert()">
 
-            ⛶ Plein écran
+            OK
 
         </button>
 
@@ -1720,17 +2173,26 @@ body.fullscreen-ui .app {
 </div>
 
 
+<!-- =======================================================
+     TOAST
+======================================================= -->
+
+<div id="toast">
+    --
+</div>
+
+
 <script>
 
-/* =====================================================
-   DEFAULT SETTINGS
-===================================================== */
+/* =========================================================
+   CONFIGURATION
+========================================================= */
 
-const defaultSettings = {
+const DEFAULTS = {
 
     theme: "dark",
 
-    clock: "24",
+    clockFormat: "24",
 
     unit: "c",
 
@@ -1738,46 +2200,136 @@ const defaultSettings = {
 
     refresh: "15",
 
-    notes: "show",
-
-    tasks: "show",
-
-    reminders: "show"
+    ambientBrightness: 100
 
 };
 
 
+/* =========================================================
+   STATE
+========================================================= */
+
 let settings =
-    JSON.parse(
-        localStorage.getItem(
-            "wall_v3_settings"
-        ) || "null"
-    ) || defaultSettings;
+    loadJSON(
+        "wall_v4_settings",
+        DEFAULTS
+    );
+
+let tasks =
+    loadJSON(
+        "wall_v4_tasks",
+        []
+    );
+
+let reminders =
+    loadJSON(
+        "wall_v4_reminders",
+        []
+    );
+
+let weather =
+    loadJSON(
+        "wall_v4_weather",
+        null
+    );
+
+let locationData =
+    loadJSON(
+        "wall_v4_location",
+        null
+    );
 
 
-/* =====================================================
-   SAVE SETTINGS
-===================================================== */
+let ambientMode =
+    false;
 
-function saveSettings() {
+let inactivityTimer =
+    null;
+
+let refreshTimer =
+    null;
+
+let lastReminderCheck =
+    "";
+
+let notificationAudio =
+    null;
+
+
+/* =========================================================
+   LOCAL STORAGE HELPERS
+========================================================= */
+
+function loadJSON(
+    key,
+    fallback
+) {
+
+    try {
+
+        const value =
+            localStorage.getItem(key);
+
+        return value
+            ? JSON.parse(value)
+            : fallback;
+
+    } catch {
+
+        return fallback;
+
+    }
+
+}
+
+
+function saveJSON(
+    key,
+    value
+) {
 
     localStorage.setItem(
-        "wall_v3_settings",
-        JSON.stringify(settings)
+        key,
+        JSON.stringify(value)
     );
 
 }
 
 
-/* =====================================================
-   THEME
-===================================================== */
+/* =========================================================
+   SETTINGS
+========================================================= */
 
-function applyTheme() {
+function saveSettings() {
+
+    saveJSON(
+        "wall_v4_settings",
+        settings
+    );
+
+}
+
+
+function changeSetting(
+    key,
+    value
+) {
+
+    settings[key] =
+        value;
+
+    saveSettings();
+
+    applySettings();
+
+}
+
+
+function applySettings() {
 
     document.body.classList.remove(
         "dark",
-        "night-mode"
+        "night"
     );
 
 
@@ -1798,12 +2350,11 @@ function applyTheme() {
         "auto"
     ) {
 
-        const dark =
+        if (
             window.matchMedia(
                 "(prefers-color-scheme: dark)"
-            ).matches;
-
-        if (dark) {
+            ).matches
+        ) {
 
             document.body.classList.add(
                 "dark"
@@ -1813,77 +2364,112 @@ function applyTheme() {
 
     }
 
+
+    document.getElementById(
+        "theme"
+    ).value =
+        settings.theme;
+
+
+    document.getElementById(
+        "clockFormat"
+    ).value =
+        settings.clockFormat;
+
+
+    document.getElementById(
+        "unit"
+    ).value =
+        settings.unit;
+
+
+    document.getElementById(
+        "sleep"
+    ).value =
+        settings.sleep;
+
+
+    document.getElementById(
+        "refresh"
+    ).value =
+        settings.refresh;
+
+
+    document.getElementById(
+        "ambientBrightness"
+    ).value =
+        settings.ambientBrightness;
+
+
+    restartWeatherTimer();
+
+    resetInactivityTimer();
+
+    if (weather) {
+
+        renderWeather();
+
+    }
+
 }
 
 
-function changeTheme(value) {
-
-    settings.theme =
-        value;
-
-    saveSettings();
-
-    applyTheme();
-
-}
-
-
-window
-    .matchMedia(
-        "(prefers-color-scheme: dark)"
-    )
-    .addEventListener(
-        "change",
-        applyTheme
-    );
-
-
-/* =====================================================
+/* =========================================================
    CLOCK
-===================================================== */
-
-function getTimeString() {
-
-    const now =
-        new Date();
-
-    return now.toLocaleTimeString(
-        "fr-CA",
-        {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12:
-                settings.clock ===
-                "12"
-        }
-    );
-
-}
-
+========================================================= */
 
 function updateClock() {
 
     const now =
         new Date();
 
+
+    const options = {
+
+        hour:
+            "2-digit",
+
+        minute:
+            "2-digit",
+
+        hour12:
+            settings.clockFormat ===
+            "12"
+
+    };
+
+
     const time =
-        getTimeString();
+        now.toLocaleTimeString(
+            "fr-CA",
+            options
+        );
+
 
     const date =
         now.toLocaleDateString(
             "fr-CA",
             {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-                year: "numeric"
+                weekday:
+                    "long",
+
+                day:
+                    "numeric",
+
+                month:
+                    "long",
+
+                year:
+                    "numeric"
             }
         );
 
+
     document.getElementById(
-        "time"
+        "clock"
     ).textContent =
         time;
+
 
     document.getElementById(
         "date"
@@ -1896,10 +2482,16 @@ function updateClock() {
     ).textContent =
         time;
 
+
     document.getElementById(
         "ambientDate"
     ).textContent =
         date;
+
+
+    checkReminders();
+
+    updateUpcoming();
 
 }
 
@@ -1910,40 +2502,28 @@ setInterval(
 );
 
 
-function changeClockFormat(
-    value
-) {
-
-    settings.clock =
-        value;
-
-    saveSettings();
-
-    updateClock();
-
-}
-
-
-/* =====================================================
+/* =========================================================
    NOTES
-===================================================== */
+========================================================= */
 
 const notes =
     document.getElementById(
         "notes"
     );
 
+
 notes.value =
     localStorage.getItem(
-        "wall_v3_notes"
+        "wall_v4_notes"
     ) || "";
+
 
 notes.addEventListener(
     "input",
     () => {
 
         localStorage.setItem(
-            "wall_v3_notes",
+            "wall_v4_notes",
             notes.value
         );
 
@@ -1951,24 +2531,128 @@ notes.addEventListener(
 );
 
 
-/* =====================================================
+/* =========================================================
    TASKS
-===================================================== */
-
-let tasks =
-    JSON.parse(
-        localStorage.getItem(
-            "wall_v3_tasks"
-        ) || "[]"
-    );
-
+========================================================= */
 
 function saveTasks() {
 
-    localStorage.setItem(
-        "wall_v3_tasks",
-        JSON.stringify(tasks)
+    saveJSON(
+        "wall_v4_tasks",
+        tasks
     );
+
+}
+
+
+function addTask() {
+
+    const input =
+        document.getElementById(
+            "taskInput"
+        );
+
+
+    const text =
+        input.value.trim();
+
+
+    if (!text)
+        return;
+
+
+    tasks.push({
+
+        id:
+            crypto.randomUUID
+            ? crypto.randomUUID()
+            : Date.now().toString(),
+
+        text:
+
+            text,
+
+        done:
+            false,
+
+        created:
+            Date.now()
+
+    });
+
+
+    input.value = "";
+
+    saveTasks();
+
+    renderTasks();
+
+    showToast(
+        "Tâche ajoutée ✓"
+    );
+
+}
+
+
+document
+    .getElementById(
+        "taskInput"
+    )
+    .addEventListener(
+        "keydown",
+        e => {
+
+            if (
+                e.key ===
+                "Enter"
+            ) {
+
+                addTask();
+
+            }
+
+        }
+    );
+
+
+function toggleTask(
+    id
+) {
+
+    const task =
+        tasks.find(
+            t => t.id === id
+        );
+
+
+    if (!task)
+        return;
+
+
+    task.done =
+        !task.done;
+
+
+    saveTasks();
+
+    renderTasks();
+
+}
+
+
+function deleteTask(
+    id
+) {
+
+    tasks =
+        tasks.filter(
+            t => t.id !== id
+        );
+
+
+    saveTasks();
+
+    renderTasks();
 
 }
 
@@ -1980,16 +2664,36 @@ function renderTasks() {
             "tasks"
         );
 
-    container.innerHTML = "";
+
+    container.innerHTML =
+        "";
+
+
+    if (!tasks.length) {
+
+        container.innerHTML =
+            `<div style="
+                color:var(--muted);
+                font-size:13px;
+            ">
+                Aucune tâche.
+            </div>`;
+
+        updateUpcoming();
+
+        return;
+
+    }
 
 
     tasks.forEach(
-        (task, index) => {
+        task => {
 
             const div =
                 document.createElement(
                     "div"
                 );
+
 
             div.className =
                 "task " +
@@ -2003,28 +2707,40 @@ function renderTasks() {
             div.innerHTML = `
 
                 <input
+                    class="task-checkbox"
                     type="checkbox"
                     ${task.done ? "checked" : ""}
                     onchange="
-                        toggleTask(${index})
+                        toggleTask('${task.id}')
                     ">
 
                 <div
-                    class="task-text">
+                    class="task-content">
+
                     ${escapeHTML(
                         task.text
                     )}
+
                 </div>
+
+                ${
+                    !task.done
+                    ? `<span class="priority">
+                        À faire
+                       </span>`
+                    : ""
+                }
 
                 <button
                     class="delete"
                     onclick="
-                        deleteTask(${index})
+                        deleteTask('${task.id}')
                     ">
                     ✕
                 </button>
 
             `;
+
 
             container.appendChild(
                 div
@@ -2034,109 +2750,116 @@ function renderTasks() {
     );
 
 
-    updateAmbientImportant();
+    updateUpcoming();
 
 }
 
 
-function addTask() {
+/* =========================================================
+   REMINDERS
+========================================================= */
 
-    const input =
-        document.getElementById(
-            "taskInput"
-        );
+function saveReminders() {
+
+    saveJSON(
+        "wall_v4_reminders",
+        reminders
+    );
+
+}
+
+
+function addReminder() {
 
     const text =
-        input.value.trim();
+        document.getElementById(
+            "reminderText"
+        )
+        .value
+        .trim();
 
-    if (!text)
+
+    const time =
+        document.getElementById(
+            "reminderTime"
+        )
+        .value;
+
+
+    if (
+        !text ||
+        !time
+    ) {
+
+        showToast(
+            "Entrez un texte et une heure."
+        );
+
         return;
 
-    tasks.push({
+    }
 
-        text: text,
 
-        done: false,
+    reminders.push({
+
+        id:
+            crypto.randomUUID
+            ? crypto.randomUUID()
+            : Date.now().toString(),
+
+        text:
+            text,
+
+        time:
+            time,
+
+        lastTriggered:
+            "",
 
         created:
             Date.now()
 
     });
 
-    input.value = "";
 
-    saveTasks();
+    document.getElementById(
+        "reminderText"
+    ).value =
+        "";
 
-    renderTasks();
+
+    document.getElementById(
+        "reminderTime"
+    ).value =
+        "";
+
+
+    saveReminders();
+
+    renderReminders();
+
+    requestNotifications();
+
+    showToast(
+        "Rappel enregistré ✓"
+    );
 
 }
 
 
-function toggleTask(index) {
+function deleteReminder(
+    id
+) {
 
-    tasks[index].done =
-        !tasks[index].done;
-
-    saveTasks();
-
-    renderTasks();
-
-}
+    reminders =
+        reminders.filter(
+            r => r.id !== id
+        );
 
 
-function deleteTask(index) {
+    saveReminders();
 
-    tasks.splice(
-        index,
-        1
-    );
-
-    saveTasks();
-
-    renderTasks();
-
-}
-
-
-document
-    .getElementById(
-        "taskInput"
-    )
-    .addEventListener(
-        "keydown",
-        event => {
-
-            if (
-                event.key ===
-                "Enter"
-            ) {
-
-                addTask();
-
-            }
-
-        }
-    );
-
-
-/* =====================================================
-   REMINDERS
-===================================================== */
-
-let reminders =
-    JSON.parse(
-        localStorage.getItem(
-            "wall_v3_reminders"
-        ) || "[]"
-    );
-
-
-function saveReminders() {
-
-    localStorage.setItem(
-        "wall_v3_reminders",
-        JSON.stringify(reminders)
-    );
+    renderReminders();
 
 }
 
@@ -2148,47 +2871,610 @@ function renderReminders() {
             "reminders"
         );
 
-    container.innerHTML = "";
+
+    container.innerHTML =
+        "";
+
+
+    if (!reminders.length) {
+
+        container.innerHTML =
+            `<div style="
+                color:var(--muted);
+                font-size:13px;
+            ">
+                Aucun rappel.
+            </div>`;
+
+        updateUpcoming();
+
+        return;
+
+    }
+
+
+    reminders
+        .slice()
+        .sort(
+            (a,b) =>
+                a.time.localeCompare(
+                    b.time
+                )
+        )
+        .forEach(
+            reminder => {
+
+                const div =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                div.className =
+                    "reminder";
+
+
+                div.innerHTML = `
+
+                    <div
+                        class="reminder-info">
+
+                        <div>
+                            🔔
+                            ${escapeHTML(
+                                reminder.text
+                            )}
+                        </div>
+
+                        <div
+                            class="reminder-time">
+                            ${reminder.time}
+                        </div>
+
+                    </div>
+
+                    <button
+                        class="delete"
+                        onclick="
+                            deleteReminder(
+                                '${reminder.id}'
+                            )
+                        ">
+                        ✕
+                    </button>
+
+                `;
+
+
+                container.appendChild(
+                    div
+                );
+
+            }
+        );
+
+
+    updateUpcoming();
+
+}
+
+
+/* =========================================================
+   RELIABLE REMINDER ENGINE
+========================================================= */
+
+function checkReminders() {
+
+    const now =
+        new Date();
+
+
+    const dateKey =
+        localDateKey(
+            now
+        );
+
+
+    const currentMinutes =
+        now.getHours() * 60 +
+        now.getMinutes();
+
+
+    const currentSeconds =
+        now.getSeconds();
 
 
     reminders.forEach(
-        (reminder, index) => {
+        reminder => {
+
+            const parts =
+                reminder.time
+                    .split(":")
+                    .map(Number);
+
+
+            if (
+                parts.length !== 2
+            )
+                return;
+
+
+            const targetMinutes =
+                parts[0] * 60 +
+                parts[1];
+
+
+            const difference =
+                targetMinutes -
+                currentMinutes;
+
+
+            /*
+             * Déclenchement uniquement
+             * dans la fenêtre de la minute.
+             */
+
+            if (
+                difference === 0 &&
+                currentSeconds < 5
+            ) {
+
+                const triggerKey =
+                    dateKey +
+                    "_" +
+                    reminder.time;
+
+
+                if (
+                    reminder.lastTriggered !==
+                    triggerKey
+                ) {
+
+                    reminder.lastTriggered =
+                        triggerKey;
+
+
+                    saveReminders();
+
+                    fireReminder(
+                        reminder
+                    );
+
+                }
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   FIRE REMINDER
+========================================================= */
+
+function fireReminder(
+    reminder
+) {
+
+    /*
+     * 1. Gros affichage visuel.
+     */
+
+    document.getElementById(
+        "alertMessage"
+    ).textContent =
+        reminder.text;
+
+
+    document.getElementById(
+        "alertOverlay"
+    ).classList.add(
+        "show"
+    );
+
+
+    /*
+     * 2. Son.
+     */
+
+    playAlarm();
+
+
+    /*
+     * 3. Vibration si la tablette
+     *    l'autorise.
+     */
+
+    if (
+        navigator.vibrate
+    ) {
+
+        navigator.vibrate([
+            300,
+            150,
+            300,
+            150,
+            500
+        ]);
+
+    }
+
+
+    /*
+     * 4. Notification navigateur.
+     */
+
+    if (
+        "Notification" in window &&
+        Notification.permission ===
+        "granted"
+    ) {
+
+        try {
+
+            new Notification(
+                "🔔 Rappel",
+                {
+                    body:
+                        reminder.text
+                }
+            );
+
+        } catch {}
+
+    }
+
+}
+
+
+function closeAlert() {
+
+    document.getElementById(
+        "alertOverlay"
+    ).classList.remove(
+        "show"
+    );
+
+    stopAlarm();
+
+}
+
+
+/* =========================================================
+   TEST REMINDER
+========================================================= */
+
+function testReminder() {
+
+    const id =
+        "test-" +
+        Date.now();
+
+
+    const reminder = {
+
+        id:
+            id,
+
+        text:
+            "Ceci est un rappel de test.",
+
+        time:
+            new Date()
+                .toTimeString()
+                .slice(0,5),
+
+        lastTriggered:
+            ""
+
+    };
+
+
+    showToast(
+        "Test programmé dans 10 secondes..."
+    );
+
+
+    setTimeout(
+        () => {
+
+            fireReminder(
+                reminder
+            );
+
+        },
+        10000
+    );
+
+}
+
+
+/* =========================================================
+   ALARM SOUND
+========================================================= */
+
+function playAlarm() {
+
+    try {
+
+        const AudioContext =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+
+        if (!AudioContext)
+            return;
+
+
+        const ctx =
+            new AudioContext();
+
+
+        let count =
+            0;
+
+
+        function beep() {
+
+            if (count >= 3) {
+
+                ctx.close();
+
+                return;
+
+            }
+
+
+            const osc =
+                ctx.createOscillator();
+
+
+            const gain =
+                ctx.createGain();
+
+
+            osc.frequency.value =
+                count % 2 === 0
+                ? 880
+                : 660;
+
+
+            gain.gain.setValueAtTime(
+                .0001,
+                ctx.currentTime
+            );
+
+
+            gain.gain.exponentialRampToValueAtTime(
+                .25,
+                ctx.currentTime + .03
+            );
+
+
+            gain.gain.exponentialRampToValueAtTime(
+                .0001,
+                ctx.currentTime + .35
+            );
+
+
+            osc.connect(gain);
+
+            gain.connect(
+                ctx.destination
+            );
+
+
+            osc.start();
+
+            osc.stop(
+                ctx.currentTime +
+                .35
+            );
+
+
+            count++;
+
+
+            setTimeout(
+                beep,
+                450
+            );
+
+        }
+
+
+        beep();
+
+    } catch {}
+
+}
+
+
+function stopAlarm() {}
+
+
+/* =========================================================
+   UPCOMING ENGINE
+========================================================= */
+
+function updateUpcoming() {
+
+    const container =
+        document.getElementById(
+            "upcoming"
+        );
+
+
+    const items = [];
+
+
+    const now =
+        new Date();
+
+
+    const currentMinutes =
+        now.getHours() * 60 +
+        now.getMinutes();
+
+
+    reminders.forEach(
+        reminder => {
+
+            const p =
+                reminder.time
+                    .split(":")
+                    .map(Number);
+
+
+            const minutes =
+                p[0] * 60 +
+                p[1];
+
+
+            let diff =
+                minutes -
+                currentMinutes;
+
+
+            if (diff < 0)
+                diff += 1440;
+
+
+            items.push({
+
+                type:
+                    "reminder",
+
+                text:
+                    reminder.text,
+
+                time:
+                    reminder.time,
+
+                diff:
+                    diff
+
+            });
+
+        }
+    );
+
+
+    tasks
+        .filter(
+            task =>
+                !task.done
+        )
+        .forEach(
+            task => {
+
+                items.push({
+
+                    type:
+                        "task",
+
+                    text:
+                        task.text,
+
+                    time:
+                        "",
+
+                    diff:
+                        10000
+
+                });
+
+            }
+        );
+
+
+    items.sort(
+        (a,b) =>
+            a.diff -
+            b.diff
+    );
+
+
+    const selected =
+        items.slice(0,3);
+
+
+    if (!selected.length) {
+
+        container.innerHTML =
+            `<div style="
+                color:var(--muted);
+                font-size:13px;
+            ">
+                ✓ Rien d'urgent.
+            </div>`;
+
+        updateAmbientImportant();
+
+        return;
+
+    }
+
+
+    container.innerHTML =
+        "";
+
+
+    selected.forEach(
+        item => {
 
             const div =
                 document.createElement(
                     "div"
                 );
 
+
             div.className =
-                "reminder-item";
+                "upcoming-item";
 
 
             div.innerHTML = `
 
-                <div>
+                <div class="upcoming-icon">
 
-                    <div>
-                        ${escapeHTML(
-                            reminder.text
-                        )}
-                    </div>
+                    ${
+                        item.type ===
+                        "reminder"
+                        ? "🔔"
+                        : "☐"
+                    }
+
+                </div>
+
+                <div class="upcoming-content">
+
+                    ${
+                        item.time
+                        ? `<div
+                            class="upcoming-time">
+                            ${item.time}
+                           </div>`
+                        : `<div
+                            class="upcoming-time">
+                            TÂCHE
+                           </div>`
+                    }
 
                     <div
-                        class="reminder-time">
-                        ${reminder.time}
+                        class="upcoming-text">
+
+                        ${escapeHTML(
+                            item.text
+                        )}
+
                     </div>
 
                 </div>
 
-                <button
-                    class="delete"
-                    onclick="
-                        deleteReminder(${index})
-                    ">
-                    ✕
-                </button>
-
             `;
+
 
             container.appendChild(
                 div
@@ -2203,184 +3489,118 @@ function renderReminders() {
 }
 
 
-function addReminder() {
+/* =========================================================
+   AMBIENT PRIORITY
+========================================================= */
 
-    const text =
+function updateAmbientImportant() {
+
+    const element =
         document.getElementById(
-            "reminderText"
-        ).value.trim();
+            "ambientImportant"
+        );
 
-    const time =
-        document.getElementById(
-            "reminderTime"
-        ).value;
-
-
-    if (
-        !text ||
-        !time
-    )
-        return;
-
-
-    reminders.push({
-
-        text: text,
-
-        time: time,
-
-        lastTriggered: ""
-
-    });
-
-
-    document.getElementById(
-        "reminderText"
-    ).value = "";
-
-    document.getElementById(
-        "reminderTime"
-    ).value = "";
-
-
-    saveReminders();
-
-    renderReminders();
-
-    requestNotificationPermission();
-
-}
-
-
-function deleteReminder(
-    index
-) {
-
-    reminders.splice(
-        index,
-        1
-    );
-
-    saveReminders();
-
-    renderReminders();
-
-}
-
-
-/* =====================================================
-   NOTIFICATIONS
-===================================================== */
-
-function requestNotificationPermission() {
-
-    if (
-        "Notification" in window &&
-        Notification.permission ===
-        "default"
-    ) {
-
-        Notification.requestPermission();
-
-    }
-
-}
-
-
-function checkReminders() {
 
     const now =
         new Date();
 
-    const currentTime =
-        now.toTimeString()
-           .slice(0,5);
 
-    const today =
-        now.toISOString()
-           .slice(0,10);
+    const currentMinutes =
+        now.getHours() * 60 +
+        now.getMinutes();
 
 
-    reminders.forEach(
-        reminder => {
+    const upcoming =
+        reminders
+            .map(
+                r => {
 
-            if (
-                reminder.time ===
-                currentTime &&
+                    const p =
+                        r.time
+                            .split(":")
+                            .map(Number);
 
-                reminder.lastTriggered !==
-                today
-            ) {
 
-                if (
-                    "Notification" in window &&
+                    let diff =
+                        p[0] * 60 +
+                        p[1] -
+                        currentMinutes;
 
-                    Notification.permission ===
-                    "granted"
-                ) {
 
-                    new Notification(
-                        "🔔 Rappel",
-                        {
-                            body:
-                                reminder.text
-                        }
-                    );
+                    if (diff < 0)
+                        diff += 1440;
 
-                } else {
 
-                    /*
-                     * Le navigateur peut
-                     * bloquer alert() en mode
-                     * veille selon la plateforme.
-                     */
+                    return {
 
-                    if (
-                        !ambientMode
-                    ) {
+                        ...r,
 
-                        alert(
-                            "🔔 " +
-                            reminder.text
-                        );
+                        diff
 
-                    }
+                    };
 
                 }
+            )
+            .sort(
+                (a,b) =>
+                    a.diff -
+                    b.diff
+            );
 
 
-                reminder.lastTriggered =
-                    today;
+    /*
+     * Priorité 1 :
+     * rappel dans les 60 prochaines minutes.
+     */
 
-                saveReminders();
+    if (
+        upcoming.length &&
+        upcoming[0].diff <= 60
+    ) {
 
-            }
+        element.textContent =
+            "🔔 " +
+            upcoming[0].time +
+            " · " +
+            upcoming[0].text;
 
-        }
-    );
+        return;
+
+    }
 
 
-    updateAmbientImportant();
+    /*
+     * Priorité 2 :
+     * première tâche.
+     */
+
+    const task =
+        tasks.find(
+            t =>
+                !t.done
+        );
+
+
+    if (task) {
+
+        element.textContent =
+            "☐ " +
+            task.text;
+
+        return;
+
+    }
+
+
+    element.textContent =
+        "";
 
 }
 
 
-setInterval(
-    checkReminders,
-    30000
-);
-
-
-/* =====================================================
+/* =========================================================
    GEOLOCATION
-===================================================== */
-
-let latitude =
-    null;
-
-let longitude =
-    null;
-
+========================================================= */
 
 function getLocation() {
 
@@ -2388,10 +3608,9 @@ function getLocation() {
         !navigator.geolocation
     ) {
 
-        document.getElementById(
-            "location"
-        ).textContent =
-            "📍 Géolocalisation indisponible";
+        setLocationText(
+            "Localisation indisponible"
+        );
 
         return;
 
@@ -2400,28 +3619,59 @@ function getLocation() {
 
     navigator.geolocation.getCurrentPosition(
 
-        position => {
+        async position => {
 
-            latitude =
+            const lat =
                 position.coords.latitude;
 
-            longitude =
+
+            const lon =
                 position.coords.longitude;
 
 
+            try {
+
+                await reverseGeocode(
+                    lat,
+                    lon
+                );
+
+            } catch {
+
+                setLocationText(
+                    "Position détectée"
+                );
+
+            }
+
+
             loadWeather(
-                latitude,
-                longitude
+                lat,
+                lon
             );
 
         },
 
-        () => {
+        error => {
 
-            document.getElementById(
-                "location"
-            ).textContent =
-                "📍 Autorisation de localisation nécessaire";
+            let message =
+                "Autorisation de localisation nécessaire";
+
+
+            if (
+                error.code ===
+                3
+            ) {
+
+                message =
+                    "Localisation trop lente";
+
+            }
+
+
+            setLocationText(
+                message
+            );
 
         },
 
@@ -2431,7 +3681,7 @@ function getLocation() {
                 false,
 
             timeout:
-                10000,
+                15000,
 
             maximumAge:
                 600000
@@ -2443,13 +3693,141 @@ function getLocation() {
 }
 
 
-/* =====================================================
+/* =========================================================
+   REVERSE GEOCODING
+========================================================= */
+
+async function reverseGeocode(
+    lat,
+    lon
+) {
+
+    const url =
+        "https://nominatim.openstreetmap.org/reverse" +
+
+        "?format=jsonv2" +
+
+        "&lat=" +
+        encodeURIComponent(lat) +
+
+        "&lon=" +
+        encodeURIComponent(lon) +
+
+        "&zoom=10" +
+
+        "&addressdetails=1" +
+
+        "&accept-language=fr";
+
+
+    const response =
+        await fetch(
+            url
+        );
+
+
+    if (!response.ok)
+        throw new Error(
+            "Geocoding failed"
+        );
+
+
+    const data =
+        await response.json();
+
+
+    const address =
+        data.address || {};
+
+
+    /*
+     * On cherche le meilleur nom
+     * de ville disponible.
+     */
+
+    const city =
+        address.city ||
+        address.town ||
+        address.village ||
+        address.municipality ||
+        address.county ||
+        "Localisation inconnue";
+
+
+    const region =
+        address.state ||
+        address.province ||
+        "";
+
+
+    const country =
+        address.country ||
+        "";
+
+
+    locationData = {
+
+        city:
+            city,
+
+        region:
+            region,
+
+        country:
+            country,
+
+        lat:
+            lat,
+
+        lon:
+            lon,
+
+        display:
+            city +
+            (
+                region
+                ? ", " + region
+                : ""
+            )
+
+    };
+
+
+    saveJSON(
+        "wall_v4_location",
+        locationData
+    );
+
+
+    setLocationText(
+        locationData.display
+    );
+
+}
+
+
+function setLocationText(
+    text
+) {
+
+    document.getElementById(
+        "location"
+    ).innerHTML =
+        "📍 " +
+        escapeHTML(text);
+
+    document.getElementById(
+        "ambientLocation"
+    ).textContent =
+        "📍 " +
+        text;
+
+}
+
+
+/* =========================================================
    WEATHER
-===================================================== */
-
-let weatherData =
-    null;
-
+========================================================= */
 
 async function loadWeather(
     lat,
@@ -2473,13 +3851,22 @@ async function loadWeather(
             "relative_humidity_2m," +
             "apparent_temperature," +
             "weather_code," +
-            "wind_speed_10m" +
+            "wind_speed_10m," +
+            "precipitation" +
+
+            "&hourly=" +
+
+            "precipitation_probability," +
+            "precipitation" +
 
             "&daily=" +
 
             "weather_code," +
             "temperature_2m_max," +
-            "temperature_2m_min" +
+            "temperature_2m_min," +
+            "sunrise," +
+            "sunset," +
+            "precipitation_probability_max" +
 
             "&timezone=auto" +
 
@@ -2487,96 +3874,75 @@ async function loadWeather(
 
 
         const response =
-            await fetch(url);
+            await fetch(
+                url
+            );
 
 
         if (!response.ok)
             throw new Error();
 
 
-        const data =
+        weather =
             await response.json();
 
 
-        weatherData =
-            data;
+        weather.lastUpdated =
+            Date.now();
 
 
-        updateWeather(
-            data
+        saveJSON(
+            "wall_v4_weather",
+            weather
         );
 
 
-        updateAmbientWeather(
-            data
+        renderWeather();
+
+        updateConnection(
+            true
         );
-
-
-        document.getElementById(
-            "location"
-        ).textContent =
-
-            "📍 Position détectée · " +
-
-            lat.toFixed(3) +
-
-            ", " +
-
-            lon.toFixed(3);
-
-
-        document.getElementById(
-            "ambientLocation"
-        ).textContent =
-
-            "📍 Position détectée";
-
-
-        document.getElementById(
-            "lastUpdate"
-        ).textContent =
-
-            "mise à jour " +
-
-            new Date()
-                .toLocaleTimeString(
-                    "fr-CA",
-                    {
-                        hour:
-                            "2-digit",
-
-                        minute:
-                            "2-digit"
-                    }
-                );
-
 
     } catch {
 
-        document.getElementById(
-            "weatherDescription"
-        ).textContent =
-            "Météo indisponible";
+        updateConnection(
+            false
+        );
+
+
+        /*
+         * Si les dernières données
+         * existent, on les conserve.
+         */
+
+        if (weather) {
+
+            renderWeather();
+
+        }
 
     }
 
 }
 
 
-/* =====================================================
-   WEATHER DISPLAY
-===================================================== */
+/* =========================================================
+   WEATHER RENDER
+========================================================= */
 
-function updateWeather(
-    data
-) {
+function renderWeather() {
+
+    if (!weather)
+        return;
+
 
     const current =
-        data.current;
+        weather.current;
 
 
     let temp =
         current.temperature_2m;
+
 
     let feels =
         current.apparent_temperature;
@@ -2627,14 +3993,6 @@ function updateWeather(
 
 
     document.getElementById(
-        "weatherDescription"
-    ).textContent =
-        weatherDescription(
-            current.weather_code
-        );
-
-
-    document.getElementById(
         "weatherIcon"
     ).textContent =
         weatherIcon(
@@ -2642,12 +4000,26 @@ function updateWeather(
         );
 
 
+    document.getElementById(
+        "weatherDescription"
+    ).textContent =
+        weatherDescription(
+            current.weather_code
+        );
+
+
+    /*
+     * Forecast
+     */
+
     const forecast =
         document.getElementById(
             "forecast"
         );
 
-    forecast.innerHTML = "";
+
+    forecast.innerHTML =
+        "";
 
 
     for (
@@ -2656,29 +4028,13 @@ function updateWeather(
         i++
     ) {
 
-        const date =
-            new Date(
-                data.daily.time[i]
-            );
-
-
-        const day =
-            date.toLocaleDateString(
-                "fr-CA",
-                {
-                    weekday:
-                        "short"
-                }
-            );
-
-
         let max =
-            data.daily
+            weather.daily
                 .temperature_2m_max[i];
 
 
         let min =
-            data.daily
+            weather.daily
                 .temperature_2m_min[i];
 
 
@@ -2696,21 +4052,37 @@ function updateWeather(
         }
 
 
+        const day =
+            new Date(
+                weather.daily.time[i]
+            )
+            .toLocaleDateString(
+                "fr-CA",
+                {
+                    weekday:
+                        "short"
+                }
+            );
+
+
         forecast.innerHTML += `
 
             <div
                 class="forecast-day">
 
                 <div
-                    class="forecast-day-name">
+                    class="forecast-name">
                     ${day}
                 </div>
 
                 <div
                     class="forecast-icon">
+
                     ${weatherIcon(
-                        data.daily.weather_code[i]
+                        weather.daily
+                            .weather_code[i]
                     )}
+
                 </div>
 
                 <div
@@ -2728,41 +4100,30 @@ function updateWeather(
 
     }
 
-}
+
+    /*
+     * Soleil
+     */
+
+    document.getElementById(
+        "sunrise"
+    ).textContent =
+        formatTime(
+            weather.daily.sunrise[0]
+        );
 
 
-/* =====================================================
-   AMBIENT WEATHER
-===================================================== */
-
-function updateAmbientWeather(
-    data
-) {
-
-    const current =
-        data.current;
+    document.getElementById(
+        "sunset"
+    ).textContent =
+        formatTime(
+            weather.daily.sunset[0]
+        );
 
 
-    let temp =
-        current.temperature_2m;
-
-    let feels =
-        current.apparent_temperature;
-
-
-    if (
-        settings.unit ===
-        "f"
-    ) {
-
-        temp =
-            cToF(temp);
-
-        feels =
-            cToF(feels);
-
-    }
-
+    /*
+     * Ambient
+     */
 
     document.getElementById(
         "ambientIcon"
@@ -2773,7 +4134,7 @@ function updateAmbientWeather(
 
 
     document.getElementById(
-        "ambientTemperature"
+        "ambientTemp"
     ).textContent =
         Math.round(temp) +
         "°";
@@ -2818,107 +4179,55 @@ function updateAmbientWeather(
 }
 
 
-/* =====================================================
-   RELEVANT AMBIENT INFORMATION
-===================================================== */
+/* =========================================================
+   WEATHER REFRESH
+========================================================= */
 
-function updateAmbientImportant() {
+function restartWeatherTimer() {
 
-    const element =
-        document.getElementById(
-            "ambientImportant"
-        );
-
-
-    const now =
-        new Date();
+    clearInterval(
+        refreshTimer
+    );
 
 
-    /*
-     * Cherche le prochain rappel
-     * d'aujourd'hui.
-     */
+    refreshTimer =
+        setInterval(
+            () => {
 
-    const upcomingReminders =
-        reminders
-            .filter(
-                reminder => {
+                if (
+                    locationData &&
+                    locationData.lat &&
+                    locationData.lon
+                ) {
 
-                    return (
-                        reminder.time >=
-                        now.toTimeString()
-                           .slice(0,5)
+                    loadWeather(
+                        locationData.lat,
+                        locationData.lon
                     );
 
+                } else {
+
+                    getLocation();
+
                 }
-            )
-            .sort(
-                (a,b) =>
-                    a.time.localeCompare(
-                        b.time
-                    )
-            );
 
+            },
 
-    if (
-        upcomingReminders.length
-    ) {
+            Number(
+                settings.refresh
+            ) *
+            60000
 
-        const next =
-            upcomingReminders[0];
-
-
-        element.textContent =
-            "🔔 " +
-            next.time +
-            " · " +
-            next.text;
-
-        return;
-
-    }
-
-
-    /*
-     * Sinon, cherche une tâche
-     * non terminée.
-     */
-
-    const nextTask =
-        tasks.find(
-            task =>
-                !task.done
         );
-
-
-    if (nextTask) {
-
-        element.textContent =
-            "☐ " +
-            nextTask.text;
-
-        return;
-
-    }
-
-
-    /*
-     * Rien d'important.
-     */
-
-    element.textContent =
-        "";
 
 }
 
 
-/* =====================================================
-   TEMPERATURE UNIT
-===================================================== */
+/* =========================================================
+   WEATHER HELPERS
+========================================================= */
 
-function cToF(
-    c
-) {
+function cToF(c) {
 
     return (
         c * 9 / 5
@@ -2927,34 +4236,6 @@ function cToF(
 }
 
 
-function changeTemperatureUnit(
-    value
-) {
-
-    settings.unit =
-        value;
-
-    saveSettings();
-
-
-    if (
-        latitude !== null
-    ) {
-
-        loadWeather(
-            latitude,
-            longitude
-        );
-
-    }
-
-}
-
-
-/* =====================================================
-   WEATHER DESCRIPTION
-===================================================== */
-
 function weatherDescription(
     code
 ) {
@@ -2962,49 +4243,34 @@ function weatherDescription(
     if (code === 0)
         return "Ciel dégagé";
 
-    if (
-        [1,2,3].includes(code)
-    )
+    if ([1,2].includes(code))
         return "Partiellement nuageux";
 
-    if (
-        [45,48].includes(code)
-    )
+    if (code === 3)
+        return "Nuageux";
+
+    if ([45,48].includes(code))
         return "Brouillard";
 
-    if (
-        [51,53,55].includes(code)
-    )
+    if ([51,53,55].includes(code))
         return "Bruine";
 
-    if (
-        [61,63,65].includes(code)
-    )
+    if ([61,63,65].includes(code))
         return "Pluie";
 
-    if (
-        [71,73,75,77].includes(code)
-    )
+    if ([71,73,75,77].includes(code))
         return "Neige";
 
-    if (
-        [80,81,82].includes(code)
-    )
+    if ([80,81,82].includes(code))
         return "Averses";
 
-    if (
-        [95,96,99].includes(code)
-    )
+    if ([95,96,99].includes(code))
         return "Orage";
 
     return "Conditions variables";
 
 }
 
-
-/* =====================================================
-   WEATHER ICON
-===================================================== */
 
 function weatherIcon(
     code
@@ -3013,17 +4279,13 @@ function weatherIcon(
     if (code === 0)
         return "☀️";
 
-    if (
-        [1,2].includes(code)
-    )
+    if ([1,2].includes(code))
         return "🌤️";
 
     if (code === 3)
         return "☁️";
 
-    if (
-        [45,48].includes(code)
-    )
+    if ([45,48].includes(code))
         return "🌫️";
 
     if (
@@ -3036,12 +4298,14 @@ function weatherIcon(
         return "🌧️";
 
     if (
-        [71,73,75,77].includes(code)
+        [71,73,75,77]
+        .includes(code)
     )
         return "❄️";
 
     if (
-        [95,96,99].includes(code)
+        [95,96,99]
+        .includes(code)
     )
         return "⛈️";
 
@@ -3050,72 +4314,149 @@ function weatherIcon(
 }
 
 
-/* =====================================================
-   WEATHER REFRESH
-===================================================== */
-
-let refreshTimer =
-    null;
-
-
-function startWeatherRefresh() {
-
-    if (refreshTimer)
-        clearInterval(
-            refreshTimer
-        );
-
-
-    refreshTimer =
-        setInterval(
-            getLocation,
-
-            Number(
-                settings.refresh
-            ) *
-            60 *
-            1000
-        );
-
-}
-
-
-function changeRefresh(
+function formatTime(
     value
 ) {
 
-    settings.refresh =
-        value;
+    if (!value)
+        return "--";
 
-    saveSettings();
 
-    startWeatherRefresh();
+    return value
+        .split("T")[1]
+        .slice(0,5);
 
 }
 
 
-/* =====================================================
+/* =========================================================
+   CONNECTION / OFFLINE
+========================================================= */
+
+function updateConnection(
+    online
+) {
+
+    const element =
+        document.getElementById(
+            "connection"
+        );
+
+
+    if (online) {
+
+        element.innerHTML =
+            `<span class="online">
+                ●
+             </span>
+             En ligne · météo actualisée`;
+
+    } else {
+
+        element.innerHTML =
+            `<span class="offline">
+                ●
+             </span>
+             Hors connexion · dernières données conservées`;
+
+    }
+
+}
+
+
+window.addEventListener(
+    "online",
+    () => {
+
+        updateConnection(
+            true
+        );
+
+        if (
+            locationData
+        ) {
+
+            loadWeather(
+                locationData.lat,
+                locationData.lon
+            );
+
+        }
+
+    }
+);
+
+
+window.addEventListener(
+    "offline",
+    () => {
+
+        updateConnection(
+            false
+        );
+
+    }
+);
+
+
+/* =========================================================
    AMBIENT MODE
-===================================================== */
+========================================================= */
 
-let ambientMode =
-    false;
+function enterAmbient() {
 
-let inactivityTimer =
-    null;
+    ambientMode =
+        true;
 
+
+    updateAmbientImportant();
+
+
+    document.getElementById(
+        "ambient"
+    ).classList.add(
+        "active"
+    );
+
+
+    applyAmbientBrightness();
+
+}
+
+
+function wakeAmbient() {
+
+    ambientMode =
+        false;
+
+
+    document.getElementById(
+        "ambient"
+    ).classList.remove(
+        "active"
+    );
+
+
+    resetInactivityTimer();
+
+}
+
+
+/* =========================================================
+   INACTIVITY
+========================================================= */
 
 function resetInactivityTimer() {
+
+    clearTimeout(
+        inactivityTimer
+    );
+
 
     if (
         ambientMode
     )
         return;
-
-
-    clearTimeout(
-        inactivityTimer
-    );
 
 
     if (
@@ -3128,68 +4469,16 @@ function resetInactivityTimer() {
 
     inactivityTimer =
         setTimeout(
-
-            enterAmbientMode,
+            enterAmbient,
 
             Number(
                 settings.sleep
             ) *
-            60 *
-            1000
-
+            60000
         );
 
 }
 
-
-function enterAmbientMode() {
-
-    if (
-        Number(
-            settings.sleep
-        ) === 0
-    )
-        return;
-
-
-    ambientMode =
-        true;
-
-
-    updateAmbientImportant();
-
-
-    document.getElementById(
-        "ambientScreen"
-    ).classList.add(
-        "active"
-    );
-
-}
-
-
-function wakeDashboard() {
-
-    ambientMode =
-        false;
-
-
-    document.getElementById(
-        "ambientScreen"
-    ).classList.remove(
-        "active"
-    );
-
-
-    resetInactivityTimer();
-
-}
-
-
-/*
- * Toute interaction avec la page
- * remet le compteur à zéro.
- */
 
 [
     "touchstart",
@@ -3203,7 +4492,8 @@ function wakeDashboard() {
             eventName,
             resetInactivityTimer,
             {
-                passive: true
+                passive:
+                    true
             }
         );
 
@@ -3211,119 +4501,43 @@ function wakeDashboard() {
 );
 
 
-/* =====================================================
-   SLEEP SETTING
-===================================================== */
+/* =========================================================
+   AMBIENT BRIGHTNESS
+========================================================= */
 
-function changeSleepTime(
+function changeAmbientBrightness(
     value
 ) {
 
-    settings.sleep =
-        value;
-
-    saveSettings();
-
-    resetInactivityTimer();
-
-}
-
-
-/* =====================================================
-   SETTINGS
-===================================================== */
-
-function openSettings() {
-
-    document.getElementById(
-        "settingsOverlay"
-    ).classList.add(
-        "open"
-    );
-
-}
-
-
-function closeSettings() {
-
-    document.getElementById(
-        "settingsOverlay"
-    ).classList.remove(
-        "open"
-    );
-
-}
-
-
-function closeSettingsOutside(
-    event
-) {
-
-    if (
-        event.target.id ===
-        "settingsOverlay"
-    ) {
-
-        closeSettings();
-
-    }
-
-}
-
-
-/* =====================================================
-   PANEL VISIBILITY
-===================================================== */
-
-function togglePanel(
-    panelId,
-    value
-) {
-
-    const panel =
-        document.getElementById(
-            panelId
-        );
-
-
-    panel.classList.toggle(
-        "hidden-panel",
-        value === "hide"
-    );
-
-
-    if (
-        panelId ===
-        "notesPanel"
-    )
-        settings.notes =
-            value;
-
-
-    if (
-        panelId ===
-        "tasksPanel"
-    )
-        settings.tasks =
-            value;
-
-
-    if (
-        panelId ===
-        "remindersPanel"
-    )
-        settings.reminders =
-            value;
+    settings.ambientBrightness =
+        Number(value);
 
 
     saveSettings();
 
+    applyAmbientBrightness();
+
 }
 
 
-/* =====================================================
+function applyAmbientBrightness() {
+
+    const brightness =
+        settings.ambientBrightness /
+        100;
+
+
+    document.getElementById(
+        "ambient"
+    ).style.filter =
+        `brightness(${brightness})`;
+
+}
+
+
+/* =========================================================
    FULLSCREEN
-===================================================== */
+========================================================= */
 
 async function toggleFullscreen() {
 
@@ -3337,18 +4551,39 @@ async function toggleFullscreen() {
                 .documentElement
                 .requestFullscreen();
 
+            showToast(
+                "Mode plein écran activé"
+            );
+
         } else {
 
             await document
                 .exitFullscreen();
 
+            showToast(
+                "Mode plein écran désactivé"
+            );
+
         }
 
     } catch {
 
-        document.body.classList.toggle(
-            "fullscreen-ui"
+        showToast(
+            "Le navigateur ne permet pas le plein écran."
         );
+
+    }
+
+}
+
+
+function exitFullscreen() {
+
+    if (
+        document.fullscreenElement
+    ) {
+
+        document.exitFullscreen();
 
     }
 
@@ -3359,100 +4594,565 @@ document.addEventListener(
     "fullscreenchange",
     () => {
 
-        document.body.classList.toggle(
-            "fullscreen-ui",
-            Boolean(
-                document.fullscreenElement
-            )
-        );
+        if (
+            document.fullscreenElement
+        ) {
+
+            showToast(
+                "Plein écran · touchez le haut pour les commandes"
+            );
+
+        }
 
     }
 );
 
 
-/* =====================================================
-   LOAD SETTINGS INTO UI
-===================================================== */
+/* =========================================================
+   FULLSCREEN CONTROLS
+========================================================= */
 
-function loadSettings() {
-
-    document.getElementById(
-        "themeSelect"
-    ).value =
-        settings.theme;
+let fsTimer =
+    null;
 
 
-    document.getElementById(
-        "clockSelect"
-    ).value =
-        settings.clock;
+document.addEventListener(
+    "touchstart",
+    event => {
+
+        if (
+            !document.fullscreenElement
+        )
+            return;
 
 
-    document.getElementById(
-        "unitSelect"
-    ).value =
-        settings.unit;
+        const y =
+            event.touches[0].clientY;
 
 
-    document.getElementById(
-        "sleepSelect"
-    ).value =
-        settings.sleep;
+        if (
+            y < 100
+        ) {
+
+            showFullscreenBar();
+
+        }
+
+    },
+    {
+        passive:
+            true
+    }
+);
 
 
-    document.getElementById(
-        "refreshSelect"
-    ).value =
-        settings.refresh;
+function showFullscreenBar() {
+
+    const bar =
+        document.getElementById(
+            "fullscreenBar"
+        );
 
 
-    document.getElementById(
-        "notesVisibility"
-    ).value =
-        settings.notes;
-
-
-    document.getElementById(
-        "tasksVisibility"
-    ).value =
-        settings.tasks;
-
-
-    document.getElementById(
-        "remindersVisibility"
-    ).value =
-        settings.reminders;
-
-
-    togglePanel(
-        "notesPanel",
-        settings.notes
+    bar.classList.add(
+        "visible"
     );
 
 
-    togglePanel(
-        "tasksPanel",
-        settings.tasks
+    clearTimeout(
+        fsTimer
     );
 
 
-    togglePanel(
-        "remindersPanel",
-        settings.reminders
+    fsTimer =
+        setTimeout(
+            () => {
+
+                bar.classList.remove(
+                    "visible"
+                );
+
+            },
+            4000
+        );
+
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+function goHome() {
+
+    window.scrollTo({
+
+        top:
+            0,
+
+        behavior:
+            "smooth"
+
+    });
+
+}
+
+
+function scrollToCard(
+    id
+) {
+
+    const element =
+        document.getElementById(
+            id
+        );
+
+
+    if (!element)
+        return;
+
+
+    element.scrollIntoView({
+
+        behavior:
+            "smooth",
+
+        block:
+            "center"
+
+    });
+
+}
+
+
+/* =========================================================
+   SETTINGS MODAL
+========================================================= */
+
+function openSettings() {
+
+    document.getElementById(
+        "settingsModal"
+    ).classList.add(
+        "open"
+    );
+
+
+    if (
+        document.fullscreenElement
+    ) {
+
+        showFullscreenBar();
+
+    }
+
+}
+
+
+function closeSettings() {
+
+    document.getElementById(
+        "settingsModal"
+    ).classList.remove(
+        "open"
     );
 
 }
 
 
-/* =====================================================
-   SECURITY
-===================================================== */
-
-function escapeHTML(
-    text
+function closeSettingsOutside(
+    event
 ) {
 
-    return String(text)
+    if (
+        event.target.id ===
+        "settingsModal"
+    ) {
+
+        closeSettings();
+
+    }
+
+}
+
+
+/* =========================================================
+   NOTIFICATIONS
+========================================================= */
+
+async function requestNotifications() {
+
+    if (
+        !("Notification" in window)
+    ) {
+
+        showToast(
+            "Notifications non disponibles dans ce navigateur."
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        const result =
+            await Notification.requestPermission();
+
+
+        if (
+            result ===
+            "granted"
+        ) {
+
+            showToast(
+                "Notifications activées ✓"
+            );
+
+        } else {
+
+            showToast(
+                "Notifications non autorisées."
+            );
+
+        }
+
+    } catch {
+
+        showToast(
+            "Impossible d'activer les notifications."
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   EXPORT
+========================================================= */
+
+function exportData() {
+
+    const data = {
+
+        version:
+            4,
+
+        exported:
+            new Date().toISOString(),
+
+        settings:
+            settings,
+
+        tasks:
+            tasks,
+
+        reminders:
+            reminders,
+
+        notes:
+            notes.value,
+
+        location:
+            locationData,
+
+        weather:
+            weather
+
+    };
+
+
+    const blob =
+        new Blob(
+            [
+                JSON.stringify(
+                    data,
+                    null,
+                    2
+                )
+            ],
+            {
+                type:
+                    "application/json"
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const a =
+        document.createElement(
+            "a"
+        );
+
+
+    a.href =
+        url;
+
+
+    a.download =
+        "wall-os-backup.json";
+
+
+    a.click();
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
+
+    showToast(
+        "Sauvegarde exportée ✓"
+    );
+
+}
+
+
+/* =========================================================
+   IMPORT
+========================================================= */
+
+function importData(
+    event
+) {
+
+    const file =
+        event.target.files[0];
+
+
+    if (!file)
+        return;
+
+
+    const reader =
+        new FileReader();
+
+
+    reader.onload =
+        () => {
+
+            try {
+
+                const data =
+                    JSON.parse(
+                        reader.result
+                    );
+
+
+                if (
+                    data.settings
+                ) {
+
+                    settings =
+                        data.settings;
+
+                    saveSettings();
+
+                }
+
+
+                if (
+                    Array.isArray(
+                        data.tasks
+                    )
+                ) {
+
+                    tasks =
+                        data.tasks;
+
+                    saveTasks();
+
+                }
+
+
+                if (
+                    Array.isArray(
+                        data.reminders
+                    )
+                ) {
+
+                    reminders =
+                        data.reminders;
+
+                    saveReminders();
+
+                }
+
+
+                if (
+                    typeof data.notes ===
+                    "string"
+                ) {
+
+                    notes.value =
+                        data.notes;
+
+                    localStorage.setItem(
+                        "wall_v4_notes",
+                        data.notes
+                    );
+
+                }
+
+
+                if (
+                    data.location
+                ) {
+
+                    locationData =
+                        data.location;
+
+                    saveJSON(
+                        "wall_v4_location",
+                        locationData
+                    );
+
+                }
+
+
+                if (
+                    data.weather
+                ) {
+
+                    weather =
+                        data.weather;
+
+                    saveJSON(
+                        "wall_v4_weather",
+                        weather
+                    );
+
+                }
+
+
+                applySettings();
+
+                renderTasks();
+
+                renderReminders();
+
+                renderWeather();
+
+
+                if (
+                    locationData
+                ) {
+
+                    setLocationText(
+                        locationData.display
+                    );
+
+                }
+
+
+                showToast(
+                    "Données restaurées ✓"
+                );
+
+
+            } catch {
+
+                showToast(
+                    "Fichier invalide."
+                );
+
+            }
+
+        };
+
+
+    reader.readAsText(
+        file
+    );
+
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+function resetEverything() {
+
+    if (
+        !confirm(
+            "Supprimer toutes les données du dashboard ?"
+        )
+    )
+        return;
+
+
+    localStorage.clear();
+
+
+    location.reload();
+
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+let toastTimer =
+    null;
+
+
+function showToast(
+    message
+) {
+
+    const toast =
+        document.getElementById(
+            "toast"
+        );
+
+
+    toast.textContent =
+        message;
+
+
+    toast.classList.add(
+        "show"
+    );
+
+
+    clearTimeout(
+        toastTimer
+    );
+
+
+    toastTimer =
+        setTimeout(
+            () => {
+
+                toast.classList.remove(
+                    "show"
+                );
+
+            },
+            3000
+        );
+
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHTML(
+    value
+) {
+
+    return String(value)
 
         .replace(
             /&/g,
@@ -3482,27 +5182,67 @@ function escapeHTML(
 }
 
 
-/* =====================================================
+/* =========================================================
+   LOCAL DATE
+========================================================= */
+
+function localDateKey(
+    date
+) {
+
+    const y =
+        date.getFullYear();
+
+
+    const m =
+        String(
+            date.getMonth() + 1
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    const d =
+        String(
+            date.getDate()
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    return (
+        y +
+        "-" +
+        m +
+        "-" +
+        d
+    );
+
+}
+
+
+/* =========================================================
    NIGHT MODE
-===================================================== */
+========================================================= */
 
 function updateNightMode() {
+
+    if (
+        settings.theme !==
+        "auto"
+    )
+        return;
+
 
     const hour =
         new Date()
             .getHours();
 
 
-    /*
-     * Le mode nuit concerne surtout
-     * le dashboard normal.
-     *
-     * Le mode Ambient conserve son
-     * contraste très élevé.
-     */
-
     document.body.classList.toggle(
-        "night-mode",
+        "night",
 
         hour >= 23 ||
         hour < 6
@@ -3517,27 +5257,85 @@ setInterval(
 );
 
 
-/* =====================================================
+/* =========================================================
+   INITIALIZATION
+========================================================= */
+
+function initialize() {
+
+    applySettings();
+
+    updateClock();
+
+    updateNightMode();
+
+    renderTasks();
+
+    renderReminders();
+
+    updateUpcoming();
+
+    applyAmbientBrightness();
+
+
+    /*
+     * Restaurer la dernière
+     * localisation immédiatement.
+     */
+
+    if (
+        locationData &&
+        locationData.display
+    ) {
+
+        setLocationText(
+            locationData.display
+        );
+
+    }
+
+
+    /*
+     * Restaurer météo immédiatement.
+     */
+
+    if (weather) {
+
+        renderWeather();
+
+        updateConnection(
+            navigator.onLine
+        );
+
+    }
+
+
+    /*
+     * Puis obtenir une nouvelle
+     * localisation.
+     */
+
+    getLocation();
+
+
+    restartWeatherTimer();
+
+    resetInactivityTimer();
+
+
+    /*
+     * Autorisation des notifications
+     * seulement après interaction.
+     */
+
+}
+
+
+/* =========================================================
    START
-===================================================== */
+========================================================= */
 
-applyTheme();
-
-loadSettings();
-
-updateClock();
-
-updateNightMode();
-
-renderTasks();
-
-renderReminders();
-
-getLocation();
-
-startWeatherRefresh();
-
-resetInactivityTimer();
+initialize();
 
 </script>
 

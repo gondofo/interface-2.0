@@ -3774,7 +3774,91 @@ function propagerCategories(motsCibles){
 CONTEXTES
 ========================================================= */
 
+/*
+ Thème dominant d'un paragraphe/texte appris : la catégorie
+ sémantique la plus représentée parmi ses mots. Sert de trace
+ de contexte global (point 3 du cahier des charges), en plus
+ du contexte local mot-à-mot.
+*/
+
+function calculerThemeParagraphe(tokens){
+
+    const comptes={};
+
+    for(const t of tokens){
+
+        if(isPonctuation(t)){
+            continue;
+        }
+
+        const cats =
+            memoire.semantique.categories[t]
+            || {};
+
+        for(const c in cats){
+
+            comptes[c] =
+                (comptes[c]||0) +
+                cats[c];
+
+        }
+
+    }
+
+    let meilleur="general";
+    let meilleurScore=0;
+
+    for(const c in comptes){
+
+        if(comptes[c]>meilleurScore){
+
+            meilleurScore=comptes[c];
+            meilleur=c;
+
+        }
+
+    }
+
+    return meilleur;
+
+}
+
+
+/*
+ Vérifie qu'aucune ponctuation de fin de phrase (./!/?) ne
+ sépare les positions i et j dans tokens, pour que la fenêtre
+ glissante ne relie pas deux phrases différentes.
+*/
+
+function memePhrase(tokens,i,j){
+
+    const debut = Math.min(i,j);
+    const fin = Math.max(i,j);
+
+    for(let k=debut;k<fin;k++){
+
+        if(
+            [".","!","?"]
+                .includes(tokens[k])
+        ){
+
+            return false;
+
+        }
+
+    }
+
+    return true;
+
+}
+
+
 function apprendreContextes(tokens){
+
+    const theme =
+        calculerThemeParagraphe(tokens);
+
+    const FENETRE_CTX=3;
 
     for(
         let i=0;
@@ -3832,6 +3916,66 @@ function apprendreContextes(tokens){
                 contexte[signature] ||
                 0
             ) + 1;
+
+
+        /*
+         Fenêtre glissante pondérée : les mots plus éloignés
+         (distance 2 et 3) comptent aussi, avec un poids qui
+         décroît avec la distance, sans franchir de frontière
+         de phrase.
+        */
+
+        for(
+            let d=2;
+            d<=FENETRE_CTX;
+            d++
+        ){
+
+            const poids = 1/d;
+
+            const gIdx = i-d;
+            const dIdx = i+d;
+
+            if(
+                gIdx>=0 &&
+                !isPonctuation(tokens[gIdx]) &&
+                memePhrase(tokens,i,gIdx)
+            ){
+
+                const cle =
+                    "ctx~" + tokens[gIdx];
+
+                contexte[cle] =
+                    (contexte[cle]||0) + poids;
+
+            }
+
+            if(
+                dIdx<tokens.length &&
+                !isPonctuation(tokens[dIdx]) &&
+                memePhrase(tokens,i,dIdx)
+            ){
+
+                const cle =
+                    "ctx~" + tokens[dIdx];
+
+                contexte[cle] =
+                    (contexte[cle]||0) + poids;
+
+            }
+
+        }
+
+
+        /*
+         Trace du thème global du paragraphe.
+        */
+
+        const cleTheme =
+            "theme~" + theme;
+
+        contexte[cleTheme] =
+            (contexte[cleTheme]||0) + .5;
 
 
         if(
@@ -3997,16 +4141,40 @@ function profilConnaissance(mot){
 
 
     /*
-     Importance globale.
+     Importance globale — formule multifactorielle pondérée
+     (voir cahier des charges, point 4) :
+
+       Importance = w1·Fréquence + w2·Répétition + w3·Résonance
+                  + w4·Contexte + w5·Diversité + w6·Pertinence
+
+     Les poids favorisent volontairement le Contexte et la
+     Pertinence conceptuelle par rapport à la simple Fréquence
+     brute, pour éviter que les mots vides ou juste très
+     fréquents dominent le classement (ils sont de toute façon
+     amortis séparément plus bas via motsVides).
+
+       Fréquence            → frequenceScore  (nb d'occurrences)
+       Répétition           → repetitionScore (répétition rapprochée)
+       Résonance            → recenceScore    (persistance dans le temps)
+       Contexte             → contexteScore
+       Diversité            → diversiteScore
+       Pertinence conceptuelle → conceptScore
     */
 
+    const W_FREQUENCE=.15;
+    const W_REPETITION=.15;
+    const W_RESONANCE=.15;
+    const W_CONTEXTE=.25;
+    const W_DIVERSITE=.10;
+    const W_PERTINENCE=.20;
+
     const importance =
-        frequenceScore*.25 +
-        repetitionScore*.20 +
-        recenceScore*.15 +
-        contexteScore*.15 +
-        diversiteScore*.15 +
-        conceptScore*.10;
+        frequenceScore*W_FREQUENCE +
+        repetitionScore*W_REPETITION +
+        recenceScore*W_RESONANCE +
+        contexteScore*W_CONTEXTE +
+        diversiteScore*W_DIVERSITE +
+        conceptScore*W_PERTINENCE;
 
 
     /*
@@ -4232,6 +4400,86 @@ function echelleSemantique(){
 }
 
 
+/* =========================================================
+DISTANCE SEMANTIQUE (GRAPHE DE CONCEPTS)
+========================================================= */
+
+/*
+ Le "graphe de concepts" ici, ce sont les catégories/concepts
+ déjà stockés dans memoire.semantique (pas une structure séparée
+ en plus — ça duplirait des données pour un gain marginal à
+ cette échelle). Cette fonction calcule une distance
+ approximative entre deux mots à partir de ce graphe :
+
+   0   → catégorie directement partagée (très proche)
+   .3  → concept indirect partagé (assez proche)
+   .5  → au moins un des deux mots n'a encore aucune catégorie
+         connue (distance inconnue, on reste neutre plutôt que
+         de pénaliser un mot juste appris)
+   1   → catégories connues des deux côtés mais aucun
+         recoupement (probablement incohérent)
+
+ Utilisée dans scoreSemantique() pour valider ou pénaliser une
+ association candidate quand aucune co-occurrence directe ne
+ la justifie déjà (point 1 et 2 du cahier des charges : "pont
+ lexique-sémantique" + "distance dans la taxonomie pour
+ valider/rejeter la pertinence").
+*/
+
+function distanceSemantique(motA,motB){
+
+    const catA =
+        memoire.semantique.categories[motA]
+        || {};
+
+    const catB =
+        memoire.semantique.categories[motB]
+        || {};
+
+    const clesA =
+        Object.keys(catA);
+
+    const clesB =
+        Object.keys(catB);
+
+    if(
+        !clesA.length ||
+        !clesB.length
+    ){
+
+        return .5;
+
+    }
+
+    const partageCategorie =
+        clesA.some(c=>clesB.includes(c));
+
+    if(partageCategorie){
+        return 0;
+    }
+
+
+    const conA =
+        memoire.semantique.concepts[motA]
+        || {};
+
+    const conB =
+        memoire.semantique.concepts[motB]
+        || {};
+
+    const partageConcept =
+        Object.keys(conA)
+            .some(c=>conB[c]);
+
+    if(partageConcept){
+        return .3;
+    }
+
+    return 1;
+
+}
+
+
 function scoreSemantique(
     precedent,
     candidat,
@@ -4386,6 +4634,44 @@ function scoreSemantique(
     }
 
 
+    /*
+     Validation par distance sémantique (points 1 et 2) : si
+     aucune association directe ne justifie déjà la paire, et
+     que les deux mots ont des catégories connues qui ne se
+     recoupent pas du tout, on pénalise doucement — c'est le
+     signal le plus net d'une association probablement
+     incohérente. Le mode "exploration" est volontairement
+     épargné : il cherche justement des rapprochements
+     inhabituels.
+    */
+
+    if(niveau!=="exploration"){
+
+        const aAssociationDirecte =
+            !!(
+                assoc &&
+                assoc[candidat]
+            );
+
+        if(!aAssociationDirecte){
+
+            const distance =
+                distanceSemantique(
+                    precedent,
+                    candidat
+                );
+
+            if(distance>=1){
+
+                score -= 1.5*echelle;
+
+            }
+
+        }
+
+    }
+
+
     return score;
 
 }
@@ -4395,7 +4681,7 @@ function scoreSemantique(
 CHOISIR PROCHAIN
 ========================================================= */
 
-function choisirProchain(
+function construireCandidats(
     options,
     precedent,
     force,
@@ -4408,89 +4694,112 @@ function choisirProchain(
         !options.length
     ){
 
-        return null;
+        return [];
 
     }
 
-    const candidats =
-        options.map(
-            ([mot,frequence])=>{
+    return options.map(
+        ([mot,frequence])=>{
 
-                const linguistique =
-                    Math.log1p(
-                        Number(frequence)
-                    );
+            const linguistique =
+                Math.log1p(
+                    Number(frequence)
+                );
 
-                const semantique =
-                    scoreSemantique(
-                        precedent,
-                        mot,
-                        niveau
-                    );
-
-                const profil =
-                    profilConnaissance(
-                        mot
-                    );
-
-                let score =
-                    linguistique*(1-force) +
-                    semantique*force;
-
-
-                /*
-                 Eviter que les connaissances faibles
-                 disparaissent complètement.
-                */
-
-                if(
-                    niveau==="exploration"
-                ){
-
-                    score +=
-                        (
-                            1-profil.confiance
-                        )*2;
-
-                }
-
-
-                /*
-                 Pénalité de répétition : sans ça, rien
-                 n'empêche la génération de boucler sur les
-                 mots les plus fréquents. La ponctuation
-                 n'est pas pénalisée (une phrase a besoin
-                 de plusieurs points/virgules).
-                */
-
-                if(
-                    compteUtilises &&
-                    !isPonctuation(mot)
-                ){
-
-                    const deja =
-                        compteUtilises.get(mot) || 0;
-
-                    if(deja>0){
-
-                        score /=
-                            1 + deja*1.5;
-
-                    }
-
-                }
-
-
-                return [
+            const semantique =
+                scoreSemantique(
+                    precedent,
                     mot,
-                    Math.max(
-                        score,
-                        .01
-                    )
-                ];
+                    niveau
+                );
+
+            const profil =
+                profilConnaissance(
+                    mot
+                );
+
+            let score =
+                linguistique*(1-force) +
+                semantique*force;
+
+
+            /*
+             Eviter que les connaissances faibles
+             disparaissent complètement.
+            */
+
+            if(
+                niveau==="exploration"
+            ){
+
+                score +=
+                    (
+                        1-profil.confiance
+                    )*2;
 
             }
+
+
+            /*
+             Pénalité de répétition : sans ça, rien
+             n'empêche la génération de boucler sur les
+             mots les plus fréquents. La ponctuation
+             n'est pas pénalisée (une phrase a besoin
+             de plusieurs points/virgules).
+            */
+
+            if(
+                compteUtilises &&
+                !isPonctuation(mot)
+            ){
+
+                const deja =
+                    compteUtilises.get(mot) || 0;
+
+                if(deja>0){
+
+                    score /=
+                        1 + deja*1.5;
+
+                }
+
+            }
+
+
+            return [
+                mot,
+                Math.max(
+                    score,
+                    .01
+                )
+            ];
+
+        }
+    );
+
+}
+
+
+function choisirProchain(
+    options,
+    precedent,
+    force,
+    niveau,
+    compteUtilises
+){
+
+    const candidats =
+        construireCandidats(
+            options,
+            precedent,
+            force,
+            niveau,
+            compteUtilises
         );
+
+    if(!candidats.length){
+        return null;
+    }
 
     return choixPondere(
         candidats
@@ -4557,6 +4866,405 @@ function rafraichirEtatGenerer(){
 }
 
 
+/* =========================================================
+CASCADE DE CANDIDATS (réutilisée par le tirage simple et
+le faisceau)
+========================================================= */
+
+/*
+ Reprend la cascade de repli déjà utilisée en génération :
+ 3-grammes → 2-grammes → associations directes → hypothèses
+ indirectes → tirage vocabulaire complet. Centralisée ici pour
+ que genererPhraseBeam() (point 10) s'appuie sur exactement la
+ même logique que la génération simple, sans duplication.
+*/
+
+function candidatsPourPosition(
+    avant,
+    precedent,
+    force,
+    niveau,
+    compteUtilises
+){
+
+    let candidats=[];
+
+    if(avant){
+
+        const cle =
+            avant + "|" + precedent;
+
+        const transitions =
+            memoire.transitions3[cle];
+
+        if(transitions){
+
+            candidats =
+                construireCandidats(
+                    Object.entries(transitions),
+                    precedent,
+                    force,
+                    niveau,
+                    compteUtilises
+                );
+
+        }
+
+    }
+
+    if(!candidats.length){
+
+        const alternatives =
+            memoire.transitions2[precedent];
+
+        if(alternatives){
+
+            candidats =
+                construireCandidats(
+                    Object.entries(alternatives),
+                    precedent,
+                    force,
+                    niveau,
+                    compteUtilises
+                );
+
+        }
+
+    }
+
+    if(!candidats.length){
+
+        const assoc =
+            memoire.semantique.associations[precedent];
+
+        if(assoc){
+
+            candidats =
+                construireCandidats(
+                    Object.entries(assoc),
+                    precedent,
+                    force,
+                    niveau,
+                    compteUtilises
+                );
+
+        }
+
+    }
+
+    if(!candidats.length){
+
+        const hyps =
+            (memoire.cognitive.hypotheses||[])
+                .filter(h=>
+                    h.a===precedent ||
+                    h.b===precedent
+                );
+
+        if(hyps.length){
+
+            const candidatsHyp =
+                hyps.map(h=>[
+                    h.a===precedent ? h.b : h.a,
+                    h.score*h.confiance
+                ]);
+
+            candidats =
+                construireCandidats(
+                    candidatsHyp,
+                    precedent,
+                    force,
+                    niveau,
+                    compteUtilises
+                );
+
+        }
+
+    }
+
+    if(!candidats.length){
+
+        const motsVoc =
+            Object.entries(memoire.vocabulaire)
+                .filter(([m])=>!isPonctuation(m));
+
+        if(motsVoc.length){
+
+            candidats =
+                construireCandidats(
+                    motsVoc,
+                    precedent,
+                    force,
+                    niveau,
+                    compteUtilises
+                );
+
+        }
+
+    }
+
+    return candidats;
+
+}
+
+
+/*
+ Tirage pondéré sans remise : sélectionne jusqu'à k éléments
+ distincts d'une liste [mot,score], proportionnellement à
+ leur score. Utilisé pour ouvrir plusieurs branches par
+ faisceau sans jamais choisir deux fois le même mot au même
+ embranchement.
+*/
+
+function echantillonnerSansRemise(
+    candidats,
+    k
+){
+
+    const pool =
+        candidats.slice();
+
+    const resultats=[];
+
+    const n =
+        Math.min(k,pool.length);
+
+    for(
+        let i=0;
+        i<n;
+        i++
+    ){
+
+        const total =
+            pool.reduce(
+                (s,[,p])=>
+                    s+Math.max(p,.0001),
+                0
+            );
+
+        let r =
+            Math.random()*total;
+
+        let idx=0;
+
+        for(
+            ;
+            idx<pool.length;
+            idx++
+        ){
+
+            r -=
+                Math.max(pool[idx][1],.0001);
+
+            if(r<=0){
+                break;
+            }
+
+        }
+
+        idx =
+            Math.min(idx,pool.length-1);
+
+        resultats.push(
+            pool[idx]
+        );
+
+        pool.splice(idx,1);
+
+    }
+
+    return resultats;
+
+}
+
+
+/* =========================================================
+GENERATION PAR RECHERCHE EN FAISCEAU (point 10)
+========================================================= */
+
+/*
+ Au lieu d'un unique tirage glouton mot par mot, on maintient
+ plusieurs suites candidates ("faisceaux") en parallèle. À
+ chaque étape, chaque faisceau se ramifie en plusieurs
+ continuations possibles (tirage pondéré sans remise, pour
+ garder une part d'aléatoire plutôt qu'un pur argmax), puis on
+ ne conserve que les LARGEUR_FAISCEAU suites au score cumulé le
+ plus élevé. À la fin, la suite retenue est celle dont le score
+ cumulé est le plus stable — l'algorithme demandé au point 10.
+*/
+
+function genererPhraseBeam(
+    premier,
+    longueur,
+    force,
+    niveau,
+    largeurFaisceau
+){
+
+    const LARGEUR =
+        largeurFaisceau || 4;
+
+    const BRANCHES = 3;
+
+    let faisceaux=[{
+
+        sequence:[premier],
+
+        score:0,
+
+        compte:new Map([[premier,1]]),
+
+        termine:false
+
+    }];
+
+
+    for(
+        let i=1;
+        i<longueur;
+        i++
+    ){
+
+        const suivants=[];
+
+        for(
+            const faisceau of faisceaux
+        ){
+
+            if(faisceau.termine){
+
+                suivants.push(faisceau);
+
+                continue;
+
+            }
+
+            const seq =
+                faisceau.sequence;
+
+            const precedent =
+                seq[seq.length-1];
+
+            const avant =
+                seq.length>=2 ?
+                    seq[seq.length-2] :
+                    null;
+
+            const candidats =
+                candidatsPourPosition(
+                    avant,
+                    precedent,
+                    force,
+                    niveau,
+                    faisceau.compte
+                );
+
+            if(!candidats.length){
+
+                suivants.push(faisceau);
+
+                continue;
+
+            }
+
+            const choisis =
+                echantillonnerSansRemise(
+                    candidats,
+                    BRANCHES
+                );
+
+            for(
+                const [mot,score]
+                of choisis
+            ){
+
+                const nouvelleCompte =
+                    new Map(faisceau.compte);
+
+                nouvelleCompte.set(
+                    mot,
+                    (
+                        nouvelleCompte.get(mot)||0
+                    )+1
+                );
+
+                const nouvelleSeq =
+                    seq.concat([mot]);
+
+                const finPhrase =
+                    nouvelleSeq.length>=8 &&
+                    [".","!","?"]
+                        .includes(mot) &&
+                    Math.random()<.8;
+
+                suivants.push({
+
+                    sequence:nouvelleSeq,
+
+                    score:faisceau.score+score,
+
+                    compte:nouvelleCompte,
+
+                    termine:finPhrase
+
+                });
+
+            }
+
+        }
+
+        if(!suivants.length){
+            break;
+        }
+
+
+        /*
+         Élagage : on garde les meilleurs faisceaux par score
+         cumulé moyen (pas la somme brute, pour ne pas
+         favoriser artificiellement les suites qui stagnent
+         sur des faisceaux non étendus).
+        */
+
+        suivants.sort(
+            (a,b)=>
+                (b.score/b.sequence.length) -
+                (a.score/a.sequence.length)
+        );
+
+        faisceaux =
+            suivants.slice(0,LARGEUR);
+
+
+        if(
+            faisceaux.every(f=>f.termine)
+        ){
+
+            break;
+
+        }
+
+    }
+
+
+    faisceaux.sort(
+        (a,b)=>
+            (b.score/b.sequence.length) -
+            (a.score/a.sequence.length)
+    );
+
+    const termines =
+        faisceaux.filter(f=>f.termine);
+
+    const meilleur =
+        (termines.length ? termines : faisceaux)[0];
+
+    return meilleur ?
+        meilleur.sequence :
+        [premier];
+
+}
+
+
 function genererPhrase(){
 
     if(
@@ -4610,190 +5318,23 @@ function genererPhrase(){
     }
 
 
-    const resultat=[
-        premier
-    ];
-
     /*
-     Suivi des répétitions pour pénaliser les mots
-     déjà utilisés dans la phrase en cours.
+     Génération par recherche en faisceau (point 10) :
+     remplace l'ancien tirage glouton mot par mot par
+     l'exploration de plusieurs suites candidates en
+     parallèle, dont on retient la plus stable au sens du
+     score cumulé.
     */
 
-    const compteUtilises =
-        new Map();
-
-    compteUtilises.set(
-        premier,
-        1
-    );
-
-
-    for(
-        let i=1;
-        i<longueur;
-        i++
-    ){
-
-        const precedent =
-            resultat[i-1];
-
-        const avant =
-            resultat[i-2];
-
-        let choix=null;
-
-
-        /*
-         priorité 3-gramme
-        */
-
-        if(avant){
-
-            const cle =
-                avant+"|"+precedent;
-
-            const transitions =
-                memoire.transitions3[
-                    cle
-                ];
-
-            if(transitions){
-
-                choix =
-                    choisirProchain(
-                        Object.entries(
-                            transitions
-                        ),
-                        precedent,
-                        force,
-                        niveau,
-                        compteUtilises
-                    );
-
-            }
-
-        }
-
-
-        /*
-         fallback 2-gramme
-        */
-
-        if(!choix){
-
-            const alternatives =
-                memoire.transitions2[
-                    precedent
-                ];
-
-            if(alternatives){
-
-                choix =
-                    choisirProchain(
-                        Object.entries(
-                            alternatives
-                        ),
-                        precedent,
-                        force,
-                        niveau,
-                        compteUtilises
-                    );
-
-            }
-
-        }
-
-
-        /*
-         fallback sémantique : aucune transition n-gramme
-         connue pour "precedent", mais on connaît peut-être
-         ses associations (fenêtre de contexte).
-        */
-
-        if(!choix){
-
-            const assoc =
-                memoire.semantique.associations[
-                    precedent
-                ];
-
-            if(assoc){
-
-                choix =
-                    choisirProchain(
-                        Object.entries(
-                            assoc
-                        ),
-                        precedent,
-                        force,
-                        niveau,
-                        compteUtilises
-                    );
-
-            }
-
-        }
-
-
-        /*
-         dernier recours : tirage pondéré sur tout le
-         vocabulaire. Cela évite un arrêt prématuré de la
-         génération simplement parce que le dernier mot
-         choisi est rare ou en fin de corpus appris.
-        */
-
-        if(!choix){
-
-            const motsVoc =
-                Object.entries(
-                    memoire.vocabulaire
-                )
-                .filter(
-                    ([m])=>!isPonctuation(m)
-                );
-
-            if(motsVoc.length){
-
-                choix =
-                    choixPondere(
-                        motsVoc
-                    );
-
-            }
-
-        }
-
-
-        if(!choix){
-            break;
-        }
-
-
-        resultat.push(
-            choix
+    const resultat =
+        genererPhraseBeam(
+            premier,
+            longueur,
+            force,
+            niveau,
+            4
         );
 
-        compteUtilises.set(
-            choix,
-            (
-                compteUtilises.get(choix) ||
-                0
-            ) + 1
-        );
-
-
-        if(
-            resultat.length>=8 &&
-            [".","!","?"]
-                .includes(choix) &&
-            Math.random()<.8
-        ){
-
-            break;
-
-        }
-
-    }
 
 
     const phrase =
@@ -5498,27 +6039,55 @@ async function oubliControle(){
 
 
             /*
-             seuil très bas.
-             Les relations fortes restent.
+             Décroissance temporelle (point 7) + protection
+             "long terme" (point 8) + gel des automatismes
+             (point 6), réunis ici sans structure séparée :
+
+             - une relation forte (>= SEUIL_CONSOLIDATION) est
+               considérée consolidée / "gelée" : elle est
+               immunisée contre la décroissance et l'élagage,
+               comme un automatisme fiable qu'on ne remet plus
+               en question à chaque cycle.
+             - une relation plus faible décroît d'un facteur
+               fixe à chaque passage. Si elle est réutilisée
+               entre deux oublis, l'apprentissage la fait
+               remonter au-dessus de la décroissance ; sinon
+               elle finit par tomber sous le seuil de
+               suppression (.05).
             */
+
+            const SEUIL_CONSOLIDATION=3;
+            const FACTEUR_DECAY=.85;
 
             for(
                 const [relation,valeur]
                 of entries
             ){
 
-                const n =
+                let n =
                     Number(valeur);
 
                 if(
-                    n<=.05
+                    n<SEUIL_CONSOLIDATION
                 ){
 
-                    delete objet[
-                        relation
-                    ];
+                    n = n*FACTEUR_DECAY;
 
-                    supprime++;
+                    if(
+                        n<=.05
+                    ){
+
+                        delete objet[
+                            relation
+                        ];
+
+                        supprime++;
+
+                        continue;
+
+                    }
+
+                    objet[relation]=n;
 
                 }
 

@@ -1447,6 +1447,8 @@ let nomMemoire = "memoire_ia_fr_v6.json";
 
 let sourceWikipediaDisponible = null;
 
+let sourceGrokipediaDisponible = null;
+
 let cyclesApprentissage = 0;
 
 let avertissementTaille = false;
@@ -1463,6 +1465,8 @@ function creerMemoire(){
     return {
 
         version:VERSION_MEMOIRE,
+
+        langue:"fr",
 
         statistiques:{
 
@@ -1483,6 +1487,8 @@ function creerMemoire(){
             sources:{
 
                 wikipedia:0,
+
+                grokipedia:0,
 
                 local:0,
 
@@ -1752,6 +1758,25 @@ function normaliserMemoire(data){
         );
 
     }
+
+    /*
+     compatibilité : anciennes mémoires sans langue
+     (par défaut français) ni source "grokipedia".
+    */
+
+    base.langue =
+        data.langue==="en" ?
+            "en" : "fr";
+
+    base.statistiques.sources = Object.assign(
+        {
+            wikipedia:0,
+            grokipedia:0,
+            local:0,
+            import:0
+        },
+        base.statistiques.sources || {}
+    );
 
 
     /* structures linguistiques */
@@ -2328,6 +2353,31 @@ function afficherEtatWikipedia(){
 }
 
 
+function afficherEtatGrokipedia(){
+
+    const el =
+        document.getElementById("grokEtat");
+
+    if(!el){
+        return;
+    }
+
+    if(sourceGrokipediaDisponible===null){
+
+        el.textContent =
+            "— inconnue —";
+
+        return;
+    }
+
+    el.textContent =
+        sourceGrokipediaDisponible
+            ? "🟢 disponible"
+            : "🔴 indisponible";
+
+}
+
+
 async function fetchTimeout(
     url,
     ms
@@ -2364,16 +2414,82 @@ async function fetchTimeout(
 }
 
 
-async function recupererWikipedia(){
+/* =========================================================
+APPRENTISSAGE ACTIF (CURIOSITÉ)
+========================================================= */
+
+/*
+ Sans ce mécanisme, chaque cycle pioche une page Wikipédia
+ totalement au hasard : la mémoire grossit en patchwork,
+ sans lien entre les sujets appris d'un cycle à l'autre.
+
+ Cette fonction choisit plutôt un mot déjà "moyennement"
+ connu (ni ignoré, ni maîtrisé) et cherche un article
+ Wikipédia lié à ce mot, pour que l'apprentissage approfondisse
+ des zones déjà entamées plutôt que de partir dans tous les
+ sens. Une partie des cycles reste aléatoire (voir
+ PROBABILITE_CURIOSITE dans lancerApprentissage) pour ne
+ pas perdre en diversité.
+*/
+
+function choisirMotCuriosite(){
+
+    const motsVidesActuels =
+        getMotsVides();
+
+    const candidats =
+        Object.keys(memoire.vocabulaire)
+            .filter(m=>
+                !isPonctuation(m) &&
+                !motsVidesActuels.includes(m) &&
+                memoire.vocabulaire[m]>=2
+            );
+
+    if(!candidats.length){
+        return null;
+    }
+
+    /*
+     On préfère les mots "moyennement" connus : les explorer
+     davantage a plus de valeur que de creuser un mot déjà
+     "fort", ou un mot à peine croisé une fois.
+    */
+
+    const moyens =
+        candidats.filter(m=>
+            profilConnaissance(m).niveau==="moyen"
+        );
+
+    const pool =
+        moyens.length ?
+            moyens :
+            candidats;
+
+    return pool[
+        Math.floor(
+            Math.random()*pool.length
+        )
+    ];
+
+}
+
+
+async function rechercherTitreLie(motCle,langue){
+
+    const domaine =
+        langue==="en" ?
+            "en.wikipedia.org" :
+            "fr.wikipedia.org";
 
     try{
 
         const url =
-            "https://fr.wikipedia.org/w/api.php" +
+            "https://" + domaine + "/w/api.php" +
             "?action=query" +
-            "&list=random" +
-            "&rnnamespace=0" +
-            "&rnlimit=1" +
+            "&list=search" +
+            "&srsearch=" +
+            encodeURIComponent(motCle) +
+            "&srlimit=5" +
             "&format=json" +
             "&origin=*";
 
@@ -2384,32 +2500,110 @@ async function recupererWikipedia(){
             );
 
         if(!response.ok){
+
             throw new Error(
                 "HTTP " +
                 response.status
             );
+
         }
 
         const data =
             await response.json();
 
+        const resultats =
+            data.query &&
+            data.query.search;
+
         if(
-            !data.query ||
-            !data.query.random ||
-            !data.query.random[0]
+            !resultats ||
+            !resultats.length
         ){
 
             throw new Error(
-                "Réponse Wikipédia invalide"
+                "Aucun résultat lié"
             );
 
         }
 
-        const titre =
-            data.query.random[0].title;
+        const choix =
+            resultats[
+                Math.floor(
+                    Math.random()*
+                    resultats.length
+                )
+            ];
+
+        return choix.title;
+
+    }
+    catch(e){
+
+        return null;
+
+    }
+
+}
+
+
+async function recupererWikipedia(langue,titreForce){
+
+    const domaine =
+        langue==="en" ?
+            "en.wikipedia.org" :
+            "fr.wikipedia.org";
+
+    try{
+
+        let titre =
+            titreForce;
+
+        if(!titre){
+
+            const url =
+                "https://" + domaine + "/w/api.php" +
+                "?action=query" +
+                "&list=random" +
+                "&rnnamespace=0" +
+                "&rnlimit=1" +
+                "&format=json" +
+                "&origin=*";
+
+            const response =
+                await fetchTimeout(
+                    url,
+                    7000
+                );
+
+            if(!response.ok){
+                throw new Error(
+                    "HTTP " +
+                    response.status
+                );
+            }
+
+            const data =
+                await response.json();
+
+            if(
+                !data.query ||
+                !data.query.random ||
+                !data.query.random[0]
+            ){
+
+                throw new Error(
+                    "Réponse Wikipédia invalide"
+                );
+
+            }
+
+            titre =
+                data.query.random[0].title;
+
+        }
 
         const url2 =
-            "https://fr.wikipedia.org/w/api.php" +
+            "https://" + domaine + "/w/api.php" +
             "?action=query" +
             "&prop=extracts" +
             "&explaintext=1" +
@@ -2464,10 +2658,14 @@ async function recupererWikipedia(){
 
         afficherEtatWikipedia();
 
-        return page.extract.slice(
-            0,
-            4500
-        );
+        return {
+
+            texte:
+                page.extract.slice(0,4500),
+
+            titre
+
+        };
 
     }
     catch(e){
@@ -2477,6 +2675,192 @@ async function recupererWikipedia(){
         afficherEtatWikipedia();
 
         return null;
+
+    }
+
+}
+
+
+/* =========================================================
+GROKIPEDIA
+========================================================= */
+
+/*
+ IMPORTANT — limite technique connue :
+ Grokipedia (grokipedia.com) n'a pas d'API publique avec CORS
+ activé (contrairement à l'API MediaWiki de Wikipédia, qui
+ supporte explicitement "&origin=*"). Un fetch() direct depuis
+ le navigateur est donc bloqué par la politique CORS du
+ navigateur, quel que soit ce que fait ce code.
+
+ Pour rendre la fonctionnalité utilisable malgré tout, cette
+ fonction passe par un proxy CORS public tiers (codetabs.com)
+ qui relaie la requête et ajoute les en-têtes nécessaires.
+ C'est un compromis, pas une solution garantie : le proxy est
+ gratuit, non-affilié à Anthropic ni à xAI, peut tomber en panne,
+ changer de limites de débit, ou disparaître sans préavis.
+ En cas d'échec, la fonction renvoie simplement null, exactement
+ comme recupererWikipedia() en cas d'indisponibilité : le reste
+ du moteur (repli vers le corpus local) gère déjà ce cas.
+
+ Grokipedia n'a pas non plus d'API "page aléatoire" publique :
+ cette fonction réutilise donc le titre déjà obtenu via
+ Wikipédia (les deux sites partagent une convention de titres
+ très proche : espaces remplacés par des underscores).
+*/
+
+const GROKIPEDIA_PROXY =
+    "https://api.codetabs.com/v1/proxy/?quest=";
+
+async function recupererGrokipedia(titre){
+
+    if(!titre){
+        return null;
+    }
+
+    try{
+
+        const urlCible =
+            "https://grokipedia.com/page/" +
+            encodeURIComponent(
+                titre.replace(/\s+/g,"_")
+            );
+
+        const response =
+            await fetchTimeout(
+                GROKIPEDIA_PROXY +
+                encodeURIComponent(urlCible),
+                9000
+            );
+
+        if(!response.ok){
+
+            throw new Error(
+                "HTTP " +
+                response.status
+            );
+
+        }
+
+        const html =
+            await response.text();
+
+        const texte =
+            extraireTexteGrokipedia(html);
+
+        if(
+            !texte ||
+            texte.length<200
+        ){
+
+            throw new Error(
+                "Extrait Grokipedia trop court"
+            );
+
+        }
+
+        sourceGrokipediaDisponible=true;
+
+        afficherEtatGrokipedia();
+
+        return {
+
+            texte:
+                texte.slice(0,4500),
+
+            titre
+
+        };
+
+    }
+    catch(e){
+
+        sourceGrokipediaDisponible=false;
+
+        afficherEtatGrokipedia();
+
+        return null;
+
+    }
+
+}
+
+
+/*
+ Extraction de texte "au mieux" depuis le HTML brut de
+ Grokipedia. Pas d'API JSON disponible : on parse le HTML avec
+ DOMParser et on retire les éléments d'interface connus
+ (navigation, boutons, formulaires de suggestion) avant de
+ prendre le texte visible. Cette extraction est fragile par
+ nature : si Grokipedia change sa mise en page, elle peut
+ renvoyer un texte de mauvaise qualité — c'est pourquoi un
+ seuil minimal de longueur (200 caractères) est vérifié par
+ l'appelant avant d'accepter le résultat.
+*/
+
+function extraireTexteGrokipedia(html){
+
+    try{
+
+        const parser =
+            new DOMParser();
+
+        const doc =
+            parser.parseFromString(
+                html,
+                "text/html"
+            );
+
+        /*
+         Retrait des éléments d'interface qui ne sont pas
+         du contenu encyclopédique.
+        */
+
+        const selecteursAExclure = [
+            "nav","header","footer",
+            "form","button","script","style"
+        ];
+
+        for(
+            const sel of selecteursAExclure
+        ){
+
+            doc.querySelectorAll(sel)
+                .forEach(el=>el.remove());
+
+        }
+
+        let texte =
+            doc.body ?
+                doc.body.innerText ||
+                doc.body.textContent ||
+                "" :
+                "";
+
+        /*
+         Nettoyage des lignes de type interface qui
+         subsistent malgré tout (menus, liens "Sign in",
+         table des matières répétée...).
+        */
+
+        texte = texte
+            .split("\n")
+            .map(l=>l.trim())
+            .filter(l=>l.length>0)
+            .filter(l=>
+                !/^(sign in|search|suggest edit|new article|submit|cancel|view my suggestions|fact-checked by)/i
+                    .test(l)
+            )
+            .join(" ");
+
+        return texte
+            .replace(/\s+/g," ")
+            .trim();
+
+    }
+    catch(e){
+
+        return "";
 
     }
 
@@ -2573,6 +2957,179 @@ const motsVides = [
 
 
 const PONDERATION_MOT_VIDE = .15;
+
+
+/* =========================================================
+LEXIQUES — ANGLAIS
+========================================================= */
+
+/*
+ Équivalents anglais des listes ci-dessus. Une mémoire créée
+ en anglais (memoire.langue==="en") utilise ces listes à la
+ place des listes françaises, via les fonctions getCategoriesConnues()
+ / getActionsConnues() / getMotsVides() / getCorpusLocal() plus bas.
+*/
+
+const categoriesConnues_en = {
+
+    animals:[
+        "cat","dog","horse","cow","lion",
+        "tiger","bear","wolf","bird","fish",
+        "mouse","rabbit","pig","sheep","goat",
+        "elephant","giraffe","monkey","hen","duck"
+    ],
+
+    food:[
+        "bread","cheese","meat","fish","rice",
+        "apple","orange","banana","vegetable","fruit",
+        "soup","cake","chocolate","milk","water",
+        "coffee","tea"
+    ],
+
+    places:[
+        "house","city","village","country","school",
+        "hospital","office","street","garden","park",
+        "shop","restaurant","station","airport",
+        "beach","mountain","forest"
+    ],
+
+    people:[
+        "man","woman","child","boy","girl",
+        "father","mother","brother","sister","friend",
+        "teacher","doctor","police","president"
+    ],
+
+    objects:[
+        "table","chair","door","window","car",
+        "bike","computer","phone","book",
+        "pen","bag","key","bed","lamp"
+    ],
+
+    nature:[
+        "tree","flower","forest","river","sea",
+        "ocean","mountain","sun","moon","rain",
+        "snow","wind","sky","earth"
+    ]
+
+};
+
+
+const actionsConnues_en = [
+
+    "eat","drink","sleep","run","walk",
+    "talk","watch","see","hear","listen",
+    "love","hate","take","give","make",
+    "say","go","come","leave","arrive",
+    "live","work","play","read","write",
+    "learn","teach","buy","sell",
+    "open","close","search","find","think",
+    "understand","know","build","create",
+    "use","carry","put","hold","jump",
+    "sing","laugh","cry"
+
+];
+
+
+const motsVides_en = [
+
+    "the","a","an","and","of","to","in",
+    "on","for","with","by","this","that",
+    "these","those","he","she","it","they",
+    "who","what","which","not","no","so",
+    "his","her","its","their","our","your","my",
+    "is","are","was","were","be","been","being",
+    "have","has","had","more","most",
+    "very","as","if","all","some","or","but",
+    "than","then","there","here","when",
+    "i","you","we","me","us","him","them"
+
+];
+
+
+const corpusLocal_en = [
+
+    "The cat walks in the garden and watches the birds.",
+
+    "The dog runs in the street then comes back to the house.",
+
+    "A child learns to read a book in a small school.",
+
+    "People work together to build a city.",
+
+    "The car moves slowly on the road during the rain.",
+
+    "The teacher explains a new idea to the students.",
+
+    "A family prepares a meal in the kitchen.",
+
+    "The man looks at the sky and thinks about his future.",
+
+    "The woman opens the door and enters the house.",
+
+    "Trees grow in the forest near the river.",
+
+    "A computer allows you to search for information and create documents.",
+
+    "People can learn new things over time.",
+
+    "Knowledge helps you understand the world better.",
+
+    "A project starts with an idea then gradually becomes a reality.",
+
+    "Data allows you to find relations between several pieces of information.",
+
+    "A good memory keeps important experiences and associations.",
+
+    "The brain uses different types of memory to understand its environment.",
+
+    "Words often appear in different contexts.",
+
+    "A sentence links several words to convey an idea.",
+
+    "Language allows people to communicate and share their knowledge."
+
+];
+
+
+/*
+ Sélecteurs bilingues : toutes les fonctions d'apprentissage /
+ génération passent par ceux-ci plutôt que d'utiliser
+ directement les constantes françaises, pour que la même
+ moteur fonctionne en français ou en anglais selon
+ memoire.langue.
+*/
+
+function getCategoriesConnues(){
+
+    return memoire.langue==="en" ?
+        categoriesConnues_en :
+        categoriesConnues;
+
+}
+
+function getActionsConnues(){
+
+    return memoire.langue==="en" ?
+        actionsConnues_en :
+        actionsConnues;
+
+}
+
+function getMotsVides(){
+
+    return memoire.langue==="en" ?
+        motsVides_en :
+        motsVides;
+
+}
+
+function getCorpusLocal(){
+
+    return memoire.langue==="en" ?
+        corpusLocal_en :
+        corpusLocal;
+
+}
 
 
 /* =========================================================
@@ -2885,14 +3442,20 @@ function apprendreSemantique(tokens){
      catégories / concepts
     */
 
+    const categories =
+        getCategoriesConnues();
+
+    const actions =
+        getActionsConnues();
+
     for(const mot of tokens){
 
         for(
-            const categorie in categoriesConnues
+            const categorie in categories
         ){
 
             if(
-                categoriesConnues[categorie]
+                categories[categorie]
                     .includes(mot)
             ){
 
@@ -2914,7 +3477,7 @@ function apprendreSemantique(tokens){
 
 
         if(
-            actionsConnues.includes(mot)
+            actions.includes(mot)
         ){
 
             ajouterCategorie(
@@ -2990,14 +3553,18 @@ function apprendreSemantique(tokens){
                 1/(j-i);
 
             /*
-             Amortissement des mots vides : "le", "de", "un"...
-             co-occurrent avec tout, donc sans amortissement
-             ils dominent les associations sémantiques.
+             Amortissement des mots vides : "le", "de", "un"
+             (ou "the", "of", "a" en anglais)... co-occurrent
+             avec tout, donc sans amortissement ils dominent
+             les associations sémantiques.
             */
 
+            const motsVidesActuels =
+                getMotsVides();
+
             if(
-                motsVides.includes(a) ||
-                motsVides.includes(b)
+                motsVidesActuels.includes(a) ||
+                motsVidesActuels.includes(b)
             ){
 
                 poids *=
@@ -3069,7 +3636,7 @@ function apprendreSemantique(tokens){
         const action=tokens[i+1];
 
         if(
-            actionsConnues.includes(action)
+            actions.includes(action)
         ){
 
             if(
@@ -3470,7 +4037,7 @@ function profilConnaissance(mot){
     let confianceFinale = confiance;
 
     if(
-        motsVides.includes(mot)
+        getMotsVides().includes(mot)
     ){
 
         importanceFinale *= .35;
@@ -5314,53 +5881,160 @@ async function lancerApprentissage(){
             cyclesApprentissage;
 
 
-        let texte=null;
+        let texteWikipedia=null;
 
-        let source="local";
+        let texteGrokipedia=null;
+
+        let titrePartage=null;
+
+
+        /*
+         Sources activées par l'utilisateur (cases à cocher).
+         Si les cases n'existent pas encore dans une page HTML
+         plus ancienne, on retombe sur le comportement
+         d'origine (Wikipédia seule).
+        */
+
+        const caseWiki =
+            document.getElementById(
+                "sourceWikipedia"
+            );
+
+        const caseGrok =
+            document.getElementById(
+                "sourceGrokipedia"
+            );
+
+        const wikiActif =
+            !caseWiki || caseWiki.checked;
+
+        const grokActif =
+            !!caseGrok && caseGrok.checked;
 
 
         if(
+            (wikiActif || grokActif) &&
             Math.random()<.65
         ){
 
-            journaliser(
-                "🌐 Tentative Wikipédia..."
-            );
+            if(wikiActif){
 
-            texte =
-                await recupererWikipedia();
+                let titreCible=null;
 
-            if(texte){
+                /*
+                 Apprentissage actif : une partie des cycles
+                 cherche un sujet lié à un mot déjà partiellement
+                 connu, plutôt que de piocher au hasard.
+                */
 
-                source="wikipedia";
+                const PROBABILITE_CURIOSITE=.5;
+
+                if(
+                    Math.random()<PROBABILITE_CURIOSITE
+                ){
+
+                    const motCurieux =
+                        choisirMotCuriosite();
+
+                    if(motCurieux){
+
+                        journaliser(
+                            "🧭 Curiosité : \"" +
+                            motCurieux +
+                            "\"..."
+                        );
+
+                        titreCible =
+                            await rechercherTitreLie(
+                                motCurieux,
+                                memoire.langue
+                            );
+
+                    }
+
+                }
+
+
+                journaliser(
+                    titreCible ?
+                        "🌐 Tentative Wikipédia (ciblée)..." :
+                        "🌐 Tentative Wikipédia..."
+                );
+
+                const resultat =
+                    await recupererWikipedia(
+                        memoire.langue,
+                        titreCible
+                    );
+
+                if(resultat){
+
+                    texteWikipedia =
+                        resultat.texte;
+
+                    titrePartage =
+                        resultat.titre;
+
+                }
 
             }
 
-        }
 
+            if(grokActif){
 
-        if(!texte){
+                journaliser(
+                    "🟣 Tentative Grokipedia..."
+                );
 
-            texte =
-                corpusLocal[
-                    Math.floor(
-                        Math.random()*
-                        corpusLocal.length
-                    )
-                ];
+                /*
+                 Grokipedia n'a pas d'API "page aléatoire" :
+                 on réutilise le titre Wikipédia déjà obtenu,
+                 ou on en tire un exprès si Wikipédia est
+                 désactivée.
+                */
 
-            source="local";
+                let titrePourGrok =
+                    titrePartage;
 
-            journaliser(
-                "📚 Corpus local."
-            );
+                if(!titrePourGrok){
 
-        }
-        else{
+                    const amorce =
+                        await recupererWikipedia(
+                            memoire.langue
+                        );
 
-            journaliser(
-                "🌐 Texte Wikipédia."
-            );
+                    if(amorce){
+
+                        titrePourGrok =
+                            amorce.titre;
+
+                        if(!texteWikipedia){
+
+                            texteWikipedia =
+                                amorce.texte;
+
+                            titrePartage =
+                                amorce.titre;
+
+                        }
+
+                    }
+
+                }
+
+                const resultatGrok =
+                    await recupererGrokipedia(
+                        titrePourGrok
+                    );
+
+                if(resultatGrok){
+
+                    texteGrokipedia =
+                        resultatGrok.texte;
+
+                }
+
+            }
 
         }
 
@@ -5370,11 +6044,66 @@ async function lancerApprentissage(){
         }
 
 
-        const nombre =
-            apprendreTexte(
-                texte,
-                source
+        let nombre=0;
+
+
+        if(texteWikipedia){
+
+            nombre +=
+                apprendreTexte(
+                    texteWikipedia,
+                    "wikipedia"
+                );
+
+            journaliser(
+                "🌐 Texte Wikipédia appris."
             );
+
+        }
+
+
+        if(texteGrokipedia){
+
+            nombre +=
+                apprendreTexte(
+                    texteGrokipedia,
+                    "grokipedia"
+                );
+
+            journaliser(
+                "🟣 Texte Grokipedia appris."
+            );
+
+        }
+
+
+        if(
+            !texteWikipedia &&
+            !texteGrokipedia
+        ){
+
+            const corpus =
+                getCorpusLocal();
+
+            const texteLocal =
+                corpus[
+                    Math.floor(
+                        Math.random()*
+                        corpus.length
+                    )
+                ];
+
+            nombre =
+                apprendreTexte(
+                    texteLocal,
+                    "local"
+                );
+
+            journaliser(
+                "📚 Corpus local."
+            );
+
+        }
 
 
         journaliser(
@@ -6800,28 +7529,50 @@ function afficherInfosMemoire(){
 
     afficherEtatWikipedia();
 
+    afficherEtatGrokipedia();
+
 
     const sources =
         memoire.statistiques.sources
         || {};
 
 
+    const compteWiki =
+        Number(sources.wikipedia||0);
+
+    const compteGrok =
+        Number(sources.grokipedia||0);
+
+    const compteLocal =
+        Number(sources.local||0);
+
+
     let dominante="—";
 
+    const max =
+        Math.max(
+            compteWiki,
+            compteGrok,
+            compteLocal
+        );
 
-    if(
-        Number(sources.wikipedia||0) >
-        Number(sources.local||0)
-    ){
+    if(max>0){
 
-        dominante="Wikipédia";
+        if(max===compteWiki){
 
-    }
-    else if(
-        Number(sources.local||0)>0
-    ){
+            dominante="Wikipédia";
 
-        dominante="Corpus local";
+        }
+        else if(max===compteGrok){
+
+            dominante="Grokipedia";
+
+        }
+        else{
+
+            dominante="Corpus local";
+
+        }
 
     }
 

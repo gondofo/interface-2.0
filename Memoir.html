@@ -1449,6 +1449,74 @@ let sourceWikipediaDisponible = null;
 
 let sourceGrokipediaDisponible = null;
 
+
+/* =========================================================
+ADAPTATION CONTINUE LEGERE (BIAIS DE SESSION)
+========================================================= */
+
+/*
+ Volontairement PAS dans `memoire` (donc jamais sauvegardé en
+ JSON) : ce biais reflète ce que l'utilisateur vient de générer
+ dans la session en cours, pas une connaissance validée. Le
+ séparer de la mémoire persistée évite exactement le risque
+ identifié plus haut dans ce fichier : renforcer le modèle à
+ partir de son propre texte généré créerait une boucle d'auto-
+ confirmation. Ici, c'est juste un projecteur temporaire sur le
+ vocabulaire récemment affiché à l'utilisateur — décroît vite,
+ disparaît à la fermeture de la page. Coût : une Map + un O(1)
+ par mot, donc négligeable pour le CPU.
+*/
+
+let biaisSession = new Map();
+
+const DECAY_BIAIS_SESSION = .7;
+
+function decroitreBiaisSession(){
+
+    for(
+        const [mot,valeur] of biaisSession
+    ){
+
+        const nouvelle =
+            valeur*DECAY_BIAIS_SESSION;
+
+        if(nouvelle<.02){
+
+            biaisSession.delete(mot);
+
+        }
+        else{
+
+            biaisSession.set(mot,nouvelle);
+
+        }
+
+    }
+
+}
+
+function renforcerBiaisSession(sequence){
+
+    decroitreBiaisSession();
+
+    for(const mot of sequence){
+
+        if(isPonctuation(mot)){
+            continue;
+        }
+
+        biaisSession.set(
+            mot,
+            Math.min(
+                1,
+                (biaisSession.get(mot)||0)+.5
+            )
+        );
+
+    }
+
+}
+
 let cyclesApprentissage = 0;
 
 let avertissementTaille = false;
@@ -1520,7 +1588,13 @@ function creerMemoire(){
 
             sentiment:{},
 
-            proprietes:{}
+            proprietes:{},
+
+            genre:{},
+
+            nombre:{},
+
+            relations:{}
 
         },
 
@@ -1842,6 +1916,15 @@ function normaliserMemoire(data){
 
     base.semantique.proprietes =
         base.semantique.proprietes || {};
+
+    base.semantique.genre =
+        base.semantique.genre || {};
+
+    base.semantique.nombre =
+        base.semantique.nombre || {};
+
+    base.semantique.relations =
+        base.semantique.relations || {};
 
 
     base.cognitive.recence =
@@ -3136,6 +3219,403 @@ function getCorpusLocal(){
 APPRENDRE
 ========================================================= */
 
+/* =========================================================
+GENRE / NOMBRE (ACCORD GRAMMATICAL)
+========================================================= */
+
+/*
+ Le moteur n'a aucune notion de grammaire : rien n'empêche
+ "le pomme" ou "la lion" en génération. On ne peut pas
+ reconstruire une vraie conjugaison sans lexique complet, mais
+ le déterminant qui précède un nom est un signal fiable de son
+ genre/nombre — on l'observe pendant l'apprentissage, et on
+ corrige les désaccords évidents après génération.
+*/
+
+const DETERMINANTS_GENRE = {
+
+    "le":"m",
+    "un":"m",
+    "ce":"m",
+    "cet":"m",
+
+    "la":"f",
+    "une":"f",
+    "cette":"f"
+
+};
+
+const DETERMINANTS_PLURIEL = [
+    "les","des","ces","aux"
+];
+
+const DETERMINANT_OPPOSE = {
+
+    "le":"la",
+    "la":"le",
+
+    "un":"une",
+    "une":"un",
+
+    "ce":"cette",
+    "cet":"cette",
+    "cette":"ce"
+
+};
+
+
+function apprendreGenreNombre(tokens){
+
+    for(
+        let i=0;
+        i<tokens.length-1;
+        i++
+    ){
+
+        const det =
+            tokens[i].toLowerCase();
+
+        const nom =
+            tokens[i+1];
+
+        if(isPonctuation(nom)){
+            continue;
+        }
+
+        if(DETERMINANTS_GENRE[det]){
+
+            if(
+                !memoire.semantique.genre[nom]
+            ){
+
+                memoire.semantique.genre[nom] =
+                    {m:0,f:0};
+
+            }
+
+            memoire.semantique.genre[nom][
+                DETERMINANTS_GENRE[det]
+            ]++;
+
+            if(
+                !memoire.semantique.nombre[nom]
+            ){
+
+                memoire.semantique.nombre[nom] =
+                    {s:0,p:0};
+
+            }
+
+            memoire.semantique.nombre[nom].s++;
+
+        }
+        else if(
+            DETERMINANTS_PLURIEL.includes(det)
+        ){
+
+            if(
+                !memoire.semantique.nombre[nom]
+            ){
+
+                memoire.semantique.nombre[nom] =
+                    {s:0,p:0};
+
+            }
+
+            memoire.semantique.nombre[nom].p++;
+
+        }
+
+    }
+
+}
+
+
+/*
+ Corrige les désaccords déterminant/nom évidents dans une
+ séquence déjà générée : si le nom est connu majoritairement
+ avec un genre différent de celui du déterminant qui le
+ précède, on remplace le déterminant. On ne touche pas quand
+ le signal est trop faible (moins de 2 observations) pour
+ éviter de "corriger" sur du bruit.
+*/
+
+function corrigerAccordsDeterminants(tokens){
+
+    const corriges =
+        tokens.slice();
+
+    for(
+        let i=0;
+        i<corriges.length-1;
+        i++
+    ){
+
+        const det =
+            corriges[i].toLowerCase();
+
+        if(
+            !DETERMINANT_OPPOSE[det]
+        ){
+
+            continue;
+
+        }
+
+        const nom =
+            corriges[i+1];
+
+        if(isPonctuation(nom)){
+            continue;
+        }
+
+        const genreNom =
+            memoire.semantique.genre[nom];
+
+        if(!genreNom){
+            continue;
+        }
+
+        const total =
+            genreNom.m + genreNom.f;
+
+        if(total<2){
+            continue;
+        }
+
+        const genreMajoritaire =
+            genreNom.m>=genreNom.f ?
+                "m" : "f";
+
+        const genreDet =
+            DETERMINANTS_GENRE[det];
+
+        if(genreDet!==genreMajoritaire){
+
+            let remplacement =
+                DETERMINANT_OPPOSE[det];
+
+            if(
+                corriges[i][0]===
+                corriges[i][0].toUpperCase()
+            ){
+
+                remplacement =
+                    remplacement.charAt(0)
+                        .toUpperCase() +
+                    remplacement.slice(1);
+
+            }
+
+            corriges[i]=remplacement;
+
+        }
+
+    }
+
+    return corriges;
+
+}
+
+
+/* =========================================================
+RELATIONS TYPEES (EST-UN / CONTRAIRE / PARTIE-DE)
+========================================================= */
+
+/*
+ Jusqu'ici, "semantique.associations" est une seule grosse
+ table générique : deux mots liés, sans savoir *comment*. Cette
+ structure ajoute des relations nommées et interrogeables,
+ stockées dans memoire.semantique.relations[mot][type][autreMot].
+
+ Trois types, avec des sources différentes :
+   - "est_un"    : dérivé directement des catégories déjà
+                   connues (chat → categorie animaux).
+   - "contraire" : détecté par une petite liste de paires
+                   d'antonymes courants, quand les deux mots
+                   apparaissent dans le même texte appris.
+   - "partie_de" : extrait de motifs explicites dans le texte
+                   ("X fait partie de Y", "X appartient à Y").
+
+ Comme pour les catégories, ce ne sont que des probabilités
+ (poids cumulés), pas des faits absolus.
+*/
+
+const PAIRES_CONTRAIRES = [
+
+    ["chaud","froid"],
+    ["grand","petit"],
+    ["jour","nuit"],
+    ["bon","mauvais"],
+    ["vrai","faux"],
+    ["ouvert","fermé"],
+    ["jeune","vieux"],
+    ["haut","bas"],
+    ["fort","faible"],
+    ["rapide","lent"],
+    ["riche","pauvre"],
+    ["facile","difficile"],
+    ["clair","obscur"],
+    ["gros","mince"],
+    ["plein","vide"],
+    ["doux","dur"],
+    ["heureux","triste"],
+    ["beau","laid"],
+    ["propre","sale"],
+    ["calme","agité"]
+
+];
+
+
+function ajouterRelationTypee(
+    motA,
+    type,
+    motB,
+    poids
+){
+
+    if(
+        !memoire.semantique.relations[motA]
+    ){
+
+        memoire.semantique.relations[motA]={};
+
+    }
+
+    if(
+        !memoire.semantique.relations[motA][type]
+    ){
+
+        memoire.semantique.relations[motA][type]={};
+
+    }
+
+    memoire.semantique.relations[motA][type][motB] =
+        (
+            memoire.semantique.relations[motA][type][motB] ||
+            0
+        ) + poids;
+
+}
+
+
+function extraireRelationsTypees(tokens){
+
+    /* est_un : dérivé des catégories connues */
+
+    for(const mot of tokens){
+
+        if(isPonctuation(mot)){
+            continue;
+        }
+
+        const cats =
+            memoire.semantique.categories[mot]
+            || {};
+
+        for(const cat in cats){
+
+            if(cats[cat]>=1){
+
+                ajouterRelationTypee(
+                    mot,
+                    "est_un",
+                    cat,
+                    .3
+                );
+
+            }
+
+        }
+
+    }
+
+
+    /* contraire : paires d'antonymes co-présentes */
+
+    for(
+        const [a,b] of PAIRES_CONTRAIRES
+    ){
+
+        if(
+            tokens.includes(a) &&
+            tokens.includes(b)
+        ){
+
+            ajouterRelationTypee(a,"contraire",b,1);
+            ajouterRelationTypee(b,"contraire",a,1);
+
+        }
+
+    }
+
+
+    /* partie_de : motifs explicites dans le texte */
+
+    for(
+        let i=0;
+        i<tokens.length-2;
+        i++
+    ){
+
+        if(
+            tokens[i+1]==="fait" &&
+            tokens[i+2]==="partie" &&
+            (
+                tokens[i+3]==="de" ||
+                tokens[i+3]==="du"
+            ) &&
+            tokens[i+4]
+        ){
+
+            const motA = tokens[i];
+            const motB = tokens[i+4];
+
+            if(
+                motA && motB &&
+                !isPonctuation(motA) &&
+                !isPonctuation(motB)
+            ){
+
+                ajouterRelationTypee(
+                    motA,"partie_de",motB,1
+                );
+
+            }
+
+        }
+
+        if(
+            tokens[i+1]==="appartient" &&
+            (
+                tokens[i+2]==="à" ||
+                tokens[i+2]==="a"
+            ) &&
+            tokens[i+3]
+        ){
+
+            const motA = tokens[i];
+            const motB = tokens[i+3];
+
+            if(
+                motA && motB &&
+                !isPonctuation(motA) &&
+                !isPonctuation(motB)
+            ){
+
+                ajouterRelationTypee(
+                    motA,"partie_de",motB,1
+                );
+
+            }
+
+        }
+
+    }
+
+}
+
+
 function apprendreTexte(
     texte,
     source="local"
@@ -3310,6 +3790,20 @@ function apprendreTexte(
     ------------------------- */
 
     apprendreSemantique(tokens);
+
+
+    /* -------------------------
+       GENRE / NOMBRE
+    ------------------------- */
+
+    apprendreGenreNombre(tokens);
+
+
+    /* -------------------------
+       RELATIONS TYPEES
+    ------------------------- */
+
+    extraireRelationsTypees(tokens);
 
 
     /* -------------------------
@@ -3684,6 +4178,173 @@ PROPAGATION DYNAMIQUE DES CATEGORIES
  pour éviter toute dérive sémantique incontrôlée).
 */
 
+/* =========================================================
+LEMMATISATION LEGERE
+========================================================= */
+
+/*
+ Pas une vraie lemmatisation linguistique (ça demanderait un
+ lexique complet avec les irrégularités du français) : une
+ heuristique conservative de suppression de suffixes courants
+ (conjugaisons -er/-ir régulières, pluriels simples). Elle sert
+ UNIQUEMENT à rapprocher des formes qui partagent presque
+ sûrement une racine ("mange"/"mangeait"/"mangent"), pas à
+ remplacer les mots dans le vocabulaire ou la génération — le
+ risque d'erreur d'une lemmatisation à la main est trop élevé
+ pour toucher au texte produit, seulement pour enrichir la
+ propagation de catégories entre formes voisines.
+*/
+
+function obtenirLemme(mot){
+
+    if(
+        mot.length<5 ||
+        getMotsVides().includes(mot)
+    ){
+
+        return mot;
+
+    }
+
+    const suffixes = [
+        "eraient","erions","eriez",
+        "erons","eront","erez","erai","era",
+        "issions","issiez","issaient",
+        "issons","issez","issent",
+        "âmes","âtes","èrent",
+        "ions","iez","aient","ais","ait",
+        "ées","és","ée","ant","ent",
+        "ons","ez","er","é",
+        "s"
+    ].sort((a,b)=>b.length-a.length);
+
+    for(const suf of suffixes){
+
+        if(
+            mot.endsWith(suf) &&
+            mot.length-suf.length>=3
+        ){
+
+            return mot.slice(
+                0,
+                mot.length-suf.length
+            );
+
+        }
+
+    }
+
+    return mot;
+
+}
+
+
+/* =========================================================
+FRAGMENTS (FILET DE SECURITE POUR MOTS INCONNUS)
+========================================================= */
+
+/*
+ Ce n'est PAS une vraie tokenisation par sous-mots : retoken-
+ iser tout le moteur casserait la compatibilité de toutes les
+ structures existantes (vocabulaire, relations, genre/nombre,
+ catégories... tout est indexé par mot entier, y compris dans
+ les mémoires JSON déjà sauvegardées). Ici, uniquement un filet
+ de secours : quand un mot est totalement inconnu (0 occurrence,
+ 0 association), on cherche des mots CONNUS qui partagent une
+ racine (via le lemmatiseur) ou un long préfixe, pour donner une
+ estimation de sens ("apparenté à...") plutôt qu'un silence
+ total. Purement informatif — n'influence ni le vocabulaire ni
+ la génération.
+*/
+
+function pluslongPrefixeCommun(a,b){
+
+    let i=0;
+
+    while(
+        i<a.length &&
+        i<b.length &&
+        a[i]===b[i]
+    ){
+
+        i++;
+
+    }
+
+    return a.slice(0,i);
+
+}
+
+
+function decomposerEnFragments(mot){
+
+    const lemme =
+        obtenirLemme(mot);
+
+    const apparentes=[];
+
+    for(
+        const candidat of
+        Object.keys(memoire.vocabulaire)
+    ){
+
+        if(
+            candidat===mot ||
+            isPonctuation(candidat) ||
+            getMotsVides().includes(candidat)
+        ){
+
+            continue;
+
+        }
+
+        if(
+            lemme!==mot &&
+            obtenirLemme(candidat)===lemme
+        ){
+
+            apparentes.push({
+                mot:candidat,
+                raison:
+                    "racine commune (\"" +
+                    lemme + "\")"
+            });
+
+            continue;
+
+        }
+
+        const prefixe =
+            pluslongPrefixeCommun(mot,candidat);
+
+        if(
+            prefixe.length>=4 &&
+            prefixe.length>=mot.length*.6
+        ){
+
+            apparentes.push({
+                mot:candidat,
+                raison:
+                    "fragment commun (\"" +
+                    prefixe + "\")"
+            });
+
+        }
+
+    }
+
+    return {
+
+        lemme,
+
+        apparentes:
+            apparentes.slice(0,8)
+
+    };
+
+}
+
+
 function propagerCategories(motsCibles){
 
     const SEUIL_PROPAGATION = .6;
@@ -3764,6 +4425,85 @@ function propagerCategories(motsCibles){
         }
 
     }
+
+
+    /*
+     Deuxième passe : propagation par racine partagée
+     (lemmatisation légère). Si "mange" a une catégorie connue
+     mais "mangeait" ou "mangent" pas encore, ils héritent de
+     la catégorie de leurs "frères" morphologiques.
+    */
+
+    const parLemme = {};
+
+    for(const mot of cibles){
+
+        const lemme =
+            obtenirLemme(mot);
+
+        if(!parLemme[lemme]){
+            parLemme[lemme]=[];
+        }
+
+        parLemme[lemme].push(mot);
+
+    }
+
+    for(const lemme in parLemme){
+
+        const groupe =
+            parLemme[lemme];
+
+        if(groupe.length<2){
+            continue;
+        }
+
+        const categoriesGroupe = {};
+
+        for(const m of groupe){
+
+            const cats =
+                memoire.semantique.categories[m]
+                || {};
+
+            for(const c in cats){
+
+                categoriesGroupe[c] =
+                    Math.max(
+                        categoriesGroupe[c]||0,
+                        cats[c]
+                    );
+
+            }
+
+        }
+
+        for(const m of groupe){
+
+            const existantes =
+                memoire.semantique.categories[m]
+                || {};
+
+            for(const c in categoriesGroupe){
+
+                if(!(existantes[c]>=.5)){
+
+                    const poids =
+                        categoriesGroupe[c]*.4;
+
+                    ajouterCategorie(m,c,poids);
+                    ajouterConcept(m,c,poids);
+
+                    propagations++;
+
+                }
+
+            }
+
+        }
+
+    }
+
 
     return propagations;
 
@@ -4401,7 +5141,99 @@ function echelleSemantique(){
 
 
 /* =========================================================
-DISTANCE SEMANTIQUE (GRAPHE DE CONCEPTS)
+/* =========================================================
+EMBEDDINGS LEGERS (VECTEURS CREUX)
+========================================================= */
+
+/*
+ Pas de vrais embeddings appris par rétropropagation (ça
+ demanderait un entraînement hors ligne, incompatible avec
+ "tout se passe dans le navigateur, à la volée"). Ce qui suit
+ est une technique plus ancienne mais légitime : un mot est
+ représenté par un vecteur creux de ses associations les plus
+ fortes (poids en log), et la proximité entre deux mots se
+ mesure par similarité cosinus entre ces vecteurs — exactement
+ le principe des modèles distributionnels historiques
+ (LSA/VSM), juste sans réduction de dimension par SVD (trop
+ coûteuse à recalculer en continu côté client). Le vecteur
+ reste "compact" par construction : on ne garde que les
+ DIM_VECTEUR associations les plus fortes, pas toute la table.
+*/
+
+const DIM_VECTEUR = 40;
+
+function obtenirVecteur(mot){
+
+    const assoc =
+        memoire.semantique.associations[mot];
+
+    if(!assoc){
+        return null;
+    }
+
+    const entries =
+        Object.entries(assoc)
+            .sort((a,b)=>b[1]-a[1])
+            .slice(0,DIM_VECTEUR);
+
+    if(!entries.length){
+        return null;
+    }
+
+    const vecteur={};
+
+    for(const [k,v] of entries){
+
+        vecteur[k] =
+            Math.log1p(v);
+
+    }
+
+    return vecteur;
+
+}
+
+
+function similariteCosinus(vecA,vecB){
+
+    if(!vecA || !vecB){
+        return null;
+    }
+
+    let produit=0;
+    let normeA=0;
+    let normeB=0;
+
+    for(const k in vecA){
+        normeA += vecA[k]*vecA[k];
+    }
+
+    for(const k in vecB){
+        normeB += vecB[k]*vecB[k];
+    }
+
+    if(normeA===0 || normeB===0){
+        return null;
+    }
+
+    for(const k in vecA){
+
+        if(vecB[k]){
+
+            produit += vecA[k]*vecB[k];
+
+        }
+
+    }
+
+    return produit /
+        (Math.sqrt(normeA)*Math.sqrt(normeB));
+
+}
+
+
+/* =========================================================
+DISTANCE SEMANTIQUE (GRAPHE DE CONCEPTS + EMBEDDINGS)
 ========================================================= */
 
 /*
@@ -4409,21 +5241,23 @@ DISTANCE SEMANTIQUE (GRAPHE DE CONCEPTS)
  déjà stockés dans memoire.semantique (pas une structure séparée
  en plus — ça duplirait des données pour un gain marginal à
  cette échelle). Cette fonction calcule une distance
- approximative entre deux mots à partir de ce graphe :
+ approximative entre deux mots :
 
-   0   → catégorie directement partagée (très proche)
-   .3  → concept indirect partagé (assez proche)
-   .5  → au moins un des deux mots n'a encore aucune catégorie
-         connue (distance inconnue, on reste neutre plutôt que
-         de pénaliser un mot juste appris)
-   1   → catégories connues des deux côtés mais aucun
-         recoupement (probablement incohérent)
+   0        → catégorie directement partagée (signal le plus
+              fiable, prioritaire sur tout le reste)
+   continu  → sinon, distance dérivée de la similarité cosinus
+              entre leurs vecteurs creux (embeddings légers) :
+              une vraie mesure géométrique continue, plus fine
+              que les anciens paliers fixes {0,.3,.5,1}
+   .3       → si aucun vecteur exploitable mais concept indirect
+              partagé (repli sur l'ancienne logique catégorielle)
+   .5       → aucune donnée exploitable des deux côtés
+   1        → catégories connues des deux côtés, aucun
+              recoupement, aucun vecteur exploitable
 
  Utilisée dans scoreSemantique() pour valider ou pénaliser une
  association candidate quand aucune co-occurrence directe ne
- la justifie déjà (point 1 et 2 du cahier des charges : "pont
- lexique-sémantique" + "distance dans la taxonomie pour
- valider/rejeter la pertinence").
+ la justifie déjà.
 */
 
 function distanceSemantique(motA,motB){
@@ -4442,16 +5276,9 @@ function distanceSemantique(motA,motB){
     const clesB =
         Object.keys(catB);
 
-    if(
-        !clesA.length ||
-        !clesB.length
-    ){
-
-        return .5;
-
-    }
-
     const partageCategorie =
+        clesA.length &&
+        clesB.length &&
         clesA.some(c=>clesB.includes(c));
 
     if(partageCategorie){
@@ -4471,8 +5298,42 @@ function distanceSemantique(motA,motB){
         Object.keys(conA)
             .some(c=>conB[c]);
 
+
+    const vecA =
+        obtenirVecteur(motA);
+
+    const vecB =
+        obtenirVecteur(motB);
+
+    const sim =
+        similariteCosinus(vecA,vecB);
+
+    if(sim!==null){
+
+        const distanceVec =
+            Math.max(
+                0,
+                Math.min(1,(1-sim)/2)
+            );
+
+        return partageConcept ?
+            Math.min(distanceVec,.3) :
+            distanceVec;
+
+    }
+
+
     if(partageConcept){
         return .3;
+    }
+
+    if(
+        !clesA.length ||
+        !clesB.length
+    ){
+
+        return .5;
+
     }
 
     return 1;
@@ -4593,6 +5454,37 @@ function scoreSemantique(
     }
 
 
+    /*
+     relations typées (est_un / partie_de) : un lien nommé
+     entre precedent et candidat est un signal plus spécifique
+     qu'une simple co-occurrence, donc un bonus plus net.
+     "contraire" est volontairement exclu ici — deux antonymes
+     ne devraient pas se suivre par défaut.
+    */
+
+    const relPrecedent =
+        memoire.semantique.relations[precedent]
+        || {};
+
+    for(
+        const type in relPrecedent
+    ){
+
+        if(type==="contraire"){
+            continue;
+        }
+
+        if(
+            relPrecedent[type][candidat]
+        ){
+
+            score += 1.2*echelle;
+
+        }
+
+    }
+
+
     /* profil cognitif */
 
     const profil =
@@ -4681,12 +5573,113 @@ function scoreSemantique(
 CHOISIR PROCHAIN
 ========================================================= */
 
+/* =========================================================
+ATTENTION CONTEXTUELLE DYNAMIQUE
+========================================================= */
+
+/*
+ Avant : le score sémantique ne regardait que le mot
+ immédiatement précédent (+ la fenêtre fixe ±3 enregistrée à
+ l'apprentissage, déjà figée). Résultat : rien ne empêchait un
+ paragraphe généré de dériver complètement de son sujet après
+ quelques mots.
+
+ Cette fonction fait "scruter" toute la séquence déjà générée
+ dans le faisceau en cours : chaque mot déjà écrit vote pour ou
+ contre un candidat, avec un poids qui décroît avec la distance
+ (les mots récents comptent plus, mais les plus anciens ne sont
+ pas ignorés — c'est la différence avec la fenêtre fixe d'avant,
+ qui coupait net à 3 mots). Le vote de chaque mot repose sur la
+ similarité vectorielle (embeddings légers) avec le candidat.
+
+ Coût : O(longueur de la séquence) par candidat — négligeable
+ pour des phrases de quelques dizaines de mots, donc pas
+ besoin d'optimisation particulière côté CPU ici.
+*/
+
+function scoreAttention(sequence,candidat){
+
+    if(
+        !sequence ||
+        sequence.length<2
+    ){
+
+        return 0;
+
+    }
+
+    const vecCandidat =
+        obtenirVecteur(candidat);
+
+    if(!vecCandidat){
+        return 0;
+    }
+
+    let total=0;
+    let poidsCumule=0;
+
+    const n =
+        sequence.length;
+
+    for(
+        let i=0;
+        i<n;
+        i++
+    ){
+
+        const mot =
+            sequence[i];
+
+        if(isPonctuation(mot)){
+            continue;
+        }
+
+        /*
+         poids décroissant avec la distance au point courant,
+         mais jamais nul (contrairement à la fenêtre fixe) :
+         1 / (1 + distance)
+        */
+
+        const distance =
+            n-i;
+
+        const poids =
+            1/(1+distance);
+
+        const vecMot =
+            obtenirVecteur(mot);
+
+        const sim =
+            similariteCosinus(
+                vecMot,
+                vecCandidat
+            );
+
+        if(sim!==null){
+
+            total += sim*poids;
+            poidsCumule += poids;
+
+        }
+
+    }
+
+    if(poidsCumule===0){
+        return 0;
+    }
+
+    return total/poidsCumule;
+
+}
+
+
 function construireCandidats(
     options,
     precedent,
     force,
     niveau,
-    compteUtilises
+    compteUtilises,
+    sequence
 ){
 
     if(
@@ -4721,6 +5714,45 @@ function construireCandidats(
             let score =
                 linguistique*(1-force) +
                 semantique*force;
+
+
+            /*
+             Attention contextuelle : bonus/malus basé sur
+             l'ensemble de la phrase en cours, pas seulement le
+             mot précédent. Pondéré par "force" comme le reste
+             du terme sémantique, avec un facteur plus doux
+             pour ne pas écraser la fluidité locale des
+             n-grammes.
+            */
+
+            if(sequence){
+
+                const attention =
+                    scoreAttention(
+                        sequence,
+                        mot
+                    );
+
+                score +=
+                    attention*force*2;
+
+            }
+
+
+            /*
+             Adaptation continue légère (point 4) : petit
+             coup de pouce si ce mot est apparu dans une
+             génération très récente de la même session.
+            */
+
+            const biais =
+                biaisSession.get(mot);
+
+            if(biais){
+
+                score += biais*.6;
+
+            }
 
 
             /*
@@ -4884,7 +5916,8 @@ function candidatsPourPosition(
     precedent,
     force,
     niveau,
-    compteUtilises
+    compteUtilises,
+    sequence
 ){
 
     let candidats=[];
@@ -4905,7 +5938,8 @@ function candidatsPourPosition(
                     precedent,
                     force,
                     niveau,
-                    compteUtilises
+                    compteUtilises,
+                    sequence
                 );
 
         }
@@ -4925,7 +5959,8 @@ function candidatsPourPosition(
                     precedent,
                     force,
                     niveau,
-                    compteUtilises
+                    compteUtilises,
+                    sequence
                 );
 
         }
@@ -4945,7 +5980,8 @@ function candidatsPourPosition(
                     precedent,
                     force,
                     niveau,
-                    compteUtilises
+                    compteUtilises,
+                    sequence
                 );
 
         }
@@ -4975,7 +6011,8 @@ function candidatsPourPosition(
                     precedent,
                     force,
                     niveau,
-                    compteUtilises
+                    compteUtilises,
+                    sequence
                 );
 
         }
@@ -4996,7 +6033,8 @@ function candidatsPourPosition(
                     precedent,
                     force,
                     niveau,
-                    compteUtilises
+                    compteUtilises,
+                    sequence
                 );
 
         }
@@ -5156,7 +6194,8 @@ function genererPhraseBeam(
                     precedent,
                     force,
                     niveau,
-                    faisceau.compte
+                    faisceau.compte,
+                    seq
                 );
 
             if(!candidats.length){
@@ -5326,13 +6365,18 @@ function genererPhrase(){
      score cumulé.
     */
 
-    const resultat =
+    const resultatBrut =
         genererPhraseBeam(
             premier,
             longueur,
             force,
             niveau,
             4
+        );
+
+    const resultat =
+        corrigerAccordsDeterminants(
+            resultatBrut
         );
 
 
@@ -5348,6 +6392,16 @@ function genererPhrase(){
         .textContent =
         phrase ||
         "❌ Impossible de générer une phrase.";
+
+
+    /*
+     Adaptation continue légère : les mots qui viennent
+     d'être affichés à l'utilisateur reçoivent un petit biais
+     de session (voir plus haut — jamais sauvegardé, jamais
+     mélangé à la mémoire persistée).
+    */
+
+    renforcerBiaisSession(resultat);
 
 }
 
@@ -7425,17 +8479,42 @@ function explorerMot(){
         !Object.keys(associations).length
     ){
 
+        const fragments =
+            decomposerEnFragments(mot);
+
+        let htmlInconnu =
+            "<b>Mot :</b> " +
+            escapeHTML(mot) +
+            "<br><br>" +
+            "Ce mot n'est pas encore connu.";
+
+        if(fragments.apparentes.length){
+
+            htmlInconnu +=
+                "<br><br><b>Mots apparentés " +
+                "(par fragment, estimation) :</b><br>";
+
+            for(
+                const a of fragments.apparentes
+            ){
+
+                htmlInconnu +=
+                    "• " +
+                    escapeHTML(a.mot) +
+                    " <i>(" +
+                    escapeHTML(a.raison) +
+                    ")</i><br>";
+
+            }
+
+        }
+
         document
             .getElementById(
                 "exploration"
             )
             .innerHTML =
-
-            "<b>Mot :</b> " +
-            escapeHTML(mot) +
-            "<br><br>" +
-
-            "Ce mot n'est pas encore connu.";
+            htmlInconnu;
 
         return;
 

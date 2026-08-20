@@ -1022,6 +1022,76 @@ APPRENTISSAGE
 
     <div class="panel">
 
+        <h2>📥 Sources personnelles (import contrôlé)</h2>
+
+        <div class="hint">
+            Rien n'est appris automatiquement ici : un aperçu
+            s'affiche ci-dessous, modifiable, et c'est toi qui
+            valides avec le bouton "Apprendre ce texte".
+        </div>
+
+        <div class="small" style="margin-top:10px">
+            Flux RSS
+        </div>
+
+        <input
+            id="urlRSS"
+            type="text"
+            style="width:100%"
+            placeholder="https://exemple.com/flux.xml">
+
+        <button
+            class="secondary btn-block"
+            style="margin-top:4px"
+            onclick="apercuSourcePersonnelle('rss')">
+            Charger l'aperçu depuis ce flux
+        </button>
+
+        <div class="hint">
+            Best-effort : beaucoup de flux RSS publics bloquent
+            les requêtes cross-origin (CORS) depuis un navigateur.
+            Si ça échoue, télécharge le flux en .html et utilise
+            l'import fichier ci-dessous à la place.
+        </div>
+
+        <div class="small" style="margin-top:12px">
+            Fichier .html local
+        </div>
+
+        <input
+            id="fichierHTML"
+            type="file"
+            accept=".html,.htm"
+            onchange="apercuSourcePersonnelle('fichier')">
+
+        <div class="hint">
+            Fiable à 100% : lecture directe du fichier, aucun
+            réseau impliqué.
+        </div>
+
+        <div class="small" style="margin-top:12px">
+            Aperçu / texte manuel (éditable)
+        </div>
+
+        <textarea
+            id="apercuImport"
+            rows="8"
+            style="width:100%"
+            placeholder="Colle un texte ici directement, ou charge-le via RSS/.html ci-dessus">
+        </textarea>
+
+        <button
+            class="success btn-block"
+            style="margin-top:8px"
+            onclick="apprendreTexteImporte()">
+            ✅ Apprendre ce texte
+        </button>
+
+    </div>
+
+
+    <div class="panel">
+
         <h2>📡 Activité du moteur</h2>
 
         <div id="journal"
@@ -1169,6 +1239,74 @@ GENERATION
             class="output">
 
             En attente d'apprentissage...
+
+        </div>
+
+    </div>
+
+
+    <div class="panel">
+
+        <h2>🧪 Batch Runner</h2>
+
+        <div class="hint">
+            Enchaîne une série de générations automatiquement et
+            exporte tout en JSON (instantané mémoire + détail de
+            chaque test) pour analyse hors-ligne.
+        </div>
+
+        <div class="small" style="margin-top:8px">
+            Nombre de tests
+        </div>
+
+        <select id="batchNombre">
+            <option value="10" selected>10</option>
+            <option value="15">15</option>
+            <option value="20">20</option>
+        </select>
+
+        <div class="small" style="margin-top:8px">
+            Mode
+        </div>
+
+        <select id="batchMode">
+
+            <option value="fixe" selected>
+                Paramètres fixes (réglages actuels, répétés)
+            </option>
+
+            <option value="balayage">
+                Balayage progressif de l'influence sémantique
+                (0% → 100%)
+            </option>
+
+        </select>
+
+        <div class="btn-row" style="margin-top:10px">
+
+            <button
+                id="btnBatchLancer"
+                class="primary"
+                onclick="lancerLotDeTests()">
+                ▶ Lancer le lot
+            </button>
+
+            <button
+                id="btnBatchExporter"
+                class="secondary"
+                onclick="exporterLotJSON()"
+                disabled>
+                💾 Exporter en JSON
+            </button>
+
+        </div>
+
+        <div
+            id="batchResultat"
+            class="output"
+            style="margin-top:10px;max-height:300px;overflow-y:auto">
+
+            Aucun lot exécuté.
 
         </div>
 
@@ -2723,7 +2861,65 @@ function nettoyerExtraitWikipedia(texte){
 
     }
 
-    return nettoye.trim();
+
+    /*
+     Filet radical : le filtre "paires ==...==" ci-dessus rate
+     les balises mal appariées ou tronquées (observé en test :
+     "=== ====" orphelines en pleine phrase). Le caractère "="
+     n'a aucun usage légitime en prose française — pas besoin
+     de détecter des paires, on supprime toute occurrence,
+     point.
+    */
+
+    nettoye =
+        nettoye.replace(/=+/g," ");
+
+
+    return nettoye
+        .replace(/\s+/g," ")
+        .trim();
+
+}
+
+
+/*
+ Une troncature brutale à N caractères peut couper en plein
+ milieu d'une phrase, ou pire, en plein milieu d'une parenthèse
+ ouverte (observé en test : "...- (version anglaise." — un
+ commentaire éditorial Wikipédia légitime, mais tronqué de
+ façon incomplète et donc incompréhensible une fois appris).
+ On recule jusqu'au dernier point de phrase complet plutôt que
+ de couper à l'aveugle, sauf si ça réduirait le texte de plus
+ de moitié (mieux vaut un texte un peu long qu'un texte
+ quasi-vide).
+*/
+
+function couperProprement(texte,maxLongueur){
+
+    if(texte.length<=maxLongueur){
+        return texte;
+    }
+
+    const brut =
+        texte.slice(0,maxLongueur);
+
+    const dernierPoint =
+        Math.max(
+            brut.lastIndexOf(". "),
+            brut.lastIndexOf("! "),
+            brut.lastIndexOf("? "),
+            brut.lastIndexOf(".\n")
+        );
+
+    if(dernierPoint>maxLongueur*.5){
+
+        return brut
+            .slice(0,dernierPoint+1)
+            .trim();
+
+    }
+
+    return brut.trim();
 
 }
 
@@ -2955,6 +3151,338 @@ async function testerSourcesPersonnelles(){
 }
 
 
+/* =========================================================
+IMPORT MULTI-FORMATS (RSS / .HTML LOCAL / TEXTE MANUEL)
+========================================================= */
+
+/*
+ Trois formats, trois niveaux de fiabilité très différents —
+ annoncés clairement dans l'interface plutôt que de laisser
+ croire qu'ils se valent :
+
+   - Fichier .html local : lecture directe du fichier via
+     FileReader, aucun réseau impliqué, fiable à 100%.
+   - Texte collé manuellement : fiable à 100%, évidemment.
+   - Flux RSS : un fetch() classique, donc soumis aux mêmes
+     règles CORS que Grokipedia plus haut — marche seulement
+     si le serveur distant autorise les requêtes cross-origin,
+     ce que beaucoup de flux publics ne font pas.
+
+ Dans tous les cas : rien n'est appris automatiquement. Le
+ texte extrait est déposé dans une zone éditable, et c'est
+ l'utilisateur qui valide explicitement l'apprentissage.
+*/
+
+function extraireTexteDeHTML(html){
+
+    try{
+
+        const parser =
+            new DOMParser();
+
+        const doc =
+            parser.parseFromString(
+                html,
+                "text/html"
+            );
+
+        const aExclure = [
+            "script","style","nav",
+            "header","footer","form","button"
+        ];
+
+        for(const sel of aExclure){
+
+            doc.querySelectorAll(sel)
+                .forEach(el=>el.remove());
+
+        }
+
+        const texte =
+            doc.body ?
+                (
+                    doc.body.innerText ||
+                    doc.body.textContent ||
+                    ""
+                ) :
+                "";
+
+        return texte
+            .replace(/\s+/g," ")
+            .trim();
+
+    }
+    catch(e){
+
+        return "";
+
+    }
+
+}
+
+
+async function chargerFichierHTML(fichier){
+
+    return new Promise((resolve)=>{
+
+        try{
+
+            const lecteur =
+                new FileReader();
+
+            lecteur.onload=()=>{
+
+                resolve(
+                    extraireTexteDeHTML(
+                        lecteur.result
+                    )
+                );
+
+            };
+
+            lecteur.onerror=()=>{
+
+                resolve("");
+
+            };
+
+            lecteur.readAsText(fichier);
+
+        }
+        catch(e){
+
+            resolve("");
+
+        }
+
+    });
+
+}
+
+
+async function chargerFluxRSS(url){
+
+    try{
+
+        const response =
+            await fetchTimeout(url,8000);
+
+        if(!response.ok){
+
+            throw new Error(
+                "HTTP "+response.status
+            );
+
+        }
+
+        const xmlTexte =
+            await response.text();
+
+        const parser =
+            new DOMParser();
+
+        const doc =
+            parser.parseFromString(
+                xmlTexte,
+                "text/xml"
+            );
+
+        const erreurParsing =
+            doc.querySelector("parsererror");
+
+        if(erreurParsing){
+
+            throw new Error(
+                "XML invalide"
+            );
+
+        }
+
+        const items =
+            doc.querySelectorAll(
+                "item, entry"
+            );
+
+        if(!items.length){
+
+            throw new Error(
+                "Aucun article dans le flux"
+            );
+
+        }
+
+        let texte="";
+
+        items.forEach(item=>{
+
+            const titre =
+                item.querySelector("title");
+
+            const description =
+                item.querySelector(
+                    "description, summary, content"
+                );
+
+            if(titre){
+
+                texte +=
+                    (titre.textContent||"") +
+                    ". ";
+
+            }
+
+            if(description){
+
+                texte +=
+                    (description.textContent||"")
+                        .replace(/<[^>]+>/g," ") +
+                    " ";
+
+            }
+
+        });
+
+        return texte
+            .replace(/\s+/g," ")
+            .trim();
+
+    }
+    catch(e){
+
+        return "";
+
+    }
+
+}
+
+
+async function apercuSourcePersonnelle(type){
+
+    const zone =
+        document.getElementById(
+            "apercuImport"
+        );
+
+    zone.value =
+        "⏳ Chargement...";
+
+    let texte="";
+
+    if(type==="rss"){
+
+        const url =
+            document
+                .getElementById("urlRSS")
+                .value.trim();
+
+        if(!url){
+
+            zone.value="";
+
+            return;
+
+        }
+
+        texte =
+            await chargerFluxRSS(url);
+
+        if(!texte){
+
+            zone.value =
+                "❌ Rien d'exploitable récupéré. " +
+                "Le flux est probablement bloqué par " +
+                "la politique CORS du serveur distant, " +
+                "ou l'URL ne pointe pas vers un flux " +
+                "RSS/Atom valide.";
+
+            return;
+
+        }
+
+    }
+    else if(type==="fichier"){
+
+        const input =
+            document.getElementById(
+                "fichierHTML"
+            );
+
+        if(
+            !input.files ||
+            !input.files.length
+        ){
+
+            zone.value="";
+
+            return;
+
+        }
+
+        texte =
+            await chargerFichierHTML(
+                input.files[0]
+            );
+
+        if(!texte){
+
+            zone.value =
+                "❌ Impossible d'extraire du texte " +
+                "de ce fichier.";
+
+            return;
+
+        }
+
+    }
+
+    zone.value =
+        texte.slice(0,8000);
+
+}
+
+
+function apprendreTexteImporte(){
+
+    const zone =
+        document.getElementById(
+            "apercuImport"
+        );
+
+    const texte =
+        zone.value.trim();
+
+    if(
+        !texte ||
+        texte.length<50
+    ){
+
+        journaliser(
+            "❌ Texte d'import trop court ou vide."
+        );
+
+        return;
+
+    }
+
+    const nombre =
+        apprendreTexte(
+            texte,
+            "import"
+        );
+
+    journaliser(
+        "📥 Import manuel validé : +" +
+        formatNombre(nombre) +
+        " tokens."
+    );
+
+    zone.value="";
+
+    afficherInfosMemoire();
+
+}
+
+
 async function recupererWikipedia(titreForce){
 
     try{
@@ -3078,7 +3606,7 @@ async function recupererWikipedia(titreForce){
         return {
 
             texte:
-                extraitPropre.slice(0,4500),
+                couperProprement(extraitPropre,4500),
 
             titre
 
@@ -6787,6 +7315,447 @@ function genererPhrase(){
     */
 
     renforcerBiaisSession(resultat);
+
+}
+
+
+/* =========================================================
+BATCH RUNNER
+========================================================= */
+
+/*
+ Automatise ce que le protocole de test manuel faisait jusque
+ là à la main (ajuster les curseurs, cliquer, copier-coller
+ chaque phrase). Réutilise genererPhrase() tel quel — même
+ pipeline, mêmes réglages lus depuis le DOM — donc aucun risque
+ de divergence de comportement entre un test manuel et un test
+ en lot.
+*/
+
+let dernierLotDeTests = null;
+
+function capturerInstantaneMemoire(){
+
+    const vocab =
+        Object.keys(
+            memoire.vocabulaire
+        ).length;
+
+    const trans2 =
+        Object.keys(
+            memoire.transitions2
+        ).length;
+
+    const trans3 =
+        Object.keys(
+            memoire.transitions3
+        ).length;
+
+    const concepts =
+        Object.keys(
+            memoire.semantique.concepts
+        ).length;
+
+    const relations =
+        compterRelations(
+            memoire.semantique.associations
+        );
+
+
+    /*
+     Même échantillonnage que le tableau de bord (jusqu'à 5000
+     mots) pour rester cohérent avec ce qui est affiché à
+     l'écran sur une grosse mémoire — recalculer sur la
+     totalité du vocabulaire serait inutilement coûteux ici.
+    */
+
+    const tousLesMots =
+        Object.keys(memoire.vocabulaire);
+
+    const echantillon =
+        tousLesMots.length>5000 ?
+            tousLesMots
+                .slice()
+                .sort(()=>Math.random()-.5)
+                .slice(0,5000) :
+            tousLesMots;
+
+    let fort=0;
+    let moyen=0;
+    let faible=0;
+
+    for(
+        const mot of echantillon
+    ){
+
+        const p =
+            profilConnaissance(mot);
+
+        if(p.niveau==="fort"){
+            fort++;
+        }
+        else if(p.niveau==="moyen"){
+            moyen++;
+        }
+        else{
+            faible++;
+        }
+
+    }
+
+    return {
+
+        tokens:memoire.statistiques.tokens,
+        vocabulaire:vocab,
+        deux_grammes:trans2,
+        trois_grammes:trans3,
+        concepts,
+        relations,
+
+        etat_cognitif:{
+
+            fortes:fort,
+            moyennes:moyen,
+            faibles:faible,
+            hypotheses:
+                memoire.cognitive.hypotheses.length
+
+        }
+
+    };
+
+}
+
+
+/*
+ Vérifications automatiques légères sur un texte généré —
+ pas une garantie de qualité, juste des signaux pour repérer
+ rapidement un résultat suspect dans un lot de 10-15 sans tout
+ relire à la main.
+*/
+
+function validerTexteGenere(texte,longueurDemandee){
+
+    const alertes=[];
+
+    if(!texte || texte.length<3){
+
+        alertes.push("texte vide ou quasi vide");
+
+        return alertes;
+
+    }
+
+    if(/[=]/.test(texte)){
+
+        alertes.push(
+            "contient encore un signe '=' " +
+            "(résidu de balisage wiki)"
+        );
+
+    }
+
+    if(/\bportails?\b/i.test(texte)){
+
+        alertes.push(
+            "mentionne \"portail\" " +
+            "(résidu possible de bannière wiki)"
+        );
+
+    }
+
+    if(
+        !/[.!?]$/.test(texte.trim())
+    ){
+
+        alertes.push(
+            "ne se termine pas par une ponctuation " +
+            "de fin de phrase"
+        );
+
+    }
+
+    const nbMots =
+        texte.split(/\s+/).length;
+
+    if(
+        nbMots<longueurDemandee*.4
+    ){
+
+        alertes.push(
+            "nettement plus courte que demandé (" +
+            nbMots + " mots pour " +
+            longueurDemandee + " demandés)"
+        );
+
+    }
+
+    return alertes;
+
+}
+
+
+async function lancerLotDeTests(){
+
+    if(
+        !Object.keys(
+            memoire.vocabulaire
+        ).length
+    ){
+
+        document
+            .getElementById("batchResultat")
+            .textContent =
+            "❌ Aucune mémoire à tester.";
+
+        return;
+
+    }
+
+    const nombre =
+        Number(
+            document
+                .getElementById("batchNombre")
+                .value
+        );
+
+    const mode =
+        document
+            .getElementById("batchMode")
+            .value;
+
+    const btnLancer =
+        document.getElementById("btnBatchLancer");
+
+    const btnExporter =
+        document.getElementById("btnBatchExporter");
+
+    const zoneResultat =
+        document.getElementById("batchResultat");
+
+    btnLancer.disabled=true;
+    btnExporter.disabled=true;
+
+    zoneResultat.textContent =
+        "⏳ Lot en cours...";
+
+
+    /*
+     Réglages d'origine, restaurés à la fin : le batch runner
+     manipule les mêmes contrôles que l'utilisateur, donc on ne
+     doit pas les laisser dans un état différent après coup.
+    */
+
+    const elLongueur =
+        document.getElementById("longueur");
+
+    const elForce =
+        document.getElementById("forceSemantique");
+
+    const elNiveau =
+        document.getElementById("niveauGeneration");
+
+    const origLongueur = elLongueur.value;
+    const origForce = elForce.value;
+    const origNiveau = elNiveau.value;
+
+
+    const instantane =
+        capturerInstantaneMemoire();
+
+    const tests=[];
+
+    for(
+        let i=0;
+        i<nombre;
+        i++
+    ){
+
+        if(mode==="balayage"){
+
+            const pas =
+                nombre>1 ?
+                    Math.round(
+                        (100*i)/(nombre-1)
+                    ) :
+                    0;
+
+            elForce.value =
+                String(pas);
+
+        }
+
+        const longueur =
+            Number(elLongueur.value);
+
+        const force =
+            Number(elForce.value);
+
+        const niveau =
+            elNiveau.value;
+
+
+        const debut =
+            (
+                typeof performance!=="undefined" ?
+                    performance.now() :
+                    Date.now()
+            );
+
+        genererPhrase();
+
+        const fin =
+            (
+                typeof performance!=="undefined" ?
+                    performance.now() :
+                    Date.now()
+            );
+
+        const texte =
+            document
+                .getElementById("resultat")
+                .textContent;
+
+        const alertes =
+            validerTexteGenere(texte,longueur);
+
+        tests.push({
+
+            numero:i+1,
+
+            parametres:{
+
+                longueur_demandee:longueur,
+                influence_semantique_pct:force,
+                niveau_cognitif:niveau
+
+            },
+
+            texte_genere:texte,
+
+            temps_calcul_ms:
+                Math.round((fin-debut)*10)/10,
+
+            alertes
+
+        });
+
+        zoneResultat.textContent =
+            "⏳ Test " + (i+1) + "/" + nombre + "...";
+
+        /*
+         Laisse le navigateur respirer entre deux générations
+         (évite de geler l'interface sur un gros lot).
+        */
+
+        await new Promise(r=>setTimeout(r,10));
+
+    }
+
+
+    elLongueur.value = origLongueur;
+    elForce.value = origForce;
+    elNiveau.value = origNiveau;
+
+    if(
+        typeof document.getElementById("forceValue")
+            .textContent!=="undefined"
+    ){
+
+        document
+            .getElementById("forceValue")
+            .textContent =
+            origForce + "%";
+
+    }
+
+
+    dernierLotDeTests = {
+
+        date_export:
+            new Date().toISOString(),
+
+        instantane_memoire:instantane,
+
+        tests
+
+    };
+
+
+    let resume =
+        "✅ " + nombre + " tests terminés.\n\n";
+
+    for(const t of tests){
+
+        resume +=
+            t.numero + "- (" +
+            t.parametres.influence_semantique_pct +
+            "% / " +
+            t.parametres.niveau_cognitif +
+            ") " +
+            t.texte_genere;
+
+        if(t.alertes.length){
+
+            resume +=
+                "\n   ⚠️ " +
+                t.alertes.join(" · ");
+
+        }
+
+        resume += "\n\n";
+
+    }
+
+    zoneResultat.textContent =
+        resume.trim();
+
+
+    btnLancer.disabled=false;
+    btnExporter.disabled=false;
+
+}
+
+
+function exporterLotJSON(){
+
+    if(!dernierLotDeTests){
+        return;
+    }
+
+    const contenu =
+        JSON.stringify(
+            dernierLotDeTests,
+            null,
+            2
+        );
+
+    const blob =
+        new Blob(
+            [contenu],
+            {type:"application/json"}
+        );
+
+    const url =
+        URL.createObjectURL(blob);
+
+    const lien =
+        document.createElement("a");
+
+    const horodatage =
+        new Date()
+            .toISOString()
+            .replace(/[:.]/g,"-");
+
+    lien.href=url;
+    lien.download =
+        "lot_tests_" + horodatage + ".json";
+
+    document.body.appendChild(lien);
+    lien.click();
+    document.body.removeChild(lien);
+
+    URL.revokeObjectURL(url);
 
 }
 

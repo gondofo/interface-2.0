@@ -1,83 +1,3173 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#002366">
-<title>Wall Dashboard V6</title>
+<title>Wall Dashboard V7</title>
+
 <style>
-:root{--b:#002366;--s:#bcbfc2;--bg:#edf0f3;--card:rgba(255,255,255,.86);--txt:#172235;--mut:#687582;--ln:rgba(0,35,102,.14)}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:var(--bg);color:var(--txt)}body.dark{--bg:#07111e;--card:rgba(16,28,43,.9);--txt:#f5f7fa;--mut:#aab4bf;--ln:rgba(188,191,194,.16)}
-button,input,textarea{font:inherit}button{border:0}#app{height:100%;overflow:auto;padding:14px 14px 78px}
-.top{height:45px;display:flex;justify-content:space-between;align-items:center}.brand{font-size:13px;font-weight:900;letter-spacing:2px;color:var(--b)}.dark .brand{color:#c8d8f5}.quick{display:flex;gap:7px}.quick button,.close{width:42px;height:42px;border-radius:13px;background:var(--card);color:var(--b)}
-.hero{min-height:350px;border-radius:28px;padding:22px;color:#fff;display:flex;flex-direction:column;justify-content:center;background:radial-gradient(circle at 50% 45%,#5d7fb4 0,#2c568f 27%,#002366 64%,#00173d 100%);box-shadow:0 14px 40px #00236644}.loc{text-align:center;font-size:15px}.time{font-size:clamp(76px,20vw,175px);font-weight:900;letter-spacing:-7px;line-height:.85;text-align:center;text-shadow:0 0 12px #fff,0 0 35px #ffffff55}.date{text-align:center;font-size:clamp(15px,3.7vw,23px);margin-top:18px;text-transform:capitalize}.weather{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:20px}.icon{font-size:42px}.temp{font-size:29px;font-weight:900}.desc{font-size:13px;opacity:.82}.next{text-align:center;font-size:13px;opacity:.78;margin-top:17px}
-.peek{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.peek button{height:46px;border-radius:14px;background:transparent;color:var(--mut);border:1px solid var(--ln)}
-.bottom{position:fixed;bottom:9px;left:10px;right:10px;z-index:80;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.bottom button{height:48px;border-radius:14px;background:var(--b);color:white;font-size:17px}
-.sheet{position:fixed;inset:0;z-index:100;display:none;align-items:flex-end;background:#00142d33;backdrop-filter:blur(5px)}.sheet.open{display:flex}.card{width:min(1100px,100%);max-height:91vh;overflow:auto;background:var(--card);border:1px solid var(--ln);border-radius:27px 27px 0 0;padding:12px 15px 25px;box-shadow:0 -15px 50px #00236633}.handle{width:46px;height:5px;border-radius:8px;background:var(--s);margin:0 auto 12px}.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.head strong{color:var(--b);font-size:18px}.dark .head strong{color:#c8d8f5}.tabs{display:flex;gap:7px;margin-bottom:10px}.tabs button{flex:1;padding:10px;border-radius:11px;background:#bcbfc233;color:var(--mut)}.tabs .on{background:var(--b);color:#fff}
-input,textarea{width:100%;padding:11px;border-radius:11px;border:1px solid var(--ln);background:var(--bg);color:var(--txt);outline:0}.row{display:flex;gap:7px;margin-top:7px}.primary{background:var(--b);color:#fff;border-radius:11px;padding:11px 14px;font-weight:800}.soft{background:#bcbfc233;color:var(--txt);border-radius:11px;padding:11px}.panel{background:#bcbfc220;border:1px solid var(--ln);border-radius:16px;padding:12px;margin-top:10px}.item{display:flex;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--ln)}.item:last-child{border:0}.itemtext{flex:1}.check{width:25px;height:25px;border:2px solid var(--b);border-radius:7px;background:transparent;color:#fff}.done .check{background:var(--b)}.done .itemtext{text-decoration:line-through;opacity:.45}.trash{background:transparent;color:#c62828}.small{font-size:12px;color:var(--mut)}
-#draw{width:100%;height:300px;background:#fff;border-radius:13px;touch-action:none}.drawtools{display:flex;gap:7px;margin-top:7px}.drawtools button{width:43px;height:43px;border-radius:11px}.black{background:#000}.red{background:#e53935}.blue{background:#1565c0}.white{background:#fff}
-.forecast{display:flex;gap:7px;overflow:auto}.day{min-width:78px;text-align:center;padding:9px 5px;border-radius:12px;background:#bcbfc220;font-size:12px}.day i{display:block;font-style:normal;font-size:25px;margin:4px}
-#wall{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;color:#fff;background:radial-gradient(circle at 50% 45%,#5d7fb4 0,#2c568f 27%,#002366 64%,#00173d 100%)}#wall.on{display:flex}.walltime{font-size:clamp(86px,23vw,230px);font-weight:900;letter-spacing:-8px;text-shadow:0 0 12px #fff,0 0 38px #ffffffaa}.walldate{font-size:clamp(16px,4vw,31px);margin-top:20px}.wallweather{display:flex;align-items:center;gap:11px;margin-top:25px}.wallnext{position:absolute;bottom:16px;opacity:.72}.wallx{position:absolute;right:10px;top:10px;width:45px;height:45px;border-radius:50%;background:#ffffff1f;color:#fff}
-#alert{position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center;background:#000b;padding:18px}.alertbox{max-width:470px;width:100%;background:var(--card);border:4px solid var(--b);border-radius:24px;padding:25px;text-align:center}.toast{position:fixed;z-index:700;display:none;bottom:70px;left:50%;transform:translateX(-50%);background:var(--b);color:#fff;padding:11px 17px;border-radius:13px;font-weight:800}
+:root{
+ --blue:#002366;
+ --gray:#bcbfc2;
+ --bg:#edf0f3;
+ --card:rgba(255,255,255,.92);
+ --text:#172235;
+ --muted:#687582;
+ --line:rgba(0,35,102,.15);
+}
+
+*{box-sizing:border-box}
+
+html,body{
+ margin:0;
+ width:100%;
+ height:100%;
+ overflow:hidden;
+ font-family:Arial,sans-serif;
+ background:var(--bg);
+ color:var(--text);
+}
+
+body.dark{
+ --bg:#07111e;
+ --card:rgba(16,28,43,.94);
+ --text:#f5f7fa;
+ --muted:#aab4bf;
+ --line:rgba(188,191,194,.16);
+}
+
+button,input,textarea{font:inherit}
+button{border:0;cursor:pointer}
+
+#app{
+ height:100%;
+ overflow:auto;
+ padding:14px 14px 78px;
+}
+
+/* =========================
+   BARRE DU HAUT
+========================= */
+
+.top{
+ height:45px;
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+}
+
+.brand{
+ font-size:13px;
+ font-weight:900;
+ letter-spacing:2px;
+ color:var(--blue);
+}
+
+.dark .brand{color:#c8d8f5}
+
+.quick{
+ display:flex;
+ gap:7px;
+}
+
+.quick button{
+ width:42px;
+ height:42px;
+ border-radius:13px;
+ background:var(--card);
+ color:var(--blue);
+}
+
+/* =========================
+   DASHBOARD PRINCIPAL
+========================= */
+
+.hero{
+ min-height:350px;
+ border-radius:28px;
+ padding:22px;
+ color:white;
+ display:flex;
+ flex-direction:column;
+ justify-content:center;
+
+ background:
+ radial-gradient(
+  circle at 50% 45%,
+  #5d7fb4 0,
+  #2c568f 27%,
+  #002366 64%,
+  #00173d 100%
+ );
+
+ box-shadow:0 14px 40px #00236644;
+}
+
+.loc{
+ text-align:center;
+ font-size:15px;
+}
+
+.time{
+ font-size:clamp(76px,20vw,175px);
+ font-weight:900;
+ letter-spacing:-7px;
+ line-height:.85;
+ text-align:center;
+
+ text-shadow:
+ 0 0 12px #fff,
+ 0 0 35px #ffffff55;
+}
+
+.date{
+ text-align:center;
+ font-size:clamp(15px,3.7vw,23px);
+ margin-top:18px;
+ text-transform:capitalize;
+}
+
+.weather{
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ gap:12px;
+ margin-top:20px;
+}
+
+.icon{font-size:42px}
+
+.temp{
+ font-size:29px;
+ font-weight:900;
+}
+
+.desc{
+ font-size:13px;
+ opacity:.82;
+}
+
+.next{
+ text-align:center;
+ font-size:13px;
+ opacity:.78;
+ margin-top:17px;
+}
+
+/* =========================
+   PETITS RACCOURCIS
+========================= */
+
+.peek{
+ display:grid;
+ grid-template-columns:repeat(3,1fr);
+ gap:8px;
+ margin-top:10px;
+}
+
+.peek button{
+ height:46px;
+ border-radius:14px;
+ background:transparent;
+ color:var(--muted);
+ border:1px solid var(--line);
+}
+
+/* =========================
+   BARRE BAS
+========================= */
+
+.bottom{
+ position:fixed;
+ bottom:9px;
+ left:10px;
+ right:10px;
+ z-index:80;
+
+ display:grid;
+ grid-template-columns:repeat(5,1fr);
+ gap:6px;
+}
+
+.bottom button{
+ height:48px;
+ border-radius:14px;
+ background:var(--blue);
+ color:white;
+ font-size:17px;
+}
+
+/* =========================
+   FENÊTRES
+   PAS DE FLOU
+========================= */
+
+.sheet{
+ position:fixed;
+ inset:0;
+ z-index:100;
+
+ display:none;
+ align-items:center;
+ justify-content:center;
+
+ background:rgba(0,20,45,.18);
+}
+
+.sheet.open{
+ display:flex;
+}
+
+.card{
+ width:min(720px,92%);
+ max-height:88vh;
+ overflow:auto;
+
+ background:var(--card);
+ border:1px solid var(--line);
+ border-radius:25px;
+
+ padding:15px;
+
+ box-shadow:
+ 0 20px 60px rgba(0,0,0,.28);
+}
+
+.handle{
+ width:46px;
+ height:5px;
+ border-radius:8px;
+ background:var(--gray);
+ margin:0 auto 12px;
+}
+
+.head{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ margin-bottom:12px;
+}
+
+.head strong{
+ color:var(--blue);
+ font-size:18px;
+}
+
+.dark .head strong{
+ color:#c8d8f5;
+}
+
+.close{
+ width:42px;
+ height:42px;
+ border-radius:13px;
+ background:#bcbfc233;
+ color:var(--blue);
+}
+
+/* =========================
+   ORGANISATEUR
+========================= */
+
+.tabs{
+ display:flex;
+ gap:7px;
+ margin-bottom:10px;
+}
+
+.tabs button{
+ flex:1;
+ padding:10px;
+ border-radius:11px;
+ background:#bcbfc233;
+ color:var(--muted);
+}
+
+.tabs .on{
+ background:var(--blue);
+ color:white;
+}
+
+input,textarea{
+ width:100%;
+ padding:11px;
+
+ border-radius:11px;
+ border:1px solid var(--line);
+
+ background:var(--bg);
+ color:var(--text);
+
+ outline:0;
+}
+
+.row{
+ display:flex;
+ gap:7px;
+ margin-top:7px;
+}
+
+.primary{
+ background:var(--blue);
+ color:white;
+ border-radius:11px;
+ padding:11px 14px;
+ font-weight:800;
+}
+
+.soft{
+ background:#bcbfc233;
+ color:var(--text);
+ border-radius:11px;
+ padding:11px;
+}
+
+.panel{
+ background:#bcbfc220;
+ border:1px solid var(--line);
+ border-radius:16px;
+ padding:12px;
+ margin-top:10px;
+}
+
+.item{
+ display:flex;
+ gap:8px;
+ align-items:center;
+ padding:9px 0;
+ border-bottom:1px solid var(--line);
+}
+
+.item:last-child{border:0}
+
+.itemtext{flex:1}
+
+.check{
+ width:25px;
+ height:25px;
+ border:2px solid var(--blue);
+ border-radius:7px;
+ background:transparent;
+ color:white;
+}
+
+.done .check{
+ background:var(--blue);
+}
+
+.done .itemtext{
+ text-decoration:line-through;
+ opacity:.45;
+}
+
+.trash{
+ background:transparent;
+ color:#c62828;
+}
+
+.small{
+ font-size:12px;
+ color:var(--muted);
+}
+
+/* =========================
+   DESSIN
+========================= */
+
+#draw{
+ width:100%;
+ height:300px;
+ background:white;
+ border-radius:13px;
+ touch-action:none;
+}
+
+.drawtools{
+ display:flex;
+ gap:7px;
+ margin-top:7px;
+}
+
+.drawtools button{
+ width:43px;
+ height:43px;
+ border-radius:11px;
+}
+
+.black{background:#000}
+.red{background:#e53935}
+.blue{background:#1565c0}
+.white{background:#fff}
+
+/* =========================
+   METEO
+========================= */
+
+.forecast{
+ display:flex;
+ gap:7px;
+ overflow:auto;
+}
+
+.day{
+ min-width:78px;
+ text-align:center;
+ padding:9px 5px;
+ border-radius:12px;
+ background:#bcbfc220;
+ font-size:12px;
+}
+
+.day i{
+ display:block;
+ font-style:normal;
+ font-size:25px;
+ margin:4px;
+}
+
+/* =========================
+   ECRAN DE VEILLE
+========================= */
+
+#wall{
+ position:fixed;
+ inset:0;
+ z-index:300;
+
+ display:none;
+
+ align-items:center;
+ justify-content:center;
+ flex-direction:column;
+
+ text-align:center;
+
+ color:white;
+
+ background:
+ radial-gradient(
+  circle at 50% 45%,
+  #5d7fb4 0,
+  #2c568f 27%,
+  #002366 64%,
+  #00173d 100%
+ );
+}
+
+#wall.on{
+ display:flex;
+}
+
+.walltime{
+ font-size:clamp(86px,23vw,230px);
+ font-weight:900;
+
+ letter-spacing:-8px;
+
+ text-shadow:
+ 0 0 12px #fff,
+ 0 0 38px #ffffffaa;
+}
+
+.walldate{
+ font-size:clamp(16px,4vw,31px);
+ margin-top:20px;
+}
+
+.wallweather{
+ display:flex;
+ align-items:center;
+ gap:11px;
+ margin-top:25px;
+}
+
+.wallnext{
+ position:absolute;
+ bottom:18px;
+
+ opacity:.72;
+
+ font-size:13px;
+}
+
+/* fermeture veille */
+
+.wallx{
+ position:absolute;
+ right:10px;
+ top:10px;
+
+ width:45px;
+ height:45px;
+
+ border-radius:50%;
+
+ background:#ffffff1f;
+ color:white;
+}
+
+/* =========================
+   MICROPHONE
+========================= */
+
+.voiceBtn{
+ position:absolute;
+
+ bottom:72px;
+ left:50%;
+
+ transform:translateX(-50%);
+
+ width:58px;
+ height:58px;
+
+ border-radius:50%;
+
+ background:#ffffff22;
+ border:1px solid #ffffff66;
+
+ color:white;
+
+ font-size:24px;
+
+ box-shadow:
+ 0 0 18px #ffffff33;
+}
+
+.voiceBtn.listening{
+ background:#ffffff55;
+
+ box-shadow:
+ 0 0 30px #fff;
+}
+
+/* =========================
+   ALERTES
+========================= */
+
+#alert{
+ position:fixed;
+ inset:0;
+ z-index:500;
+
+ display:none;
+
+ align-items:center;
+ justify-content:center;
+
+ background:#000b;
+
+ padding:18px;
+}
+
+.alertbox{
+ max-width:470px;
+ width:100%;
+
+ background:var(--card);
+
+ border:4px solid var(--blue);
+
+ border-radius:24px;
+
+ padding:25px;
+
+ text-align:center;
+}
+
+.toast{
+ position:fixed;
+
+ z-index:700;
+
+ display:none;
+
+ bottom:70px;
+ left:50%;
+
+ transform:translateX(-50%);
+
+ background:var(--blue);
+
+ color:white;
+
+ padding:11px 17px;
+
+ border-radius:13px;
+
+ font-weight:800;
+}
 </style>
 </head>
+
 <body>
+
 <div id="app">
-<div class="top"><div class="brand">WALL DASHBOARD</div><div class="quick"><button onclick="theme()">◐</button><button onclick="fs()">⛶</button></div></div>
-<section class="hero"><div id="loc" class="loc">📍 Localisation...</div><div id="clock" class="time">00:00</div><div id="date" class="date">...</div><div class="weather"><div id="wi" class="icon">⛅</div><div><div id="wt" class="temp">--°C</div><div id="wd" class="desc">Météo...</div></div></div><div id="next" class="next">Tout est calme ✓</div></section>
-<div class="peek"><button onclick="openS('weather')">☀️ Météo</button><button onclick="openS('organizer')">📝 Organisateur</button><button onclick="openS('more')">••• Plus</button></div>
+
+<div class="top">
+
+<div class="brand">
+WALL DASHBOARD
 </div>
-<nav class="bottom"><button onclick="openS('weather')">☀️</button><button onclick="openS('organizer')">📝</button><button onclick="openS('organizer','draw')">✍️</button><button onclick="wall()">🕐</button><button onclick="fs()">⛶</button></nav>
 
-<section id="organizer" class="sheet" onclick="bg(event,this)"><div class="card"><div class="handle"></div><div class="head"><strong>📝 Organisateur</strong><button class="close" onclick="closeS('organizer')">✕</button></div>
-<div class="tabs"><button id="tt" class="on" onclick="mode('text')">⌨️ Texte</button><button id="td" onclick="mode('draw')">✍️ Doigt</button><button id="tl" onclick="mode('list')">☑️ À faire</button></div>
-<div id="text"><textarea id="note" rows="5" placeholder="Note, idée, tâche..."></textarea><div class="row"><button class="primary" onclick="saveNote()">💾 Enregistrer</button><button class="soft" onclick="clearNote()">Effacer</button></div></div>
-<div id="drawing" style="display:none"><canvas id="draw"></canvas><div class="drawtools"><button class="black" onclick="pen('#000')"></button><button class="red" onclick="pen('#e53935')"></button><button class="blue" onclick="pen('#1565c0')"></button><button class="white" onclick="eraser()">🧽</button><button class="white" onclick="clearDraw()">🗑️</button><button class="primary" onclick="saveDraw()">💾</button></div></div>
-<div id="list" style="display:none"><div class="row"><input id="task" placeholder="Nouvelle tâche"><button class="primary" onclick="addTask()">+</button></div><div id="tasks"></div></div>
-<div class="panel"><strong>🔔 Ajouter au même endroit</strong><input id="title" placeholder="Ex. Sortir les poubelles" style="margin-top:7px"><div class="row"><input id="day" type="date"><input id="hour" type="time"></div><div class="row"><button class="primary" onclick="add('rem')">🔔 Rappel</button><button class="primary" onclick="add('event')">📅 Date</button><button class="primary" onclick="add('task')">☑️ Tâche</button></div></div>
-<div class="panel"><strong>📌 Programmés</strong><div id="scheduled"></div></div>
-</div></section>
+<div class="quick">
 
-<section id="weather" class="sheet" onclick="bg(event,this)"><div class="card"><div class="handle"></div><div class="head"><strong>🌤️ Météo</strong><button class="close" onclick="closeS('weather')">✕</button></div><div id="details" class="panel">Chargement...</div><div id="forecast" class="forecast"></div><button class="primary" style="width:100%;margin-top:10px" onclick="weather(true)">🔄 Actualiser</button></div></section>
-<section id="more" class="sheet" onclick="bg(event,this)"><div class="card"><div class="handle"></div><div class="head"><strong>••• Outils</strong><button class="close" onclick="closeS('more')">✕</button></div><div class="row"><button class="primary" onclick="wall()">🕐 Veille</button><button class="primary" onclick="timer()">⏱️ Minuteur</button><button class="primary" onclick="diag()">🧪 Test</button></div><button class="primary" style="width:100%;margin-top:8px" onclick="notif()">🔔 Activer les notifications</button></div></section>
-<section id="timer" class="sheet" onclick="bg(event,this)"><div class="card"><div class="handle"></div><div class="head"><strong>⏱️ Minuteur</strong><button class="close" onclick="closeS('timer')">✕</button></div><div style="text-align:center"><div id="tdis" style="font-size:76px;font-weight:900;color:var(--b)">05:00</div><input id="tinput" type="number" min="1" value="300" style="max-width:180px;text-align:center"><div class="row" style="justify-content:center"><button class="primary" onclick="startTimer()">▶️</button><button class="primary" onclick="pauseTimer()">⏸️</button><button class="primary" onclick="resetTimer()">↺</button></div></div></div></section>
-<section id="diag" class="sheet" onclick="bg(event,this)"><div class="card"><div class="handle"></div><div class="head"><strong>🧪 Diagnostic</strong><button class="close" onclick="closeS('diag')">✕</button></div><div id="diagbody"></div></div></section>
-<div id="alert"><div class="alertbox"><h2 style="color:var(--b)">🔔 RAPPEL</h2><p id="alerttext" style="font-size:20px"></p><button class="primary" style="width:100%" onclick="closeAlert()">OK</button></div></div><div id="toast"></div>
-<section id="wall"><button class="wallx" onclick="stopWall()">✕</button><div id="wclock" class="walltime">00:00</div><div id="wdate" class="walldate">...</div><div class="wallweather"><div id="wwi" class="icon">⛅</div><div><div id="wwt" class="temp">--°C</div><div id="wwd" class="desc">...</div></div></div><div id="wnext" class="wallnext">Tout est calme ✓</div></section>
+<button onclick="theme()">◐</button>
+
+<button onclick="toggleFullscreen()">⛶</button>
+
+</div>
+
+</div>
+
+<section class="hero">
+
+<div id="loc" class="loc">
+📍 Localisation...
+</div>
+
+<div id="clock" class="time">
+00:00
+</div>
+
+<div id="date" class="date">
+...
+</div>
+
+<div class="weather">
+
+<div id="wi" class="icon">
+⛅
+</div>
+
+<div>
+
+<div id="wt" class="temp">
+--°C
+</div>
+
+<div id="wd" class="desc">
+Météo...
+</div>
+
+</div>
+
+</div>
+
+<div id="next" class="next">
+Tout est calme ✓
+</div>
+
+</section>
+
+<div class="peek">
+
+<button onclick="openSheet('weather')">
+☀️ Météo
+</button>
+
+<button onclick="openSheet('organizer')">
+📝 Organisateur
+</button>
+
+<button onclick="openSheet('more')">
+••• Plus
+</button>
+
+</div>
+
+</div>
+
+
+<nav class="bottom">
+
+<button onclick="openSheet('weather')">☀️</button>
+
+<button onclick="openSheet('organizer')">📝</button>
+
+<button onclick="openSheet('organizer','draw')">✍️</button>
+
+<button onclick="enterStandby()">🕐</button>
+
+<button onclick="toggleFullscreen()">⛶</button>
+
+</nav>
+
+
+<!-- =========================
+     ORGANISATEUR
+========================= -->
+
+<section id="organizer"
+class="sheet"
+onclick="backgroundClose(event,this)">
+
+<div class="card">
+
+<div class="handle"></div>
+
+<div class="head">
+
+<strong>
+📝 Organisateur
+</strong>
+
+<button class="close"
+onclick="closeSheet('organizer')">
+✕
+</button>
+
+</div>
+
+
+<div class="tabs">
+
+<button id="tabText"
+class="on"
+onclick="organizerMode('text')">
+⌨️ Texte
+</button>
+
+<button id="tabDraw"
+onclick="organizerMode('draw')">
+✍️ Doigt
+</button>
+
+<button id="tabList"
+onclick="organizerMode('list')">
+☑️ À faire
+</button>
+
+</div>
+
+
+<div id="textMode">
+
+<textarea
+id="note"
+rows="5"
+placeholder="Écris une note, une idée ou quelque chose à retenir..."
+></textarea>
+
+<div class="row">
+
+<button
+class="primary"
+onclick="saveNote()">
+💾 Enregistrer
+</button>
+
+<button
+class="soft"
+onclick="clearNote()">
+Effacer
+</button>
+
+</div>
+
+</div>
+
+
+<div id="drawMode"
+style="display:none">
+
+<canvas id="draw"></canvas>
+
+<div class="drawtools">
+
+<button
+class="black"
+onclick="setPen('#000')">
+</button>
+
+<button
+class="red"
+onclick="setPen('#e53935')">
+</button>
+
+<button
+class="blue"
+onclick="setPen('#1565c0')">
+</button>
+
+<button
+class="white"
+onclick="setEraser()">
+🧽
+</button>
+
+<button
+class="white"
+onclick="clearDrawing()">
+🗑️
+</button>
+
+<button
+class="primary"
+onclick="saveDrawing()">
+💾
+</button>
+
+</div>
+
+</div>
+
+
+<div id="listMode"
+style="display:none">
+
+<div class="row">
+
+<input
+id="taskInput"
+placeholder="Nouvelle tâche"
+>
+
+<button
+class="primary"
+onclick="addTask()">
++
+</button>
+
+</div>
+
+<div id="tasks"></div>
+
+</div>
+
+
+<div class="panel">
+
+<strong>
+🔔 Ajouter
+</strong>
+
+<input
+id="scheduleTitle"
+placeholder="Ex. Sortir les poubelles"
+style="margin-top:7px"
+>
+
+<div class="row">
+
+<input
+id="scheduleDate"
+type="date"
+>
+
+<input
+id="scheduleTime"
+type="time"
+>
+
+</div>
+
+<div class="row">
+
+<button
+class="primary"
+onclick="addSchedule('reminder')">
+🔔 Rappel
+</button>
+
+<button
+class="primary"
+onclick="addSchedule('event')">
+📅 Date
+</button>
+
+<button
+class="primary"
+onclick="addSchedule('task')">
+☑️ Tâche
+</button>
+
+</div>
+
+</div>
+
+
+<div class="panel">
+
+<strong>
+📌 Programmés
+</strong>
+
+<div id="scheduled"></div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- =========================
+     METEO
+========================= -->
+
+<section
+id="weather"
+class="sheet"
+onclick="backgroundClose(event,this)">
+
+<div class="card">
+
+<div class="handle"></div>
+
+<div class="head">
+
+<strong>
+🌤️ Météo
+</strong>
+
+<button
+class="close"
+onclick="closeSheet('weather')">
+✕
+</button>
+
+</div>
+
+<div id="weatherDetails"
+class="panel">
+Chargement...
+</div>
+
+<div
+id="forecast"
+class="forecast">
+</div>
+
+<button
+class="primary"
+style="width:100%;margin-top:10px"
+onclick="loadWeather(true)">
+🔄 Actualiser
+</button>
+
+</div>
+
+</section>
+
+
+<!-- =========================
+     PLUS
+========================= -->
+
+<section
+id="more"
+class="sheet"
+onclick="backgroundClose(event,this)">
+
+<div class="card">
+
+<div class="handle"></div>
+
+<div class="head">
+
+<strong>
+••• Outils
+</strong>
+
+<button
+class="close"
+onclick="closeSheet('more')">
+✕
+</button>
+
+</div>
+
+<div class="row">
+
+<button
+class="primary"
+onclick="enterStandby()">
+🕐 Veille
+</button>
+
+<button
+class="primary"
+onclick="openTimer()">
+⏱️ Minuteur
+</button>
+
+<button
+class="primary"
+onclick="openDiagnostic()">
+🧪 Test
+</button>
+
+</div>
+
+<button
+class="primary"
+style="width:100%;margin-top:8px"
+onclick="requestNotifications()">
+🔔 Notifications
+</button>
+
+</div>
+
+</section>
+
+
+<!-- =========================
+     MINUTEUR
+========================= -->
+
+<section
+id="timer"
+class="sheet"
+onclick="backgroundClose(event,this)">
+
+<div class="card">
+
+<div class="handle"></div>
+
+<div class="head">
+
+<strong>
+⏱️ Minuteur
+</strong>
+
+<button
+class="close"
+onclick="closeSheet('timer')">
+✕
+</button>
+
+</div>
+
+<div style="text-align:center">
+
+<div
+id="timerDisplay"
+style="font-size:76px;font-weight:900;color:var(--blue)">
+05:00
+</div>
+
+<input
+id="timerInput"
+type="number"
+min="1"
+value="300"
+style="max-width:180px;text-align:center"
+>
+
+<div
+class="row"
+style="justify-content:center">
+
+<button
+class="primary"
+onclick="startTimer()">
+▶️
+</button>
+
+<button
+class="primary"
+onclick="pauseTimer()">
+⏸️
+</button>
+
+<button
+class="primary"
+onclick="resetTimer()">
+↺
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- =========================
+     DIAGNOSTIC
+========================= -->
+
+<section
+id="diagnostic"
+class="sheet"
+onclick="backgroundClose(event,this)">
+
+<div class="card">
+
+<div class="handle"></div>
+
+<div class="head">
+
+<strong>
+🧪 Diagnostic
+</strong>
+
+<button
+class="close"
+onclick="closeSheet('diagnostic')">
+✕
+</button>
+
+</div>
+
+<div id="diagnosticBody"></div>
+
+<button
+class="primary"
+style="width:100%;margin-top:10px"
+onclick="testAlert()">
+🚨 Tester une alerte
+</button>
+
+</div>
+
+</section>
+
+
+<!-- =========================
+     ECRAN DE VEILLE
+========================= -->
+
+<section id="wall">
+
+<button
+class="wallx"
+onclick="leaveStandby()">
+✕
+</button>
+
+<div id="wallClock"
+class="walltime">
+00:00
+</div>
+
+<div id="wallDate"
+class="walldate">
+...
+</div>
+
+<div class="wallweather">
+
+<div id="wallIcon"
+class="icon">
+⛅
+</div>
+
+<div>
+
+<div
+id="wallTemp"
+class="temp">
+--°C
+</div>
+
+<div
+id="wallDesc"
+class="desc">
+...
+</div>
+
+</div>
+
+</div>
+
+<div
+id="wallNext"
+class="wallnext">
+Tout est calme ✓
+</div>
+
+
+<button
+id="voiceBtn"
+class="voiceBtn"
+onclick="startVoice()">
+🎙️
+</button>
+
+<div
+style="
+position:absolute;
+bottom:48px;
+font-size:11px;
+opacity:.4
+">
+Touchez 🎙️ pour donner une commande
+</div>
+
+</section>
+
+
+<!-- =========================
+     ALERTE
+========================= -->
+
+<div id="alert">
+
+<div class="alertbox">
+
+<h2 style="color:var(--blue)">
+🔔 RAPPEL
+</h2>
+
+<p
+id="alertText"
+style="font-size:20px">
+</p>
+
+<button
+class="primary"
+style="width:100%"
+onclick="closeAlert()">
+OK
+</button>
+
+</div>
+
+</div>
+
+
+<div id="toast"></div>
+
 
 <script>
-const S={t:'v6t',r:'v6r',e:'v6e',n:'v6n',d:'v6d',theme:'v6theme'},$=id=>document.getElementById(id);
-let tasks=load(S.t,[]),rem=load(S.r,[]),events=load(S.e,[]),geo={},weatherData=null,timerID=null,secs=300,wallMode=false,idleID;
-function load(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch(e){return f}}function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
-function esc(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
-function toast(x){$('toast').textContent=x;$('toast').style.display='block';clearTimeout(window.x);window.x=setTimeout(()=>$('toast').style.display='none',2200)}
-function theme(){document.body.classList.toggle('dark');localStorage.setItem(S.theme,document.body.classList.contains('dark')?'dark':'light')}
-if(localStorage.getItem(S.theme)==='dark')document.body.classList.add('dark');
-function openS(id,m){$(id).classList.add('open');if(id==='organizer'){$('note').value=localStorage.getItem(S.n)||'';renderTasks();renderScheduled();if(m==='draw')mode('draw')}}function closeS(id){$(id).classList.remove('open')}function bg(e,x){if(e.target===x)closeS(x.id)}
-function mode(m){['text','drawing','list'].forEach(x=>$(x).style.display='none');$('text').style.display=m==='text'?'block':'none';$('drawing').style.display=m==='draw'?'block':'none';$('list').style.display=m==='list'?'block':'none';['tt','td','tl'].forEach(x=>$(x).classList.remove('on'));$('t'+({text:'t',draw:'d',list:'l'}[m])).classList.add('on');if(m==='draw')setTimeout(sizeCanvas,30)}
-function saveNote(){localStorage.setItem(S.n,$('note').value);toast('Note sauvegardée ✓')}function clearNote(){if(confirm('Effacer la note ?')){$('note').value='';localStorage.removeItem(S.n);toast('Note effacée')}}
-function addTask(){let x=$('task').value.trim();if(!x)return;tasks.push({id:Date.now(),text:x,done:false});save(S.t,tasks);$('task').value='';renderTasks();renderScheduled();renderNext();toast('Tâche ajoutée ✓')}
-function renderTasks(){$('tasks').innerHTML=tasks.length?'':'<div class="small">Aucune tâche.</div>';tasks.forEach(t=>{let d=document.createElement('div');d.className='item '+(t.done?'done':'');d.innerHTML=`<button class="check" onclick="toggleTask(${t.id})">${t.done?'✓':''}</button><div class="itemtext">${esc(t.text)}</div><button class="trash" onclick="delTask(${t.id})">🗑️</button>`;$('tasks').appendChild(d)})}
-function toggleTask(id){tasks=tasks.map(t=>t.id===id?{...t,done:!t.done}:t);save(S.t,tasks);renderTasks();renderNext()}function delTask(id){tasks=tasks.filter(t=>t.id!==id);save(S.t,tasks);renderTasks();renderScheduled();renderNext()}
-function add(type){let title=$('title').value.trim(),d=$('day').value,h=$('hour').value;if(!title||!d||!h){toast('Remplis titre, date et heure');return}let ms=new Date(d+'T'+h).getTime();if(ms<=Date.now()){toast('Choisis une date future');return}if(type==='rem'){rem.push({id:Date.now(),text:title,time:ms,done:false});save(S.r,rem)}else if(type==='event'){events.push({id:Date.now(),text:title,date:d,time:h});save(S.e,events)}else{tasks.push({id:Date.now(),text:title+' • '+d+' '+h,done:false});save(S.t,tasks);renderTasks()}$('title').value='';$('day').value='';$('hour').value='';renderScheduled();renderNext();toast(type==='rem'?'Rappel programmé ✓':type==='event'?'Date ajoutée ✓':'Tâche programmée ✓')}
-function renderScheduled(){let a=[...rem.filter(x=>!x.done).map(x=>({id:x.id,k:'r',ms:x.time,ico:'🔔',text:x.text})),...events.map(x=>({id:x.id,k:'e',ms:new Date(x.date+'T'+x.time).getTime(),ico:'📅',text:x.text}))].filter(x=>x.ms>Date.now()).sort((a,b)=>a.ms-b.ms);$('scheduled').innerHTML=a.length?'':'<div class="small" style="margin-top:8px">Rien de programmé.</div>';a.forEach(x=>{let d=document.createElement('div');d.className='item';d.innerHTML=`<div>${x.ico}</div><div class="itemtext"><strong>${new Date(x.ms).toLocaleString('fr-CA',{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</strong><br>${esc(x.text)}</div><button class="trash" onclick="${x.k==='r'?`delRem(${x.id})`:`delEvent(${x.id})`}">🗑️</button>`;$('scheduled').appendChild(d)})}
-function delRem(id){rem=rem.filter(x=>x.id!==id);save(S.r,rem);renderScheduled();renderNext()}function delEvent(id){events=events.filter(x=>x.id!==id);save(S.e,events);renderScheduled();renderNext()}
-function renderNext(){let a=[];rem.filter(x=>!x.done&&x.time>Date.now()).forEach(x=>a.push({ms:x.time,s:'🔔 '+x.text}));events.forEach(x=>{let ms=new Date(x.date+'T'+x.time).getTime();if(ms>Date.now())a.push({ms,s:'📅 '+x.text})});let t=tasks.find(x=>!x.done);if(t)a.push({ms:Infinity,s:'☑️ '+t.text});a.sort((a,b)=>a.ms-b.ms);let s=a.length?(a[0].ms===Infinity?a[0].s:a[0].s+' • '+new Date(a[0].ms).toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'})):'Tout est calme ✓';$('next').textContent=s;$('wnext').textContent=s}
-function check(){let changed=false;rem.forEach(x=>{if(!x.done&&x.time<=Date.now()){x.done=true;changed=true;alertBox(x.text)}});if(changed){save(S.r,rem);renderScheduled();renderNext()}}
-function alertBox(t){$('alerttext').textContent=t;$('alert').style.display='flex';if(navigator.vibrate)navigator.vibrate?.([250,120,250,120,600]);if('Notification'in window&&Notification.permission==='granted')try{new Notification('Wall Dashboard',{body:t})}catch(e){}}function closeAlert(){$('alert').style.display='none'}
-function wx(c){let m={0:['☀️','Ciel dégagé'],1:['🌤️','Plutôt dégagé'],2:['⛅','Partiellement nuageux'],3:['☁️','Nuageux'],45:['🌫️','Brouillard'],51:['🌦️','Bruine'],53:['🌦️','Bruine'],61:['🌦️','Pluie légère'],63:['🌧️','Pluie'],65:['🌧️','Forte pluie'],71:['🌨️','Neige'],73:['🌨️','Neige'],75:['❄️','Forte neige'],80:['🌦️','Averses'],81:['🌧️','Averses'],82:['⛈️','Fortes averses'],95:['⛈️','Orage'],96:['⛈️','Orage'],99:['⛈️','Orage']};return m[c]||['🌡️','Conditions inconnues']}
-async function weather(force=false){if(geo.lat==null)return;try{let r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${geo.lat}&longitude=${geo.lon}&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5`);weatherData=await r.json();let c=weatherData.current,w=wx(c.weather_code);$('wi').textContent=w[0];$('wt').textContent=Math.round(c.temperature_2m)+'°C';$('wd').textContent=w[1];$('wwi').textContent=w[0];$('wwt').textContent=Math.round(c.temperature_2m)+'°C';$('wwd').textContent=w[1];$('details').textContent=`Humidité ${c.relative_humidity_2m}% • Vent ${Math.round(c.wind_speed_10m)} km/h`;$('forecast').innerHTML=weatherData.daily.time.map((d,i)=>{let q=wx(weatherData.daily.weather_code[i]);return `<div class="day"><strong>${i?' '+new Date(d+'T12:00:00').toLocaleDateString('fr-CA',{weekday:'short'}):'Aujourd’hui'}</strong><i>${q[0]}</i>${Math.round(weatherData.daily.temperature_2m_max[i])}° / ${Math.round(weatherData.daily.temperature_2m_min[i])}°</div>`}).join('')}catch(e){$('wd').textContent='Météo indisponible';$('details').textContent='Connexion Internet requise.'}}
-navigator.geolocation?.getCurrentPosition(async p=>{geo.lat=p.coords.latitude;geo.lon=p.coords.longitude;try{let r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${geo.lat}&lon=${geo.lon}&zoom=10&addressdetails=1`),a=(await r.json()).address||{};geo.city=a.city||a.town||a.village||a.municipality||a.county||a.state||'Lieu inconnu'}catch(e){geo.city='Position trouvée'}$('loc').textContent='📍 '+geo.city;weather(true)},()=>{$('loc').textContent='📍 Autorisation requise'},{maximumAge:1800000,timeout:15000});
-function timer(){$('timer').classList.add('open');resetTimer()}function startTimer(){if(timerID)return;timerID=setInterval(()=>{secs--;showTimer();if(secs<=0){pauseTimer();alertBox('Le minuteur est terminé.')}},1000)}function pauseTimer(){clearInterval(timerID);timerID=null}function resetTimer(){pauseTimer();secs=Math.max(1,parseInt($('tinput').value||300));showTimer()}function showTimer(){$('tdis').textContent=String(Math.floor(secs/60)).padStart(2,'0')+':'+String(secs%60).padStart(2,'0')}
-async function fs(){try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch(e){toast('Plein écran non disponible')}}
-function wall(){wallMode=true;$('wall').classList.add('on');renderNext();fs()}function stopWall(){wallMode=false;$('wall').classList.remove('on');if(document.fullscreenElement)document.exitFullscreen()}
-async function notif(){if(!('Notification'in window)){toast('Notifications indisponibles');return}let p=await Notification.requestPermission();toast(p==='granted'?'Notifications activées ✓':'Notifications non autorisées')}
-function diag(){$('diagbody').innerHTML=[['Stockage',!!localStorage],['Géolocalisation',!!navigator.geolocation],['Réseau',!!fetch],['Tactile',!!$('draw').getContext],['Plein écran',!!document.documentElement.requestFullscreen],['Notifications','Notification'in window]].map(x=>`<div class="item"><div class="itemtext">${x[0]}</div><strong>${x[1]?'OK ✓':'LIMITÉ'}</strong></div>`).join('')+`<button class="primary" style="width:100%;margin-top:9px" onclick="alertBox('Alerte de test V6 — OK')">🚨 Tester une alerte</button>`;$('diag').classList.add('open')}
-const canvas=$('draw'),ctx=canvas.getContext('2d');let down=false,pcolor='#000',eraseMode=false;
-function sizeCanvas(){let r=canvas.getBoundingClientRect(),q=devicePixelRatio||1;canvas.width=r.width*q;canvas.height=r.height*q;ctx.setTransform(q,0,0,q,0,0);ctx.lineCap='round';ctx.lineJoin='round';let s=localStorage.getItem(S.d);if(s){let im=new Image();im.onload=()=>ctx.drawImage(im,0,0,r.width,r.height);im.src=s}}
-function point(e){let r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}canvas.onpointerdown=e=>{down=true;let p=point(e);ctx.beginPath();ctx.moveTo(p.x,p.y)};canvas.onpointermove=e=>{if(!down)return;let p=point(e);ctx.globalCompositeOperation=eraseMode?'destination-out':'source-over';ctx.strokeStyle=pcolor;ctx.lineWidth=eraseMode?24:4;ctx.lineTo(p.x,p.y);ctx.stroke()};['pointerup','pointercancel','pointerleave'].forEach(x=>canvas.addEventListener(x,()=>{if(down){down=false;saveDraw()}}));function pen(c){pcolor=c;eraseMode=false}function eraser(){eraseMode=true}function clearDraw(){if(confirm('Effacer le tableau ?')){let r=canvas.getBoundingClientRect();ctx.clearRect(0,0,r.width,r.height);localStorage.removeItem(S.d)}}function saveDraw(){try{localStorage.setItem(S.d,canvas.toDataURL())}catch(e){}}
-function tick(){let n=new Date(),t=n.toLocaleTimeString('fr-CA',{hour:'2-digit',minute:'2-digit'}),d=n.toLocaleDateString('fr-CA',{weekday:'long',day:'numeric',month:'long',year:'numeric'});$('clock').textContent=t;$('date').textContent=d;$('wclock').textContent=t;$('wdate').textContent=d;check();renderNext()}setInterval(tick,1000);tick();renderTasks();renderScheduled();renderNext();
-function resetIdle(){if(wallMode)return;clearTimeout(idleID);idleID=setTimeout(wall,300000)}['pointerdown','touchstart','keydown'].forEach(e=>document.addEventListener(e,resetIdle,{passive:true}));resetIdle();document.addEventListener('visibilitychange',()=>{if(!document.hidden){check();weather()}});document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(wallMode)stopWall();document.querySelectorAll('.sheet.open').forEach(x=>x.classList.remove('open'));closeAlert()}});window.onresize=()=>{if($('drawing').style.display==='block')sizeCanvas()}
+
+/* =========================
+   STOCKAGE
+========================= */
+
+const STORAGE={
+ tasks:"wall_v7_tasks",
+ reminders:"wall_v7_reminders",
+ events:"wall_v7_events",
+ note:"wall_v7_note",
+ drawing:"wall_v7_drawing",
+ theme:"wall_v7_theme"
+};
+
+function load(key,fallback){
+
+ try{
+  return JSON.parse(
+   localStorage.getItem(key)
+  ) ?? fallback;
+ }catch(e){
+  return fallback;
+ }
+
+}
+
+function save(key,value){
+ localStorage.setItem(
+  key,
+  JSON.stringify(value)
+ );
+}
+
+
+/* =========================
+   ETAT
+========================= */
+
+let tasks=load(STORAGE.tasks,[]);
+let reminders=load(STORAGE.reminders,[]);
+let events=load(STORAGE.events,[]);
+
+let locationData={};
+let weatherData=null;
+
+let standby=false;
+let idleTimer=null;
+
+let timerId=null;
+let timerSeconds=300;
+
+let recognition=null;
+
+
+/* =========================
+   OUTILS
+========================= */
+
+function $(id){
+ return document.getElementById(id);
+}
+
+function escapeHTML(text){
+
+ return String(text).replace(
+  /[&<>"']/g,
+  char=>({
+   "&":"&amp;",
+   "<":"&lt;",
+   ">":"&gt;",
+   '"':"&quot;",
+   "'":"&#039;"
+  })[char]
+ );
+
+}
+
+function toast(message){
+
+ const box=$("toast");
+
+ box.textContent=message;
+ box.style.display="block";
+
+ clearTimeout(window.toastTimer);
+
+ window.toastTimer=setTimeout(()=>{
+  box.style.display="none";
+ },2200);
+
+}
+
+
+/* =========================
+   THEME
+========================= */
+
+function toggleTheme(){
+
+ document.body.classList.toggle("dark");
+
+ localStorage.setItem(
+  STORAGE.theme,
+  document.body.classList.contains("dark")
+   ? "dark"
+   : "light"
+ );
+
+}
+
+if(
+ localStorage.getItem(STORAGE.theme)==="dark"
+){
+ document.body.classList.add("dark");
+}
+
+
+/* =========================
+   FENETRES
+========================= */
+
+function openSheet(id,mode){
+
+ $(id).classList.add("open");
+
+ if(id==="organizer"){
+
+  $("note").value=
+   localStorage.getItem(STORAGE.note)||"";
+
+  renderTasks();
+  renderScheduled();
+
+  if(mode==="draw"){
+   organizerMode("draw");
+  }
+
+ }
+
+}
+
+function closeSheet(id){
+
+ $(id).classList.remove("open");
+
+}
+
+function backgroundClose(event,element){
+
+ if(event.target===element){
+  closeSheet(element.id);
+ }
+
+}
+
+
+/* =========================
+   ORGANISATEUR
+========================= */
+
+function organizerMode(mode){
+
+ $("textMode").style.display=
+  mode==="text"?"block":"none";
+
+ $("drawMode").style.display=
+  mode==="draw"?"block":"none";
+
+ $("listMode").style.display=
+  mode==="list"?"block":"none";
+
+
+ $("tabText").classList.remove("on");
+ $("tabDraw").classList.remove("on");
+ $("tabList").classList.remove("on");
+
+
+ if(mode==="text")
+  $("tabText").classList.add("on");
+
+ if(mode==="draw")
+  $("tabDraw").classList.add("on");
+
+ if(mode==="list")
+  $("tabList").classList.add("on");
+
+
+ if(mode==="draw"){
+  setTimeout(sizeCanvas,50);
+ }
+
+}
+
+
+/* =========================
+   NOTES
+========================= */
+
+function saveNote(){
+
+ localStorage.setItem(
+  STORAGE.note,
+  $("note").value
+ );
+
+ toast("Note sauvegardée ✓");
+
+}
+
+function clearNote(){
+
+ if(confirm("Effacer la note ?")){
+
+  $("note").value="";
+
+  localStorage.removeItem(
+   STORAGE.note
+  );
+
+  toast("Note effacée");
+
+ }
+
+}
+
+
+/* =========================
+   TACHES
+========================= */
+
+function addTask(){
+
+ const text=$("taskInput")
+  .value
+  .trim();
+
+ if(!text)return;
+
+ tasks.push({
+  id:Date.now(),
+  text,
+  done:false
+ });
+
+ save(STORAGE.tasks,tasks);
+
+ $("taskInput").value="";
+
+ renderTasks();
+ renderNext();
+
+ toast("Tâche ajoutée ✓");
+
+}
+
+function renderTasks(){
+
+ const container=$("tasks");
+
+ container.innerHTML="";
+
+ if(!tasks.length){
+
+  container.innerHTML=
+   '<div class="small">Aucune tâche.</div>';
+
+  return;
+
+ }
+
+ tasks.forEach(task=>{
+
+  const item=document.createElement("div");
+
+  item.className=
+   "item "+(task.done?"done":"");
+
+  item.innerHTML=`
+
+   <button
+    class="check"
+    onclick="toggleTask(${task.id})">
+    ${task.done?"✓":""}
+   </button>
+
+   <div class="itemtext">
+    ${escapeHTML(task.text)}
+   </div>
+
+   <button
+    class="trash"
+    onclick="deleteTask(${task.id})">
+    🗑️
+   </button>
+
+  `;
+
+  container.appendChild(item);
+
+ });
+
+}
+
+function toggleTask(id){
+
+ tasks=tasks.map(task=>
+  task.id===id
+   ? {...task,done:!task.done}
+   : task
+ );
+
+ save(STORAGE.tasks,tasks);
+
+ renderTasks();
+ renderNext();
+
+}
+
+function deleteTask(id){
+
+ tasks=tasks.filter(
+  task=>task.id!==id
+ );
+
+ save(STORAGE.tasks,tasks);
+
+ renderTasks();
+ renderNext();
+
+}
+
+
+/* =========================
+   RAPPELS / EVENEMENTS
+========================= */
+
+function addSchedule(type){
+
+ const title=$("scheduleTitle")
+  .value
+  .trim();
+
+ const date=$("scheduleDate").value;
+ const time=$("scheduleTime").value;
+
+ if(!title||!date||!time){
+
+  toast("Remplis le titre, la date et l'heure");
+  return;
+
+ }
+
+ const timestamp=
+  new Date(date+"T"+time).getTime();
+
+ if(timestamp<=Date.now()){
+
+  toast("Choisis une date future");
+  return;
+
+ }
+
+
+ if(type==="reminder"){
+
+  reminders.push({
+   id:Date.now(),
+   text:title,
+   time:timestamp,
+   done:false
+  });
+
+  save(STORAGE.reminders,reminders);
+
+ }
+
+
+ if(type==="event"){
+
+  events.push({
+   id:Date.now(),
+   text:title,
+   date,
+   time
+  });
+
+  save(STORAGE.events,events);
+
+ }
+
+
+ if(type==="task"){
+
+  tasks.push({
+   id:Date.now(),
+   text:title+" • "+date+" "+time,
+   done:false
+  });
+
+  save(STORAGE.tasks,tasks);
+
+  renderTasks();
+
+ }
+
+
+ $("scheduleTitle").value="";
+ $("scheduleDate").value="";
+ $("scheduleTime").value="";
+
+ renderScheduled();
+ renderNext();
+
+ toast("Ajout effectué ✓");
+
+}
+
+
+function renderScheduled(){
+
+ const container=$("scheduled");
+
+ let list=[];
+
+
+ reminders
+  .filter(x=>!x.done&&x.time>Date.now())
+  .forEach(x=>{
+   list.push({
+    id:x.id,
+    type:"reminder",
+    time:x.time,
+    icon:"🔔",
+    text:x.text
+   });
+  });
+
+
+ events.forEach(x=>{
+
+  const time=
+   new Date(
+    x.date+"T"+x.time
+   ).getTime();
+
+  if(time>Date.now()){
+
+   list.push({
+    id:x.id,
+    type:"event",
+    time,
+    icon:"📅",
+    text:x.text
+   });
+
+  }
+
+ });
+
+
+ list.sort(
+  (a,b)=>a.time-b.time
+ );
+
+
+ container.innerHTML="";
+
+
+ if(!list.length){
+
+  container.innerHTML=
+   '<div class="small" style="margin-top:8px">Rien de programmé.</div>';
+
+  return;
+
+ }
+
+
+ list.forEach(item=>{
+
+  const row=document.createElement("div");
+
+  row.className="item";
+
+  row.innerHTML=`
+
+   <div>${item.icon}</div>
+
+   <div class="itemtext">
+
+    <strong>
+     ${new Date(item.time)
+      .toLocaleString("fr-CA",{
+       weekday:"short",
+       day:"2-digit",
+       month:"2-digit",
+       hour:"2-digit",
+       minute:"2-digit"
+      })}
+    </strong>
+
+    <br>
+
+    ${escapeHTML(item.text)}
+
+   </div>
+
+   <button
+    class="trash"
+    onclick="${
+     item.type==="reminder"
+      ? `deleteReminder(${item.id})`
+      : `deleteEvent(${item.id})`
+    }">
+
+    🗑️
+
+   </button>
+
+  `;
+
+  container.appendChild(row);
+
+ });
+
+}
+
+
+function deleteReminder(id){
+
+ reminders=reminders.filter(
+  x=>x.id!==id
+ );
+
+ save(STORAGE.reminders,reminders);
+
+ renderScheduled();
+ renderNext();
+
+}
+
+
+function deleteEvent(id){
+
+ events=events.filter(
+  x=>x.id!==id
+ );
+
+ save(STORAGE.events,events);
+
+ renderScheduled();
+ renderNext();
+
+}
+
+
+/* =========================
+   PROCHAINE INFORMATION
+========================= */
+
+function renderNext(){
+
+ let list=[];
+
+
+ reminders
+  .filter(x=>!x.done&&x.time>Date.now())
+  .forEach(x=>{
+   list.push({
+    time:x.time,
+    text:"🔔 "+x.text
+   });
+  });
+
+
+ events.forEach(x=>{
+
+  const time=
+   new Date(
+    x.date+"T"+x.time
+   ).getTime();
+
+  if(time>Date.now()){
+
+   list.push({
+    time,
+    text:"📅 "+x.text
+   });
+
+  }
+
+ });
+
+
+ const nextTask=
+  tasks.find(x=>!x.done);
+
+ if(nextTask){
+
+  list.push({
+   time:Infinity,
+   text:"☑️ "+nextTask.text
+  });
+
+ }
+
+
+ list.sort(
+  (a,b)=>a.time-b.time
+ );
+
+
+ let text="Tout est calme ✓";
+
+ if(list.length){
+
+  const next=list[0];
+
+  text=
+   next.time===Infinity
+    ? next.text
+    : next.text+
+      " • "+
+      new Date(next.time)
+       .toLocaleTimeString(
+        "fr-CA",
+        {
+         hour:"2-digit",
+         minute:"2-digit"
+        }
+       );
+
+ }
+
+
+ $("next").textContent=text;
+ $("wallNext").textContent=text;
+
+}
+
+
+/* =========================
+   VERIFICATION RAPPELS
+========================= */
+
+function checkReminders(){
+
+ let changed=false;
+
+ reminders.forEach(reminder=>{
+
+  if(
+   !reminder.done &&
+   reminder.time<=Date.now()
+  ){
+
+   reminder.done=true;
+
+   changed=true;
+
+   showAlert(
+    reminder.text
+   );
+
+  }
+
+ });
+
+
+ if(changed){
+
+  save(
+   STORAGE.reminders,
+   reminders
+  );
+
+  renderScheduled();
+  renderNext();
+
+ }
+
+}
+
+
+/* =========================
+   ALERTES
+========================= */
+
+function showAlert(text){
+
+ $("alertText").textContent=text;
+ $("alert").style.display="flex";
+
+ if(navigator.vibrate){
+
+  navigator.vibrate([
+   250,120,250,120,600
+  ]);
+
+ }
+
+
+ if(
+  "Notification" in window &&
+  Notification.permission==="granted"
+ ){
+
+  try{
+
+   new Notification(
+    "Wall Dashboard",
+    {body:text}
+   );
+
+  }catch(e){}
+
+ }
+
+}
+
+function closeAlert(){
+
+ $("alert").style.display="none";
+
+}
+
+function testAlert(){
+
+ showAlert(
+  "Alerte de test V7 — tout fonctionne ✓"
+ );
+
+}
+
+
+/* =========================
+   METEO
+========================= */
+
+function weatherIcon(code){
+
+ const map={
+
+  0:["☀️","Ciel dégagé"],
+  1:["🌤️","Plutôt dégagé"],
+  2:["⛅","Partiellement nuageux"],
+  3:["☁️","Nuageux"],
+  45:["🌫️","Brouillard"],
+  51:["🌦️","Bruine"],
+  53:["🌦️","Bruine"],
+  61:["🌦️","Pluie légère"],
+  63:["🌧️","Pluie"],
+  65:["🌧️","Forte pluie"],
+  71:["🌨️","Neige"],
+  73:["🌨️","Neige"],
+  75:["❄️","Forte neige"],
+  80:["🌦️","Averses"],
+  81:["🌧️","Averses"],
+  82:["⛈️","Fortes averses"],
+  95:["⛈️","Orage"],
+  96:["⛈️","Orage"],
+  99:["⛈️","Orage"]
+
+ };
+
+ return map[code]||["🌡️","Conditions inconnues"];
+
+}
+
+
+async function loadWeather(){
+
+ if(locationData.lat==null)return;
+
+ try{
+
+  const response=
+   await fetch(
+    "https://api.open-meteo.com/v1/forecast"+
+    "?latitude="+locationData.lat+
+    "&longitude="+locationData.lon+
+    "&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m"+
+    "&daily=weather_code,temperature_2m_max,temperature_2m_min"+
+    "&timezone=auto"+
+    "&forecast_days=5"
+   );
+
+  weatherData=
+   await response.json();
+
+  const current=
+   weatherData.current;
+
+  const info=
+   weatherIcon(
+    current.weather_code
+   );
+
+
+  $("wi").textContent=info[0];
+  $("wt").textContent=
+   Math.round(current.temperature_2m)+"°C";
+  $("wd").textContent=info[1];
+
+
+  $("wallIcon").textContent=info[0];
+  $("wallTemp").textContent=
+   Math.round(current.temperature_2m)+"°C";
+  $("wallDesc").textContent=info[1];
+
+
+  $("weatherDetails").textContent=
+   "Humidité "+
+   current.relative_humidity_2m+
+   "% • Vent "+
+   Math.round(
+    current.wind_speed_10m
+   )+
+   " km/h";
+
+
+  $("forecast").innerHTML=
+   weatherData.daily.time
+    .map((date,index)=>{
+
+     const info=
+      weatherIcon(
+       weatherData.daily.weather_code[index]
+      );
+
+     return `
+
+      <div class="day">
+
+       <strong>
+        ${
+         index
+          ? new Date(
+             date+"T12:00:00"
+            ).toLocaleDateString(
+             "fr-CA",
+             {weekday:"short"}
+            )
+          : "Aujourd’hui"
+        }
+       </strong>
+
+       <i>${info[0]}</i>
+
+       ${Math.round(
+        weatherData.daily.temperature_2m_max[index]
+       )}° /
+
+       ${Math.round(
+        weatherData.daily.temperature_2m_min[index]
+       )}°
+
+      </div>
+
+     `;
+
+    })
+    .join("");
+
+ }catch(error){
+
+  $("wd").textContent=
+   "Météo indisponible";
+
+  $("weatherDetails").textContent=
+   "Connexion Internet requise.";
+
+ }
+
+}
+
+
+/* =========================
+   LOCALISATION
+========================= */
+
+if(navigator.geolocation){
+
+ navigator.geolocation.getCurrentPosition(
+
+  async position=>{
+
+   locationData.lat=
+    position.coords.latitude;
+
+   locationData.lon=
+    position.coords.longitude;
+
+
+   try{
+
+    const response=
+     await fetch(
+      "https://nominatim.openstreetmap.org/reverse"+
+      "?format=jsonv2"+
+      "&lat="+locationData.lat+
+      "&lon="+locationData.lon+
+      "&zoom=10"+
+      "&addressdetails=1"
+     );
+
+    const data=
+     await response.json();
+
+    const address=
+     data.address||{};
+
+    locationData.city=
+     address.city||
+     address.town||
+     address.village||
+     address.municipality||
+     address.county||
+     address.state||
+     "Lieu inconnu";
+
+
+   }catch(e){
+
+    locationData.city=
+     "Position trouvée";
+
+   }
+
+
+   $("loc").textContent=
+    "📍 "+locationData.city;
+
+   loadWeather();
+
+  },
+
+  ()=>{
+   $("loc").textContent=
+    "📍 Autorisation requise";
+  },
+
+  {
+   maximumAge:1800000,
+   timeout:15000
+  }
+
+ );
+
+}
+
+
+/* =========================
+   HORLOGE
+========================= */
+
+function updateClock(){
+
+ const now=new Date();
+
+ const time=
+  now.toLocaleTimeString(
+   "fr-CA",
+   {
+    hour:"2-digit",
+    minute:"2-digit"
+   }
+  );
+
+ const date=
+  now.toLocaleDateString(
+   "fr-CA",
+   {
+    weekday:"long",
+    day:"numeric",
+    month:"long",
+    year:"numeric"
+   }
+  );
+
+
+ $("clock").textContent=time;
+ $("date").textContent=date;
+
+ $("wallClock").textContent=time;
+ $("wallDate").textContent=date;
+
+ checkReminders();
+ renderNext();
+
+}
+
+
+setInterval(
+ updateClock,
+ 1000
+);
+
+updateClock();
+
+
+/* =========================
+   VEILLE
+   IMPORTANT :
+   NE FORCE PAS LE PLEIN ECRAN
+========================= */
+
+function enterStandby(){
+
+ standby=true;
+
+ clearTimeout(idleTimer);
+
+ $("wall").classList.add("on");
+
+ renderNext();
+
+}
+
+function leaveStandby(){
+
+ standby=false;
+
+ clearTimeout(idleTimer);
+
+ $("wall").classList.remove("on");
+
+}
+
+function resetIdleTimer(){
+
+ if(standby)return;
+
+ clearTimeout(idleTimer);
+
+ /*
+  Après 5 minutes sans interaction,
+  on affiche seulement la veille.
+  
+  IMPORTANT :
+  aucun appel à requestFullscreen()
+  ici.
+ */
+
+ idleTimer=setTimeout(
+  enterStandby,
+  5*60*1000
+ );
+
+}
+
+
+[
+ "pointerdown",
+ "touchstart",
+ "keydown"
+].forEach(event=>{
+
+ document.addEventListener(
+  event,
+  resetIdleTimer,
+  {passive:true}
+ );
+
+});
+
+resetIdleTimer();
+
+
+/* =========================
+   PLEIN ECRAN
+   SEULEMENT SUR ACTION
+========================= */
+
+async function requestFullscreen(){
+
+ try{
+
+  if(document.fullscreenElement){
+   return true;
+  }
+
+  if(
+   !document.documentElement.requestFullscreen
+  ){
+   throw new Error(
+    "fullscreen unsupported"
+   );
+  }
+
+  await document.documentElement.requestFullscreen();
+
+  return true;
+
+ }catch(error){
+
+  toast(
+   "Le navigateur bloque le plein écran"
+  );
+
+  return false;
+
+ }
+
+}
+
+
+async function toggleFullscreen(){
+
+ try{
+
+  if(document.fullscreenElement){
+
+   await document.exitFullscreen();
+
+  }else{
+
+   await requestFullscreen();
+
+  }
+
+ }catch(error){
+
+  toast(
+   "Plein écran indisponible"
+  );
+
+ }
+
+}
+
+
+/* =========================
+   VOIX
+========================= */
+
+function startVoice(){
+
+ const SpeechRecognition=
+  window.SpeechRecognition||
+  window.webkitSpeechRecognition;
+
+
+ if(!SpeechRecognition){
+
+  toast(
+   "Reconnaissance vocale non disponible"
+  );
+
+  return;
+
+ }
+
+
+ recognition=
+  new SpeechRecognition();
+
+
+ recognition.lang="fr-CA";
+
+ recognition.interimResults=false;
+
+ recognition.maxAlternatives=1;
+
+
+ $("voiceBtn").classList.add(
+  "listening"
+ );
+
+ $("voiceBtn").textContent="🔴";
+
+ toast("Écoute...");
+
+
+ recognition.onresult=event=>{
+
+  const text=
+   event.results[0][0]
+    .transcript
+    .trim();
+
+
+  $("voiceBtn").classList.remove(
+   "listening"
+  );
+
+  $("voiceBtn").textContent="🎙️";
+
+
+  executeVoiceCommand(text);
+
+ };
+
+
+ recognition.onerror=()=>{
+
+  $("voiceBtn").classList.remove(
+   "listening"
+  );
+
+  $("voiceBtn").textContent="🎙️";
+
+  toast(
+   "Commande vocale non reconnue"
+  );
+
+ };
+
+
+ recognition.onend=()=>{
+
+  $("voiceBtn").classList.remove(
+   "listening"
+  );
+
+  $("voiceBtn").textContent="🎙️";
+
+ };
+
+
+ try{
+
+  recognition.start();
+
+ }catch(error){}
+
+}
+
+
+/* =========================
+   COMPREHENSION VOCALE
+========================= */
+
+function executeVoiceCommand(text){
+
+ const command=
+  text
+   .toLowerCase()
+   .replace(/[.,!?]/g," ")
+   .replace(/\s+/g," ")
+   .trim();
+
+
+ /* METEO */
+
+ if(
+  /\b(météo|temps)\b/
+   .test(command)
+ ){
+
+  openSheet("weather");
+
+  toast(
+   "Météo ouverte ✓"
+  );
+
+  return;
+
+ }
+
+
+ /* NOTE */
+
+ if(
+  /\b(note|écris|écrire|mémo)\b/
+   .test(command)
+ ){
+
+  let content=
+   command
+    .replace(
+     /^(.*?)(note|écris|écrire|mémo)\s*/,
+     ""
+    )
+    .trim();
+
+
+  if(!content){
+   content=text;
+  }
+
+
+  localStorage.setItem(
+   STORAGE.note,
+   content
+  );
+
+
+  toast(
+   "Note enregistrée ✓"
+  );
+
+  return;
+
+ }
+
+
+ /* HEURE */
+
+ if(
+  /\b(quelle heure|l'heure|heure)\b/
+   .test(command)
+ ){
+
+  toast(
+   "Il est "+
+   new Date()
+    .toLocaleTimeString(
+     "fr-CA",
+     {
+      hour:"2-digit",
+      minute:"2-digit"
+     }
+    )
+  );
+
+  return;
+
+ }
+
+
+ /* RAPPEL */
+
+ const hourMatch=
+  command.match(
+   /\b([01]?\d|2[0-3])\s*(?:h|heure|heures)(?:\s*(\d{1,2}))?\b/
+  );
+
+
+ if(
+  /\b(rappelle|rappel)\b/
+   .test(command)
+  &&
+  hourMatch
+ ){
+
+  const date=
+   new Date();
+
+
+  if(
+   /\b(demain)\b/
+    .test(command)
+  ){
+
+   date.setDate(
+    date.getDate()+1
+   );
+
+  }
+
+
+  const time=
+   String(
+    hourMatch[1]
+   ).padStart(2,"0")
+   +
+   ":"+
+   String(
+    hourMatch[2]||"00"
+   ).padStart(2,"0");
+
+
+  const timestamp=
+   new Date(
+    date.toISOString().slice(0,10)
+    +"T"+time
+   ).getTime();
+
+
+  reminders.push({
+
+   id:Date.now(),
+
+   text:text,
+
+   time:timestamp,
+
+   done:false
+
+  });
+
+
+  save(
+   STORAGE.reminders,
+   reminders
+  );
+
+
+  renderScheduled();
+  renderNext();
+
+
+  toast(
+   "Rappel créé ✓"
+  );
+
+  return;
+
+ }
+
+
+ /* TACHE */
+
+ if(
+  /\b(tâche|tache|ajoute)\b/
+   .test(command)
+ ){
+
+  let content=
+   command
+    .replace(
+     /\b(ajoute|une|la|tâche|tache)\b/g,
+     ""
+    )
+    .trim();
+
+
+  if(!content){
+   content=text;
+  }
+
+
+  tasks.push({
+
+   id:Date.now(),
+
+   text:content,
+
+   done:false
+
+  });
+
+
+  save(
+   STORAGE.tasks,
+   tasks
+  );
+
+
+  renderTasks();
+  renderNext();
+
+
+  toast(
+   "Tâche créée ✓"
+  );
+
+  return;
+
+ }
+
+
+ /* SI COMMANDE INCONNUE */
+
+ toast(
+  "J'ai entendu : "+text
+ );
+
+}
+
+
+/* =========================
+   NOTIFICATIONS
+========================= */
+
+async function requestNotifications(){
+
+ if(
+  !("Notification" in window)
+ ){
+
+  toast(
+   "Notifications indisponibles"
+  );
+
+  return;
+
+ }
+
+
+ const permission=
+  await Notification.requestPermission();
+
+
+ toast(
+  permission==="granted"
+   ? "Notifications activées ✓"
+   : "Notifications non autorisées"
+ );
+
+}
+
+
+/* =========================
+   MINUTEUR
+========================= */
+
+function openTimer(){
+
+ $("timer").classList.add(
+  "open"
+ );
+
+ resetTimer();
+
+}
+
+function startTimer(){
+
+ if(timerId)return;
+
+ timerId=
+  setInterval(()=>{
+
+   timerSeconds--;
+
+   updateTimerDisplay();
+
+
+   if(timerSeconds<=0){
+
+    pauseTimer();
+
+    showAlert(
+     "Le minuteur est terminé."
+    );
+
+   }
+
+  },1000);
+
+}
+
+function pauseTimer(){
+
+ clearInterval(timerId);
+
+ timerId=null;
+
+}
+
+function resetTimer(){
+
+ pauseTimer();
+
+ timerSeconds=
+  Math.max(
+   1,
+   parseInt(
+    $("timerInput").value||300
+   )
+  );
+
+ updateTimerDisplay();
+
+}
+
+function updateTimerDisplay(){
+
+ $("timerDisplay").textContent=
+  String(
+   Math.floor(
+    timerSeconds/60
+   )
+  ).padStart(2,"0")
+  +
+  ":"+
+  String(
+   timerSeconds%60
+  ).padStart(2,"0");
+
+}
+
+
+/* =========================
+   DIAGNOSTIC
+========================= */
+
+function openDiagnostic(){
+
+ const tests=[
+
+  [
+   "Stockage local",
+   !!window.localStorage
+  ],
+
+  [
+   "Géolocalisation",
+   !!navigator.geolocation
+  ],
+
+  [
+   "Connexion réseau",
+   !!window.fetch
+  ],
+
+  [
+   "Écran tactile",
+   "ontouchstart" in window
+  ],
+
+  [
+   "Plein écran",
+   !!document.documentElement.requestFullscreen
+  ],
+
+  [
+   "Reconnaissance vocale",
+   !!(
+    window.SpeechRecognition||
+    window.webkitSpeechRecognition
+   )
+  ],
+
+  [
+   "Notifications",
+   "Notification" in window
+  ]
+
+ ];
+
+
+ $("diagnosticBody").innerHTML=
+  tests.map(test=>`
+
+   <div class="item">
+
+    <div class="itemtext">
+     ${test[0]}
+    </div>
+
+    <strong>
+     ${test[1]?"OK ✓":"LIMITÉ"}
+    </strong>
+
+   </div>
+
+  `).join("");
+
+
+ $("diagnostic").classList.add(
+  "open"
+ );
+
+}
+
+
+/* =========================
+   DESSIN TACTILE
+========================= */
+
+const canvas=$("draw");
+const ctx=canvas.getContext("2d");
+
+let drawing=false;
+let penColor="#000";
+let erasing=false;
+
+
+function sizeCanvas(){
+
+ const rect=
+  canvas.getBoundingClientRect();
+
+ const ratio=
+  window.devicePixelRatio||1;
+
+
+ canvas.width=
+  rect.width*ratio;
+
+ canvas.height=
+  rect.height*ratio;
+
+
+ ctx.setTransform(
+  ratio,
+  0,
+  0,
+  ratio,
+  0,
+  0
+ );
+
+
+ ctx.lineCap="round";
+ ctx.lineJoin="round";
+
+
+ const saved=
+  localStorage.getItem(
+   STORAGE.drawing
+  );
+
+
+ if(saved){
+
+  const image=
+   new Image();
+
+
+  image.onload=()=>{
+
+   ctx.drawImage(
+    image,
+    0,
+    0,
+    rect.width,
+    rect.height
+   );
+
+  };
+
+
+  image.src=saved;
+
+ }
+
+}
+
+
+function getCanvasPoint(event){
+
+ const rect=
+  canvas.getBoundingClientRect();
+
+ return {
+
+  x:event.clientX-rect.left,
+
+  y:event.clientY-rect.top
+
+ };
+
+}
+
+
+canvas.addEventListener(
+ "pointerdown",
+ event=>{
+
+  drawing=true;
+
+  const point=
+   getCanvasPoint(event);
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+   point.x,
+   point.y
+  );
+
+ }
+);
+
+
+canvas.addEventListener(
+ "pointermove",
+ event=>{
+
+  if(!drawing)return;
+
+  const point=
+   getCanvasPoint(event);
+
+
+  ctx.globalCompositeOperation=
+   erasing
+    ?"destination-out"
+    :"source-over";
+
+
+  ctx.strokeStyle=penColor;
+
+  ctx.lineWidth=
+   erasing
+    ?24
+    :4;
+
+
+  ctx.lineTo(
+   point.x,
+   point.y
+  );
+
+  ctx.stroke();
+
+ }
+);
+
+
+[
+ "pointerup",
+ "pointercancel",
+ "pointerleave"
+].forEach(event=>{
+
+ canvas.addEventListener(
+  event,
+  ()=>{
+
+   if(drawing){
+
+    drawing=false;
+
+    saveDrawing();
+
+   }
+
+  }
+ );
+
+});
+
+
+function setPen(color){
+
+ penColor=color;
+
+ erasing=false;
+
+}
+
+function setEraser(){
+
+ erasing=true;
+
+}
+
+function clearDrawing(){
+
+ if(
+  confirm(
+   "Effacer le tableau ?"
+  )
+ ){
+
+  const rect=
+   canvas.getBoundingClientRect();
+
+  ctx.clearRect(
+   0,
+   0,
+   rect.width,
+   rect.height
+  );
+
+  localStorage.removeItem(
+   STORAGE.drawing
+  );
+
+ }
+
+}
+
+function saveDrawing(){
+
+ try{
+
+  localStorage.setItem(
+   STORAGE.drawing,
+   canvas.toDataURL()
+  );
+
+ }catch(e){}
+
+}
+
+
+/* =========================
+   RESIZE
+========================= */
+
+window.addEventListener(
+ "resize",
+ ()=>{
+
+  if(
+   $("drawMode").style.display==="block"
+  ){
+
+   sizeCanvas();
+
+  }
+
+ }
+);
+
+
+/* =========================
+   ECHAP
+========================= */
+
+document.addEventListener(
+ "keydown",
+ event=>{
+
+  if(event.key==="Escape"){
+
+   if(standby){
+
+    leaveStandby();
+
+   }
+
+   document
+    .querySelectorAll(
+     ".sheet.open"
+    )
+    .forEach(
+     sheet=>
+      sheet.classList.remove("open")
+    );
+
+   closeAlert();
+
+  }
+
+ }
+);
+
+
+/* =========================
+   INITIALISATION
+========================= */
+
+renderTasks();
+renderScheduled();
+renderNext();
+
 </script>
+
 </body>
 </html>

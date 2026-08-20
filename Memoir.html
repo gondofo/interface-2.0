@@ -908,6 +908,13 @@ MEMOIRE
             🧹 Oubli contrôlé des relations faibles
         </button>
 
+        <button
+            class="danger btn-block"
+            style="margin-top:8px"
+            onclick="purgerMotsBannis()">
+            🧽 Purger les résidus "=" / "portail"
+        </button>
+
     </div>
 
 
@@ -1223,9 +1230,44 @@ GENERATION
         </select>
 
 
+        <div class="small" style="margin-top:12px">
+            🎯 Ciblage éclair (optionnel)
+        </div>
+
+        <input
+            id="cibleRecherche"
+            type="text"
+            style="width:100%"
+            placeholder="Mot-clé ou question pour orienter cette génération">
+
+        <div class="hint">
+            Cherche un article Wikipédia sur ce sujet précis,
+            l'apprend à la volée, puis génère avec — sans changer
+            le comportement standard du moteur pour les cycles
+            suivants. L'article reste appris dans la mémoire
+            (taggé "cible_ponctuelle"), comme n'importe quel autre
+            apprentissage.
+        </div>
+
+        <button
+            id="btnCiblage"
+            class="secondary btn-block"
+            style="margin-top:6px"
+            onclick="genererAvecCiblage()">
+            🎯 Générer avec ce sujet
+        </button>
+
+        <div
+            id="statutCiblage"
+            class="hint"
+            style="margin-top:4px">
+        </div>
+
+
         <button
             id="btnGenerer"
             class="success btn-block"
+            style="margin-top:10px"
             onclick="genererPhrase()"
             disabled>
 
@@ -1706,7 +1748,9 @@ function creerMemoire(){
 
                 local:0,
 
-                import:0
+                import:0,
+
+                cible_ponctuelle:0
 
             }
 
@@ -1992,7 +2036,8 @@ function normaliserMemoire(data){
         {
             wikipedia:0,
             local:0,
-            import:0
+            import:0,
+            cible_ponctuelle:0
         },
         base.statistiques.sources || {}
     );
@@ -6423,6 +6468,48 @@ function scoreAttention(sequence,candidat){
 }
 
 
+/*
+ Filtre définitif : certains tokens ("=", "portail"...) sont
+ déjà installés dans des mémoires existantes depuis avant que
+ le filtrage à l'apprentissage n'existe. Le nettoyage à l'entrée
+ (nettoyerExtraitWikipedia) empêche d'en apprendre de nouveaux,
+ mais ne purge rien de ce qui est déjà là — observé en test sur
+ une mémoire de 1,8M tokens : "portail" et "=" continuaient
+ d'être choisis en génération malgré tout. Ce filtre les exclut
+ purement et simplement de la sélection, quel que soit leur
+ score ou leur ancienneté dans la mémoire. Un nettoyage
+ rétroactif complémentaire (purgerMotsBannis) existe plus bas
+ pour les retirer aussi de la mémoire elle-même.
+*/
+
+const MOTS_BANNIS_DEFINITIVEMENT = [
+    "portail","portails"
+];
+
+function motEstBanni(mot){
+
+    if(!mot){
+        return false;
+    }
+
+    if(mot.includes("=")){
+        return true;
+    }
+
+    if(
+        MOTS_BANNIS_DEFINITIVEMENT
+            .includes(mot.toLowerCase())
+    ){
+
+        return true;
+
+    }
+
+    return false;
+
+}
+
+
 function construireCandidats(
     options,
     precedent,
@@ -6441,7 +6528,11 @@ function construireCandidats(
 
     }
 
-    return options.map(
+    return options
+        .filter(
+            ([mot])=>!motEstBanni(mot)
+        )
+        .map(
         ([mot,frequence])=>{
 
             const linguistique =
@@ -6599,6 +6690,9 @@ function choisirDebut(){
     const options =
         Object.entries(
             memoire.debuts
+        )
+        .filter(
+            ([mot])=>!motEstBanni(mot)
         );
 
     if(options.length){
@@ -6614,7 +6708,9 @@ function choisirDebut(){
             memoire.vocabulaire
         )
         .filter(
-            m=>!isPonctuation(m)
+            m=>
+                !isPonctuation(m) &&
+                !motEstBanni(m)
         );
 
     if(!mots.length){
@@ -7320,8 +7416,151 @@ function genererPhrase(){
 
 
 /* =========================================================
-BATCH RUNNER
+CIBLAGE ECLAIR
 ========================================================= */
+
+/*
+ Recherche Wikipédia orientée sur un sujet précis, apprentissage
+ immédiat, puis génération — au lieu du cycle automatique
+ aléatoire/curieux habituel. Tourne entièrement sur le thread
+ principal en async/await (voir la discussion sur les Web
+ Workers plus haut : le vrai goulot d'étranglement ici est la
+ latence réseau, déjà non-bloquante nativement en JS ; un
+ Worker ajouterait de la complexité sans gain réel, et cloner
+ `memoire` — 1.8M tokens dans les tests réels — à travers
+ postMessage serait probablement plus lent que le calcul
+ lui-même).
+
+ "Reset" : une fois le texte généré, rien ne persiste comme
+ filtre de recherche pour les cycles automatiques suivants —
+ le prochain cycle d'apprentissage automatique repart sur son
+ comportement aléatoire/curieux normal. L'article lui-même
+ reste appris dans la mémoire (source "cible_ponctuelle"),
+ exactement comme n'importe quel autre apprentissage : il n'y a
+ pas de mécanisme d'apprentissage "temporaire, puis oublié"
+ dans cette architecture (ça demanderait une mémoire parallèle
+ dupliquée pour chaque fonction de score, un chantier bien plus
+ lourd que ce que "chirurgical" suggère).
+*/
+
+async function genererAvecCiblage(){
+
+    const requete =
+        document
+            .getElementById("cibleRecherche")
+            .value.trim();
+
+    const statut =
+        document.getElementById(
+            "statutCiblage"
+        );
+
+    if(!requete){
+
+        statut.textContent =
+            "❌ Aucun mot-clé saisi.";
+
+        return;
+
+    }
+
+    const btn =
+        document.getElementById("btnCiblage");
+
+    btn.disabled=true;
+
+    statut.textContent =
+        "🎯 Recherche Wikipédia sur \"" +
+        requete + "\"...";
+
+    const debut =
+        (
+            typeof performance!=="undefined" ?
+                performance.now() :
+                Date.now()
+        );
+
+    const titre =
+        await rechercherTitreLie(requete);
+
+    if(!titre){
+
+        statut.textContent =
+            "❌ Aucun article Wikipédia trouvé " +
+            "pour ce sujet.";
+
+        btn.disabled=false;
+
+        return;
+
+    }
+
+    statut.textContent =
+        "🎯 Article trouvé : \"" + titre +
+        "\". Récupération...";
+
+    const resultatWiki =
+        await recupererWikipedia(titre);
+
+    const dureeRecherche =
+        (
+            typeof performance!=="undefined" ?
+                performance.now() :
+                Date.now()
+        ) - debut;
+
+    if(!resultatWiki){
+
+        statut.textContent =
+            "❌ Impossible de récupérer " +
+            "l'article \"" + titre + "\".";
+
+        btn.disabled=false;
+
+        return;
+
+    }
+
+    statut.textContent =
+        "🎯 Apprentissage de \"" + titre +
+        "\" (" + Math.round(dureeRecherche) +
+        " ms de recherche)...";
+
+
+    /*
+     Laisse le navigateur peindre la mise à jour du statut
+     avant le calcul synchrone d'apprentissage.
+    */
+
+    await new Promise(r=>setTimeout(r,0));
+
+    const nbTokensAppris =
+        apprendreTexte(
+            resultatWiki.texte,
+            "cible_ponctuelle"
+        );
+
+    journaliser(
+        "🎯 Ciblage éclair : \"" + requete +
+        "\" → \"" + titre + "\" (+" +
+        formatNombre(nbTokensAppris) +
+        " tokens, " +
+        Math.round(dureeRecherche) +
+        " ms de recherche)"
+    );
+
+    genererPhrase();
+
+    afficherInfosMemoire();
+
+    statut.textContent =
+        "✅ Généré à partir de \"" + titre +
+        "\" (recherche : " +
+        Math.round(dureeRecherche) + " ms).";
+
+    btn.disabled=false;
+
+}
 
 /*
  Automatise ce que le protocole de test manuel faisait jusque
@@ -8370,6 +8609,181 @@ function creerHypothesesIndirectes(
 /* =========================================================
 OUBLI CONTROLE
 ========================================================= */
+
+/*
+ Nettoyage rétroactif : le filtre à l'apprentissage
+ (nettoyerExtraitWikipedia) et le filtre à la génération
+ (motEstBanni) empêchent les nouveaux cas, mais ne retirent
+ rien de ce qui est déjà installé dans une mémoire existante.
+ Cette fonction purge "=" et "portail"/"portails" de toutes les
+ structures où ils peuvent apparaître, à la fois comme clé
+ principale et comme entrée imbriquée (ex: une association
+ "lion" → "portail" doit perdre cette entrée sans perdre "lion"
+ lui-même).
+*/
+
+function purgerMotsBannis(){
+
+    if(
+        !confirm(
+            "Purger définitivement les résidus \"=\" et " +
+            "\"portail\" de la mémoire ? Cette action est " +
+            "irréversible (sauvegarde recommandée avant)."
+        )
+    ){
+
+        return;
+
+    }
+
+    let purges=0;
+
+    const structuresClePrincipale = [
+        memoire.vocabulaire,
+        memoire.transitions2,
+        memoire.debuts,
+        memoire.semantique.categories,
+        memoire.semantique.contextes,
+        memoire.semantique.concepts,
+        memoire.semantique.associations,
+        memoire.semantique.actions,
+        memoire.semantique.genre,
+        memoire.semantique.nombre,
+        memoire.semantique.capitalisation,
+        memoire.semantique.relations
+    ];
+
+    for(
+        const structure of structuresClePrincipale
+    ){
+
+        if(!structure){
+            continue;
+        }
+
+        for(
+            const cle of Object.keys(structure)
+        ){
+
+            if(motEstBanni(cle)){
+
+                delete structure[cle];
+
+                purges++;
+
+            }
+
+        }
+
+    }
+
+
+    /*
+     transitions3 : clés composées "motA|motB", à vérifier
+     des deux côtés du séparateur.
+    */
+
+    for(
+        const cle of
+        Object.keys(memoire.transitions3)
+    ){
+
+        const [a,b] =
+            cle.split("|");
+
+        if(
+            motEstBanni(a) ||
+            motEstBanni(b)
+        ){
+
+            delete memoire.transitions3[cle];
+
+            purges++;
+
+        }
+
+    }
+
+
+    /*
+     Valeurs imbriquées : une transition/association VERS un
+     mot banni doit disparaître sans supprimer le mot de départ.
+    */
+
+    const structuresValeursImbriquees = [
+        memoire.transitions2,
+        memoire.transitions3,
+        memoire.semantique.associations,
+        memoire.semantique.actions
+    ];
+
+    for(
+        const structure of structuresValeursImbriquees
+    ){
+
+        if(!structure){
+            continue;
+        }
+
+        for(
+            const cle in structure
+        ){
+
+            const sousObjet =
+                structure[cle];
+
+            if(
+                !sousObjet ||
+                typeof sousObjet!=="object"
+            ){
+
+                continue;
+
+            }
+
+            for(
+                const sousCle of
+                Object.keys(sousObjet)
+            ){
+
+                if(motEstBanni(sousCle)){
+
+                    delete sousObjet[sousCle];
+
+                    purges++;
+
+                }
+
+            }
+
+        }
+
+    }
+
+
+    /*
+     Hypothèses indirectes : peuvent référencer un mot banni
+     dans leurs champs a/b.
+    */
+
+    memoire.cognitive.hypotheses =
+        memoire.cognitive.hypotheses.filter(
+            h=>
+                !motEstBanni(h.a) &&
+                !motEstBanni(h.b)
+        );
+
+
+    journaliser(
+        "🧽 Purge terminée : " +
+        formatNombre(purges) +
+        " entrées supprimées."
+    );
+
+    afficherInfosMemoire();
+
+}
+
 
 async function oubliControle(){
 

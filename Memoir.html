@@ -984,6 +984,20 @@ APPRENTISSAGE
 
         </div>
 
+        <button
+            class="secondary btn-block"
+            style="margin-top:8px"
+            onclick="testerSourcesPersonnelles()">
+            🧪 Tester les sources personnelles
+        </button>
+
+        <div class="hint" style="margin-top:4px">
+            Expérimental : tente de récupérer journal/eco/culture
+            via une iframe cachée. Résultat visible dans le
+            journal ci-dessous. Rien n'est appris automatiquement
+            tant que ce n'est pas confirmé fonctionnel.
+        </div>
+
         <div class="file-info"
              style="margin-top:10px">
 
@@ -1447,8 +1461,6 @@ let nomMemoire = "memoire_ia_fr_v6.json";
 
 let sourceWikipediaDisponible = null;
 
-let sourceGrokipediaDisponible = null;
-
 
 /* =========================================================
 ADAPTATION CONTINUE LEGERE (BIAIS DE SESSION)
@@ -1534,8 +1546,6 @@ function creerMemoire(){
 
         version:VERSION_MEMOIRE,
 
-        langue:"fr",
-
         statistiques:{
 
             tokens:0,
@@ -1555,8 +1565,6 @@ function creerMemoire(){
             sources:{
 
                 wikipedia:0,
-
-                grokipedia:0,
 
                 local:0,
 
@@ -1594,7 +1602,9 @@ function creerMemoire(){
 
             nombre:{},
 
-            relations:{}
+            relations:{},
+
+            capitalisation:{}
 
         },
 
@@ -1834,18 +1844,15 @@ function normaliserMemoire(data){
     }
 
     /*
-     compatibilité : anciennes mémoires sans langue
-     (par défaut français) ni source "grokipedia".
+     compatibilité : d'anciennes mémoires de test (versions
+     bilingues abandonnées) peuvent contenir une clé "grokipedia"
+     dans sources — on la laisse de côté sans planter, mais on
+     ne la réintroduit plus.
     */
-
-    base.langue =
-        data.langue==="en" ?
-            "en" : "fr";
 
     base.statistiques.sources = Object.assign(
         {
             wikipedia:0,
-            grokipedia:0,
             local:0,
             import:0
         },
@@ -1925,6 +1932,9 @@ function normaliserMemoire(data){
 
     base.semantique.relations =
         base.semantique.relations || {};
+
+    base.semantique.capitalisation =
+        base.semantique.capitalisation || {};
 
 
     base.cognitive.recence =
@@ -2436,31 +2446,6 @@ function afficherEtatWikipedia(){
 }
 
 
-function afficherEtatGrokipedia(){
-
-    const el =
-        document.getElementById("grokEtat");
-
-    if(!el){
-        return;
-    }
-
-    if(sourceGrokipediaDisponible===null){
-
-        el.textContent =
-            "— inconnue —";
-
-        return;
-    }
-
-    el.textContent =
-        sourceGrokipediaDisponible
-            ? "🟢 disponible"
-            : "🔴 indisponible";
-
-}
-
-
 async function fetchTimeout(
     url,
     ms
@@ -2557,17 +2542,12 @@ function choisirMotCuriosite(){
 }
 
 
-async function rechercherTitreLie(motCle,langue){
-
-    const domaine =
-        langue==="en" ?
-            "en.wikipedia.org" :
-            "fr.wikipedia.org";
+async function rechercherTitreLie(motCle){
 
     try{
 
         const url =
-            "https://" + domaine + "/w/api.php" +
+            "https://fr.wikipedia.org/w/api.php" +
             "?action=query" +
             "&list=search" +
             "&srsearch=" +
@@ -2629,12 +2609,305 @@ async function rechercherTitreLie(motCle,langue){
 }
 
 
-async function recupererWikipedia(langue,titreForce){
+/*
+ Les extraits Wikipédia contiennent parfois des en-têtes de
+ section encore visibles ("== Liens externes ==", "=== Voir
+ aussi ===") quand la troncature à 4500 caractères tombe au
+ milieu d'une section de fin d'article. Sans nettoyage, ces
+ fragments de balisage sont appris comme du texte normal et
+ ressortent tels quels en génération (bug observé en test).
+ On coupe l'extrait AVANT la première section de ce type
+ plutôt que de la laisser polluer le texte appris.
+*/
 
-    const domaine =
-        langue==="en" ?
-            "en.wikipedia.org" :
-            "fr.wikipedia.org";
+const SECTIONS_A_EXCLURE = [
+    "Notes et références",
+    "Voir aussi",
+    "Liens externes",
+    "Bibliographie",
+    "Articles connexes",
+    "Annexes"
+];
+
+function nettoyerExtraitWikipedia(texte){
+
+    let indexCoupure =
+        texte.length;
+
+    for(
+        const section of SECTIONS_A_EXCLURE
+    ){
+
+        const motif =
+            new RegExp(
+                "={2,}\\s*" +
+                section +
+                "\\s*={2,}",
+                "i"
+            );
+
+        const trouve =
+            texte.match(motif);
+
+        if(
+            trouve &&
+            trouve.index<indexCoupure
+        ){
+
+            indexCoupure =
+                trouve.index;
+
+        }
+
+    }
+
+    let nettoye =
+        texte.slice(0,indexCoupure);
+
+    /*
+     Filet de sécurité supplémentaire : retire tout en-tête de
+     section résiduel qui n'aurait pas déclenché la coupure
+     ci-dessus (sections non listées, ou balisage isolé).
+    */
+
+    nettoye = nettoye.replace(
+        /={2,}[^=\n]{1,60}={2,}/g,
+        " "
+    );
+
+    return nettoye.trim();
+
+}
+
+
+/* =========================================================
+SOURCES PERSONNELLES (EXPERIMENTAL)
+========================================================= */
+
+/*
+ Ces pages (journal.html, eco.html, culture.html) ne sont pas
+ du contenu statique : elles chargent et fusionnent leurs flux
+ en JavaScript après le premier rendu ("Chargement et fusion
+ des sources..."). Un fetch() classique ne récupère que cette
+ coquille vide, avant que leur JS n'ait tourné — c'est
+ différent du problème CORS rencontré avec Grokipedia (ici,
+ même origine que Memoir.html, donc pas de blocage réseau),
+ mais le résultat est le même : rien d'exploitable.
+
+ Cette fonction charge la page dans une iframe cachée (donc
+ avec exécution réelle du JS de la page), attend un délai fixe
+ pour que leur contenu ait le temps de se peupler, puis lit le
+ texte final du DOM. C'est fragile par nature :
+   - le délai d'attente est une estimation, pas une garantie
+     que le chargement soit terminé
+   - si leur page change de structure, l'extraction peut
+     ramener du bruit d'interface plutôt que du contenu
+   - contrairement à recupererWikipedia(), ceci n'a jamais pu
+     être testé en conditions réelles depuis cet environnement
+     (pas de navigateur ici) — SEULEMENT la syntaxe a été
+     vérifiée.
+
+ Volontairement PAS branché dans l'apprentissage automatique
+ pour l'instant : disponible via testerSourcePersonnelle()
+ dans la console, ou le bouton de test dédié, en attendant une
+ confirmation que ça fonctionne réellement chez toi.
+*/
+
+async function recupererSourcePersonnelle(
+    url,
+    delaiMs
+){
+
+    return new Promise((resolve)=>{
+
+        try{
+
+            const iframe =
+                document.createElement("iframe");
+
+            iframe.style.display="none";
+            iframe.style.width="0";
+            iframe.style.height="0";
+
+            let resolu=false;
+
+            const nettoyer=()=>{
+
+                if(iframe.parentNode){
+
+                    iframe.parentNode
+                        .removeChild(iframe);
+
+                }
+
+            };
+
+            const terminer=(texte)=>{
+
+                if(resolu){
+                    return;
+                }
+
+                resolu=true;
+
+                nettoyer();
+
+                resolve(texte);
+
+            };
+
+            iframe.onload=()=>{
+
+                setTimeout(
+                    ()=>{
+
+                        try{
+
+                            const doc =
+                                iframe.contentDocument;
+
+                            if(!doc || !doc.body){
+
+                                terminer(null);
+
+                                return;
+
+                            }
+
+                            const texte =
+                                (
+                                    doc.body.innerText ||
+                                    doc.body.textContent ||
+                                    ""
+                                ).trim();
+
+                            if(texte.length<200){
+
+                                terminer(null);
+
+                                return;
+
+                            }
+
+                            terminer(texte);
+
+                        }
+                        catch(e){
+
+                            /*
+                             Erreur d'accès au contentDocument :
+                             en pratique ne devrait pas arriver
+                             en same-origin, mais on reste
+                             défensif.
+                            */
+
+                            terminer(null);
+
+                        }
+
+                    },
+                    delaiMs || 3000
+                );
+
+            };
+
+            iframe.onerror=()=>{
+
+                terminer(null);
+
+            };
+
+            iframe.src=url;
+
+            document.body.appendChild(iframe);
+
+
+            /*
+             Filet de sécurité : si onload ne se déclenche
+             jamais (page qui ne finit pas de charger), on
+             n'attend pas indéfiniment.
+            */
+
+            setTimeout(
+                ()=>terminer(null),
+                (delaiMs||3000)+5000
+            );
+
+        }
+        catch(e){
+
+            resolve(null);
+
+        }
+
+    });
+
+}
+
+
+const SOURCES_PERSONNELLES = [
+
+    "https://benlyna60.github.io/sandbox/Source/journal.html",
+    "https://benlyna60.github.io/sandbox/Source/eco.html",
+    "https://benlyna60.github.io/sandbox/Source/culture.html"
+
+];
+
+
+/*
+ Test manuel, à lancer depuis la console ou un bouton dédié :
+ tente les 3 sources l'une après l'autre et journalise ce qui
+ a été récupéré (ou pas), sans rien apprendre — juste pour
+ vérifier si l'extraction fonctionne réellement avant de
+ décider de la brancher dans l'apprentissage automatique.
+*/
+
+async function testerSourcesPersonnelles(){
+
+    journaliser(
+        "🧪 Test des sources personnelles..."
+    );
+
+    for(
+        const url of SOURCES_PERSONNELLES
+    ){
+
+        journaliser(
+            "🧪 " + url + "..."
+        );
+
+        const texte =
+            await recupererSourcePersonnelle(url);
+
+        if(texte){
+
+            journaliser(
+                "✅ " +
+                texte.length +
+                " caractères récupérés. Aperçu : \"" +
+                texte.slice(0,120) +
+                "...\""
+            );
+
+        }
+        else{
+
+            journaliser(
+                "❌ Rien d'exploitable récupéré."
+            );
+
+        }
+
+    }
+
+    journaliser(
+        "🧪 Test terminé."
+    );
+
+}
+
+
+async function recupererWikipedia(titreForce){
 
     try{
 
@@ -2644,7 +2917,7 @@ async function recupererWikipedia(langue,titreForce){
         if(!titre){
 
             const url =
-                "https://" + domaine + "/w/api.php" +
+                "https://fr.wikipedia.org/w/api.php" +
                 "?action=query" +
                 "&list=random" +
                 "&rnnamespace=0" +
@@ -2686,7 +2959,7 @@ async function recupererWikipedia(langue,titreForce){
         }
 
         const url2 =
-            "https://" + domaine + "/w/api.php" +
+            "https://fr.wikipedia.org/w/api.php" +
             "?action=query" +
             "&prop=extracts" +
             "&explaintext=1" +
@@ -2737,6 +3010,19 @@ async function recupererWikipedia(langue,titreForce){
 
         }
 
+        const extraitPropre =
+            nettoyerExtraitWikipedia(
+                page.extract
+            );
+
+        if(extraitPropre.length<100){
+
+            throw new Error(
+                "Extrait trop court après nettoyage"
+            );
+
+        }
+
         sourceWikipediaDisponible=true;
 
         afficherEtatWikipedia();
@@ -2744,7 +3030,7 @@ async function recupererWikipedia(langue,titreForce){
         return {
 
             texte:
-                page.extract.slice(0,4500),
+                extraitPropre.slice(0,4500),
 
             titre
 
@@ -2764,190 +3050,6 @@ async function recupererWikipedia(langue,titreForce){
 }
 
 
-/* =========================================================
-GROKIPEDIA
-========================================================= */
-
-/*
- IMPORTANT — limite technique connue :
- Grokipedia (grokipedia.com) n'a pas d'API publique avec CORS
- activé (contrairement à l'API MediaWiki de Wikipédia, qui
- supporte explicitement "&origin=*"). Un fetch() direct depuis
- le navigateur est donc bloqué par la politique CORS du
- navigateur, quel que soit ce que fait ce code.
-
- Pour rendre la fonctionnalité utilisable malgré tout, cette
- fonction passe par un proxy CORS public tiers (codetabs.com)
- qui relaie la requête et ajoute les en-têtes nécessaires.
- C'est un compromis, pas une solution garantie : le proxy est
- gratuit, non-affilié à Anthropic ni à xAI, peut tomber en panne,
- changer de limites de débit, ou disparaître sans préavis.
- En cas d'échec, la fonction renvoie simplement null, exactement
- comme recupererWikipedia() en cas d'indisponibilité : le reste
- du moteur (repli vers le corpus local) gère déjà ce cas.
-
- Grokipedia n'a pas non plus d'API "page aléatoire" publique :
- cette fonction réutilise donc le titre déjà obtenu via
- Wikipédia (les deux sites partagent une convention de titres
- très proche : espaces remplacés par des underscores).
-*/
-
-const GROKIPEDIA_PROXY =
-    "https://api.codetabs.com/v1/proxy/?quest=";
-
-async function recupererGrokipedia(titre){
-
-    if(!titre){
-        return null;
-    }
-
-    try{
-
-        const urlCible =
-            "https://grokipedia.com/page/" +
-            encodeURIComponent(
-                titre.replace(/\s+/g,"_")
-            );
-
-        const response =
-            await fetchTimeout(
-                GROKIPEDIA_PROXY +
-                encodeURIComponent(urlCible),
-                9000
-            );
-
-        if(!response.ok){
-
-            throw new Error(
-                "HTTP " +
-                response.status
-            );
-
-        }
-
-        const html =
-            await response.text();
-
-        const texte =
-            extraireTexteGrokipedia(html);
-
-        if(
-            !texte ||
-            texte.length<200
-        ){
-
-            throw new Error(
-                "Extrait Grokipedia trop court"
-            );
-
-        }
-
-        sourceGrokipediaDisponible=true;
-
-        afficherEtatGrokipedia();
-
-        return {
-
-            texte:
-                texte.slice(0,4500),
-
-            titre
-
-        };
-
-    }
-    catch(e){
-
-        sourceGrokipediaDisponible=false;
-
-        afficherEtatGrokipedia();
-
-        return null;
-
-    }
-
-}
-
-
-/*
- Extraction de texte "au mieux" depuis le HTML brut de
- Grokipedia. Pas d'API JSON disponible : on parse le HTML avec
- DOMParser et on retire les éléments d'interface connus
- (navigation, boutons, formulaires de suggestion) avant de
- prendre le texte visible. Cette extraction est fragile par
- nature : si Grokipedia change sa mise en page, elle peut
- renvoyer un texte de mauvaise qualité — c'est pourquoi un
- seuil minimal de longueur (200 caractères) est vérifié par
- l'appelant avant d'accepter le résultat.
-*/
-
-function extraireTexteGrokipedia(html){
-
-    try{
-
-        const parser =
-            new DOMParser();
-
-        const doc =
-            parser.parseFromString(
-                html,
-                "text/html"
-            );
-
-        /*
-         Retrait des éléments d'interface qui ne sont pas
-         du contenu encyclopédique.
-        */
-
-        const selecteursAExclure = [
-            "nav","header","footer",
-            "form","button","script","style"
-        ];
-
-        for(
-            const sel of selecteursAExclure
-        ){
-
-            doc.querySelectorAll(sel)
-                .forEach(el=>el.remove());
-
-        }
-
-        let texte =
-            doc.body ?
-                doc.body.innerText ||
-                doc.body.textContent ||
-                "" :
-                "";
-
-        /*
-         Nettoyage des lignes de type interface qui
-         subsistent malgré tout (menus, liens "Sign in",
-         table des matières répétée...).
-        */
-
-        texte = texte
-            .split("\n")
-            .map(l=>l.trim())
-            .filter(l=>l.length>0)
-            .filter(l=>
-                !/^(sign in|search|suggest edit|new article|submit|cancel|view my suggestions|fact-checked by)/i
-                    .test(l)
-            )
-            .join(" ");
-
-        return texte
-            .replace(/\s+/g," ")
-            .trim();
-
-    }
-    catch(e){
-
-        return "";
-
-    }
-
-}
 
 
 /* =========================================================
@@ -3042,177 +3144,40 @@ const motsVides = [
 const PONDERATION_MOT_VIDE = .15;
 
 
-/* =========================================================
-LEXIQUES — ANGLAIS
-========================================================= */
-
 /*
- Équivalents anglais des listes ci-dessus. Une mémoire créée
- en anglais (memoire.langue==="en") utilise ces listes à la
- place des listes françaises, via les fonctions getCategoriesConnues()
- / getActionsConnues() / getMotsVides() / getCorpusLocal() plus bas.
-*/
-
-const categoriesConnues_en = {
-
-    animals:[
-        "cat","dog","horse","cow","lion",
-        "tiger","bear","wolf","bird","fish",
-        "mouse","rabbit","pig","sheep","goat",
-        "elephant","giraffe","monkey","hen","duck"
-    ],
-
-    food:[
-        "bread","cheese","meat","fish","rice",
-        "apple","orange","banana","vegetable","fruit",
-        "soup","cake","chocolate","milk","water",
-        "coffee","tea"
-    ],
-
-    places:[
-        "house","city","village","country","school",
-        "hospital","office","street","garden","park",
-        "shop","restaurant","station","airport",
-        "beach","mountain","forest"
-    ],
-
-    people:[
-        "man","woman","child","boy","girl",
-        "father","mother","brother","sister","friend",
-        "teacher","doctor","police","president"
-    ],
-
-    objects:[
-        "table","chair","door","window","car",
-        "bike","computer","phone","book",
-        "pen","bag","key","bed","lamp"
-    ],
-
-    nature:[
-        "tree","flower","forest","river","sea",
-        "ocean","mountain","sun","moon","rain",
-        "snow","wind","sky","earth"
-    ]
-
-};
-
-
-const actionsConnues_en = [
-
-    "eat","drink","sleep","run","walk",
-    "talk","watch","see","hear","listen",
-    "love","hate","take","give","make",
-    "say","go","come","leave","arrive",
-    "live","work","play","read","write",
-    "learn","teach","buy","sell",
-    "open","close","search","find","think",
-    "understand","know","build","create",
-    "use","carry","put","hold","jump",
-    "sing","laugh","cry"
-
-];
-
-
-const motsVides_en = [
-
-    "the","a","an","and","of","to","in",
-    "on","for","with","by","this","that",
-    "these","those","he","she","it","they",
-    "who","what","which","not","no","so",
-    "his","her","its","their","our","your","my",
-    "is","are","was","were","be","been","being",
-    "have","has","had","more","most",
-    "very","as","if","all","some","or","but",
-    "than","then","there","here","when",
-    "i","you","we","me","us","him","them"
-
-];
-
-
-const corpusLocal_en = [
-
-    "The cat walks in the garden and watches the birds.",
-
-    "The dog runs in the street then comes back to the house.",
-
-    "A child learns to read a book in a small school.",
-
-    "People work together to build a city.",
-
-    "The car moves slowly on the road during the rain.",
-
-    "The teacher explains a new idea to the students.",
-
-    "A family prepares a meal in the kitchen.",
-
-    "The man looks at the sky and thinks about his future.",
-
-    "The woman opens the door and enters the house.",
-
-    "Trees grow in the forest near the river.",
-
-    "A computer allows you to search for information and create documents.",
-
-    "People can learn new things over time.",
-
-    "Knowledge helps you understand the world better.",
-
-    "A project starts with an idea then gradually becomes a reality.",
-
-    "Data allows you to find relations between several pieces of information.",
-
-    "A good memory keeps important experiences and associations.",
-
-    "The brain uses different types of memory to understand its environment.",
-
-    "Words often appear in different contexts.",
-
-    "A sentence links several words to convey an idea.",
-
-    "Language allows people to communicate and share their knowledge."
-
-];
-
-
-/*
- Sélecteurs bilingues : toutes les fonctions d'apprentissage /
- génération passent par ceux-ci plutôt que d'utiliser
- directement les constantes françaises, pour que la même
- moteur fonctionne en français ou en anglais selon
- memoire.langue.
+ Ces quatre fonctions existent pour que le reste du moteur
+ (apprentissage, association, profil de connaissance,
+ lemmatiseur) n'ait pas besoin de connaître les listes
+ françaises directement — juste un point d'accès unique.
+ (Une version bilingue FR/EN de ces listes a existé puis a été
+ retirée : hors-sujet pour l'instant, elle alourdissait le
+ fichier sans être utilisée.)
 */
 
 function getCategoriesConnues(){
 
-    return memoire.langue==="en" ?
-        categoriesConnues_en :
-        categoriesConnues;
+    return categoriesConnues;
 
 }
 
 function getActionsConnues(){
 
-    return memoire.langue==="en" ?
-        actionsConnues_en :
-        actionsConnues;
+    return actionsConnues;
 
 }
 
 function getMotsVides(){
 
-    return memoire.langue==="en" ?
-        motsVides_en :
-        motsVides;
+    return motsVides;
 
 }
 
 function getCorpusLocal(){
 
-    return memoire.langue==="en" ?
-        corpusLocal_en :
-        corpusLocal;
+    return corpusLocal;
 
 }
+
 
 
 /* =========================================================
@@ -3616,6 +3581,162 @@ function extraireRelationsTypees(tokens){
 }
 
 
+/* =========================================================
+CASSE (MAJUSCULES / NOMS PROPRES)
+========================================================= */
+
+/*
+ Le tokenizer met tout en minuscule (nécessaire pour que
+ "Chat" et "chat" comptent comme le même mot). Conséquence
+ observée en test : les noms propres ("Michel de Warzée",
+ "Afrique") ne sont plus jamais capitalisés en génération.
+
+ Cette fonction ré-analyse le texte BRUT (avant minuscule) pour
+ repérer quels mots sont habituellement rencontrés avec une
+ majuscule ailleurs qu'en début de phrase — un signal fiable de
+ nom propre. On ignore volontairement le tout premier mot de
+ chaque phrase : sa majuscule est une règle grammaticale, pas
+ un indice de nom propre.
+*/
+
+function apprendreCasse(texteOriginal,tokens){
+
+    const bruts =
+        texteOriginal
+            .replace(/\r\n/g," ")
+            .replace(/\r/g," ")
+            .replace(/[’]/g,"'")
+            .replace(
+                /([,.!?;:()[\]«»])/g,
+                " $1 "
+            )
+            .replace(/\s+/g," ")
+            .trim()
+            .split(" ")
+            .filter(Boolean);
+
+    if(bruts.length!==tokens.length){
+
+        /*
+         Désynchronisation improbable mais possible sur des
+         caractères exotiques : on abandonne proprement plutôt
+         que de risquer d'associer la mauvaise casse au
+         mauvais mot.
+        */
+
+        return;
+
+    }
+
+    let debutPhrase=true;
+
+    for(
+        let i=0;
+        i<tokens.length;
+        i++
+    ){
+
+        const mot =
+            tokens[i];
+
+        if(isPonctuation(mot)){
+
+            if(
+                [".","!","?"].includes(mot)
+            ){
+
+                debutPhrase=true;
+
+            }
+
+            continue;
+
+        }
+
+        if(!debutPhrase){
+
+            const brut =
+                bruts[i];
+
+            const estMajuscule =
+                brut.length>0 &&
+                brut.charAt(0)===
+                    brut.charAt(0).toUpperCase() &&
+                brut.charAt(0)!==
+                    brut.charAt(0).toLowerCase();
+
+            if(
+                !memoire.semantique.capitalisation[mot]
+            ){
+
+                memoire.semantique.capitalisation[mot] =
+                    {maj:0,min:0};
+
+            }
+
+            memoire.semantique.capitalisation[mot][
+                estMajuscule ? "maj" : "min"
+            ]++;
+
+        }
+
+        debutPhrase=false;
+
+    }
+
+}
+
+
+/*
+ Restaure la casse d'un mot pour l'affichage : majuscule
+ forcée en début de phrase (règle grammaticale), sinon
+ majuscule seulement si le mot est observé comme nom propre
+ avec suffisamment de confiance (au moins 3 observations, et
+ au moins deux fois plus souvent majuscule que minuscule).
+*/
+
+function formeAffichage(mot,forcerMajuscule){
+
+    if(!mot || isPonctuation(mot)){
+        return mot;
+    }
+
+    if(forcerMajuscule){
+
+        return (
+            mot.charAt(0).toUpperCase() +
+            mot.slice(1)
+        );
+
+    }
+
+    const info =
+        memoire.semantique.capitalisation[mot];
+
+    if(!info){
+        return mot;
+    }
+
+    const total =
+        info.maj+info.min;
+
+    if(
+        total>=3 &&
+        info.maj>info.min*2
+    ){
+
+        return (
+            mot.charAt(0).toUpperCase() +
+            mot.slice(1)
+        );
+
+    }
+
+    return mot;
+
+}
+
+
 function apprendreTexte(
     texte,
     source="local"
@@ -3797,6 +3918,13 @@ function apprendreTexte(
     ------------------------- */
 
     apprendreGenreNombre(tokens);
+
+
+    /* -------------------------
+       CASSE
+    ------------------------- */
+
+    apprendreCasse(texte,tokens);
 
 
     /* -------------------------
@@ -5327,12 +5455,24 @@ function distanceSemantique(motA,motB){
         return .3;
     }
 
+    /*
+     Avant : cas neutre (.5) quand aucune catégorie n'est
+     connue d'au moins un côté. Observé en test : ça laissait
+     passer des associations complètement incohérentes entre
+     sujets sans lien ("bolet orangé" → "film français") sans
+     aucune pénalité réelle. Le vecteur (ci-dessus) reste le
+     signal privilégié pour les mots réellement apparentés ;
+     ce repli ne s'applique qu'en l'absence totale de données
+     exploitables des deux côtés, donc on peut se permettre
+     d'être plus sévère.
+    */
+
     if(
         !clesA.length ||
         !clesB.length
     ){
 
-        return .5;
+        return .75;
 
     }
 
@@ -5528,13 +5668,16 @@ function scoreSemantique(
 
     /*
      Validation par distance sémantique (points 1 et 2) : si
-     aucune association directe ne justifie déjà la paire, et
-     que les deux mots ont des catégories connues qui ne se
-     recoupent pas du tout, on pénalise doucement — c'est le
-     signal le plus net d'une association probablement
-     incohérente. Le mode "exploration" est volontairement
-     épargné : il cherche justement des rapprochements
-     inhabituels.
+     aucune association directe ne justifie déjà la paire, on
+     pénalise proportionnellement à la distance calculée
+     (continue, pas un simple seuil binaire) — c'est le signal
+     le plus net d'une association probablement incohérente.
+     Avant, seule une distance parfaite (=1) déclenchait une
+     pénalité ; le cas "aucune donnée exploitable" (.75)
+     passait totalement inaperçu, ce qui laissait passer des
+     collages incohérents entre sujets sans rapport observés
+     en test. Le mode "exploration" est volontairement épargné
+     : il cherche justement des rapprochements inhabituels.
     */
 
     if(niveau!=="exploration"){
@@ -5553,11 +5696,8 @@ function scoreSemantique(
                     candidat
                 );
 
-            if(distance>=1){
-
-                score -= 1.5*echelle;
-
-            }
+            score -=
+                distance*1.8*echelle;
 
         }
 
@@ -6052,7 +6192,16 @@ function candidatsPourPosition(
  leur score. Utilisé pour ouvrir plusieurs branches par
  faisceau sans jamais choisir deux fois le même mot au même
  embranchement.
+
+ TEMPERATURE_FAISCEAU adoucit la distribution (racine du
+ score plutôt que le score brut) : sans ça, un candidat
+ largement dominant écrase systématiquement les autres et le
+ faisceau retombe presque toujours sur le même "attracteur",
+ produisant des sorties trop peu variées d'une génération à
+ l'autre sur une mémoire encore petite.
 */
+
+const TEMPERATURE_FAISCEAU = 1.25;
 
 function echantillonnerSansRemise(
     candidats,
@@ -6060,7 +6209,15 @@ function echantillonnerSansRemise(
 ){
 
     const pool =
-        candidats.slice();
+        candidats.map(
+            ([mot,score])=>[
+                mot,
+                Math.pow(
+                    Math.max(score,.0001),
+                    1/TEMPERATURE_FAISCEAU
+                )
+            ]
+        );
 
     const resultats=[];
 
@@ -6130,6 +6287,118 @@ GENERATION PAR RECHERCHE EN FAISCEAU (point 10)
  plus élevé. À la fin, la suite retenue est celle dont le score
  cumulé est le plus stable — l'algorithme demandé au point 10.
 */
+
+/*
+ Filtre de clôture syntaxique : observé en test, la génération
+ pouvait s'arrêter sur un mot-outil "suspendu" ("...montagnes
+ du.", "...confier."). Cette liste couvre déterminants,
+ prépositions et conjonctions qui n'ont jamais de sens comme
+ dernier mot plein d'une phrase. Ne couvre pas l'accord
+ adjectif/nom (pas de détection de nature grammaticale des
+ adjectifs dans ce moteur) — limite connue, pas résolue ici.
+*/
+
+const MOTS_INTERDITS_FIN = [
+
+    "de","du","des","à","au","aux","dans","sur","par","pour",
+    "avec","en","chez","sans","sous","vers","entre","contre",
+    "selon","depuis","que","qui","dont","où",
+    "le","la","les","un","une","ce","cet","cette","ces",
+    "mon","ma","mes","ton","ta","tes","son","sa","ses",
+    "notre","nos","votre","vos","leur","leurs",
+    "et","ou","mais","donc","or","ni","car","ne","se",
+    "qu'","d'","l'","comme","si"
+
+];
+
+function motValidePourFinir(mot){
+
+    if(!mot){
+        return false;
+    }
+
+    const propre =
+        mot.toLowerCase();
+
+    return (
+        !MOTS_INTERDITS_FIN.includes(propre) &&
+        !isPonctuation(propre)
+    );
+
+}
+
+
+/*
+ Filet de sécurité : si la longueur maximale est atteinte sans
+ que le faisceau ait jamais trouvé de clôture propre (rare
+ avec le filtre ci-dessus, mais possible sur une mémoire très
+ pauvre), on coupe les mots-outils suspendus en fin de
+ séquence et on force une ponctuation finale si besoin.
+*/
+
+function nettoyerFinPhrase(tokens){
+
+    const resultat =
+        tokens.slice();
+
+    let tentatives=0;
+
+    while(
+        resultat.length>2 &&
+        tentatives<4
+    ){
+
+        let dernierIdx =
+            resultat.length-1;
+
+        while(
+            dernierIdx>=0 &&
+            isPonctuation(resultat[dernierIdx])
+        ){
+
+            dernierIdx--;
+
+        }
+
+        if(dernierIdx<0){
+            break;
+        }
+
+        if(
+            !motValidePourFinir(
+                resultat[dernierIdx]
+            )
+        ){
+
+            resultat.splice(dernierIdx,1);
+
+            tentatives++;
+
+        }
+        else{
+
+            break;
+
+        }
+
+    }
+
+    const dernier =
+        resultat[resultat.length-1];
+
+    if(
+        dernier &&
+        !isPonctuation(dernier)
+    ){
+
+        resultat.push(".");
+
+    }
+
+    return resultat;
+
+}
+
 
 function genererPhraseBeam(
     premier,
@@ -6234,6 +6503,11 @@ function genererPhraseBeam(
                     nouvelleSeq.length>=8 &&
                     [".","!","?"]
                         .includes(mot) &&
+                    motValidePourFinir(
+                        nouvelleSeq[
+                            nouvelleSeq.length-2
+                        ]
+                    ) &&
                     Math.random()<.8;
 
                 suivants.push({
@@ -6294,11 +6568,35 @@ function genererPhraseBeam(
     const termines =
         faisceaux.filter(f=>f.termine);
 
-    const meilleur =
-        (termines.length ? termines : faisceaux)[0];
+    const finalistes =
+        (termines.length ? termines : faisceaux)
+            .slice(0,3);
 
-    return meilleur ?
-        meilleur.sequence :
+    /*
+     Avant : toujours le meilleur faisceau (argmax), point.
+     Sur une mémoire encore petite, ça produisait parfois
+     exactement la même phrase à chaque génération (observé
+     en test). On garde la "stabilité" — on ne pioche que
+     parmi les tout meilleurs faisceaux — mais avec un tirage
+     pondéré plutôt qu'un choix figé, pour que la sortie varie
+     naturellement d'une génération à l'autre.
+    */
+
+    const choixFinal =
+        finalistes.length>1 ?
+            choixPondere(
+                finalistes.map(f=>[
+                    f,
+                    Math.max(
+                        f.score/f.sequence.length,
+                        .01
+                    )
+                ])
+            ) :
+            finalistes[0];
+
+    return choixFinal ?
+        choixFinal.sequence :
         [premier];
 
 }
@@ -6374,9 +6672,14 @@ function genererPhrase(){
             4
         );
 
-    const resultat =
+    const resultatCorrige =
         corrigerAccordsDeterminants(
             resultatBrut
+        );
+
+    const resultat =
+        nettoyerFinPhrase(
+            resultatCorrige
         );
 
 
@@ -6418,13 +6721,47 @@ function reconstruirePhrase(tokens){
         ".",",","!","?",";",":",")","]"
     ];
 
+    /*
+     Avant : seule la toute première lettre de la sortie était
+     mise en majuscule. Un point interne (fin de première
+     "phrase" dans une séquence générée plus longue) ne
+     déclenchait jamais de nouvelle majuscule — bug observé en
+     test ("D'autres. elle est..."). On suit maintenant un
+     drapeau "début de phrase" tout du long, et on restaure au
+     passage la casse des noms propres reconnus.
+    */
+
+    let debutPhrase=true;
+
     for(
         let i=0;
         i<tokens.length;
         i++
     ){
 
-        const token=tokens[i];
+        const tokenBrut=tokens[i];
+
+        const token=
+            formeAffichage(
+                tokenBrut,
+                debutPhrase &&
+                    !isPonctuation(tokenBrut)
+            );
+
+        if(
+            !isPonctuation(tokenBrut)
+        ){
+
+            debutPhrase=false;
+
+        }
+        else if(
+            [".","!","?"].includes(tokenBrut)
+        ){
+
+            debutPhrase=true;
+
+        }
 
         if(i===0){
 
@@ -6448,7 +6785,7 @@ function reconstruirePhrase(tokens){
         }
 
         if(
-            sansEspace.includes(token)
+            sansEspace.includes(tokenBrut)
         ){
 
             texte+=token;
@@ -6476,14 +6813,6 @@ function reconstruirePhrase(tokens){
         texte
         .replace(/\s+/g," ")
         .trim();
-
-    if(texte){
-
-        texte =
-            texte.charAt(0).toUpperCase() +
-            texte.slice(1);
-
-    }
 
     return texte;
 
@@ -7506,156 +7835,61 @@ async function lancerApprentissage(){
 
         let texteWikipedia=null;
 
-        let texteGrokipedia=null;
-
-        let titrePartage=null;
-
-
-        /*
-         Sources activées par l'utilisateur (cases à cocher).
-         Si les cases n'existent pas encore dans une page HTML
-         plus ancienne, on retombe sur le comportement
-         d'origine (Wikipédia seule).
-        */
-
-        const caseWiki =
-            document.getElementById(
-                "sourceWikipedia"
-            );
-
-        const caseGrok =
-            document.getElementById(
-                "sourceGrokipedia"
-            );
-
-        const wikiActif =
-            !caseWiki || caseWiki.checked;
-
-        const grokActif =
-            !!caseGrok && caseGrok.checked;
-
 
         if(
-            (wikiActif || grokActif) &&
             Math.random()<.65
         ){
 
-            if(wikiActif){
+            let titreCible=null;
 
-                let titreCible=null;
+            /*
+             Apprentissage actif : une partie des cycles
+             cherche un sujet lié à un mot déjà partiellement
+             connu, plutôt que de piocher au hasard.
+            */
 
-                /*
-                 Apprentissage actif : une partie des cycles
-                 cherche un sujet lié à un mot déjà partiellement
-                 connu, plutôt que de piocher au hasard.
-                */
+            const PROBABILITE_CURIOSITE=.5;
 
-                const PROBABILITE_CURIOSITE=.5;
+            if(
+                Math.random()<PROBABILITE_CURIOSITE
+            ){
 
-                if(
-                    Math.random()<PROBABILITE_CURIOSITE
-                ){
+                const motCurieux =
+                    choisirMotCuriosite();
 
-                    const motCurieux =
-                        choisirMotCuriosite();
+                if(motCurieux){
 
-                    if(motCurieux){
-
-                        journaliser(
-                            "🧭 Curiosité : \"" +
-                            motCurieux +
-                            "\"..."
-                        );
-
-                        titreCible =
-                            await rechercherTitreLie(
-                                motCurieux,
-                                memoire.langue
-                            );
-
-                    }
-
-                }
-
-
-                journaliser(
-                    titreCible ?
-                        "🌐 Tentative Wikipédia (ciblée)..." :
-                        "🌐 Tentative Wikipédia..."
-                );
-
-                const resultat =
-                    await recupererWikipedia(
-                        memoire.langue,
-                        titreCible
+                    journaliser(
+                        "🧭 Curiosité : \"" +
+                        motCurieux +
+                        "\"..."
                     );
 
-                if(resultat){
-
-                    texteWikipedia =
-                        resultat.texte;
-
-                    titrePartage =
-                        resultat.titre;
+                    titreCible =
+                        await rechercherTitreLie(
+                            motCurieux
+                        );
 
                 }
 
             }
 
 
-            if(grokActif){
+            journaliser(
+                titreCible ?
+                    "🌐 Tentative Wikipédia (ciblée)..." :
+                    "🌐 Tentative Wikipédia..."
+            );
 
-                journaliser(
-                    "🟣 Tentative Grokipedia..."
+            const resultat =
+                await recupererWikipedia(
+                    titreCible
                 );
 
-                /*
-                 Grokipedia n'a pas d'API "page aléatoire" :
-                 on réutilise le titre Wikipédia déjà obtenu,
-                 ou on en tire un exprès si Wikipédia est
-                 désactivée.
-                */
+            if(resultat){
 
-                let titrePourGrok =
-                    titrePartage;
-
-                if(!titrePourGrok){
-
-                    const amorce =
-                        await recupererWikipedia(
-                            memoire.langue
-                        );
-
-                    if(amorce){
-
-                        titrePourGrok =
-                            amorce.titre;
-
-                        if(!texteWikipedia){
-
-                            texteWikipedia =
-                                amorce.texte;
-
-                            titrePartage =
-                                amorce.titre;
-
-                        }
-
-                    }
-
-                }
-
-                const resultatGrok =
-                    await recupererGrokipedia(
-                        titrePourGrok
-                    );
-
-                if(resultatGrok){
-
-                    texteGrokipedia =
-                        resultatGrok.texte;
-
-                }
+                texteWikipedia =
+                    resultat.texte;
 
             }
 
@@ -7672,7 +7906,7 @@ async function lancerApprentissage(){
 
         if(texteWikipedia){
 
-            nombre +=
+            nombre =
                 apprendreTexte(
                     texteWikipedia,
                     "wikipedia"
@@ -7683,27 +7917,7 @@ async function lancerApprentissage(){
             );
 
         }
-
-
-        if(texteGrokipedia){
-
-            nombre +=
-                apprendreTexte(
-                    texteGrokipedia,
-                    "grokipedia"
-                );
-
-            journaliser(
-                "🟣 Texte Grokipedia appris."
-            );
-
-        }
-
-
-        if(
-            !texteWikipedia &&
-            !texteGrokipedia
-        ){
+        else{
 
             const corpus =
                 getCorpusLocal();
@@ -9177,8 +9391,6 @@ function afficherInfosMemoire(){
 
     afficherEtatWikipedia();
 
-    afficherEtatGrokipedia();
-
 
     const sources =
         memoire.statistiques.sources
@@ -9188,39 +9400,21 @@ function afficherInfosMemoire(){
     const compteWiki =
         Number(sources.wikipedia||0);
 
-    const compteGrok =
-        Number(sources.grokipedia||0);
-
     const compteLocal =
         Number(sources.local||0);
 
 
     let dominante="—";
 
-    const max =
-        Math.max(
-            compteWiki,
-            compteGrok,
-            compteLocal
-        );
+    if(
+        compteWiki>0 ||
+        compteLocal>0
+    ){
 
-    if(max>0){
-
-        if(max===compteWiki){
-
-            dominante="Wikipédia";
-
-        }
-        else if(max===compteGrok){
-
-            dominante="Grokipedia";
-
-        }
-        else{
-
-            dominante="Corpus local";
-
-        }
+        dominante =
+            compteWiki>=compteLocal ?
+                "Wikipédia" :
+                "Corpus local";
 
     }
 

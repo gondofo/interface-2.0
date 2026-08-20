@@ -2675,6 +2675,54 @@ function nettoyerExtraitWikipedia(texte){
         " "
     );
 
+
+    /*
+     Bannières de portail ("Portail de la politique", "Portail
+     de la France"...) : ce sont des modèles Wikipédia rendus
+     en texte plat juste avant les catégories, sans en-tête
+     "==" pour les repérer. Observé en test : le mot "Portail"
+     se retrouvait appris et généré tel quel en fin de phrase.
+     Deux filtres complémentaires, volontairement prudents pour
+     ne pas supprimer un usage légitime du mot "portail" (sens
+     architectural, ex. "le portail de la cathédrale") :
+
+     1) Plusieurs mentions "Portail de/du/des ..." à la suite
+        — un vrai texte ne répète jamais ce motif en rafale,
+        c'est la signature du bloc de portails.
+     2) Une mention isolée de "Portail", mais seulement si elle
+        tombe dans la toute fin de l'extrait — position typique
+        du bloc de portails juste avant la troncature.
+    */
+
+    nettoye = nettoye.replace(
+        /(?:Portails?\s+(?:de\s+(?:la|l['’]|du|des)|du|des)?\s*[A-ZÉÀÇÔÎ][\wÀ-ÿ'’\-]*(?:\s+[A-ZÉÀÇÔÎ][\wÀ-ÿ'’\-]*){0,3}\s*){2,}/g,
+        " "
+    );
+
+    const ZONE_FINALE=200;
+
+    if(nettoye.length>0){
+
+        const debutZone =
+            Math.max(0,nettoye.length-ZONE_FINALE);
+
+        const zoneFinale =
+            nettoye.slice(debutZone);
+
+        const idxPortail =
+            zoneFinale.search(/\bPortails?\b/);
+
+        if(idxPortail!==-1){
+
+            nettoye =
+                nettoye
+                    .slice(0,debutZone+idxPortail)
+                    .trim();
+
+        }
+
+    }
+
     return nettoye.trim();
 
 }
@@ -5438,11 +5486,45 @@ function distanceSemantique(motA,motB){
 
     if(sim!==null){
 
-        const distanceVec =
+        /*
+         Un cosinus positif basé sur 1 ou 2 dimensions
+         communes (souvent des mots-satellites très généraux,
+         genre "être", "pays", "siècle", qui apparaissent dans
+         presque tous les articles) donne une fausse
+         impression de proximité — c'est exactement le
+         "voisinage flou" identifié en test (sauts de sujet
+         "coq à l'âne", ex. Maskinongé → ordre et des Grieux).
+         On ne fait confiance à la similarité brute que si elle
+         repose sur au moins 3 dimensions partagées ; sinon on
+         la mélange avec le repli sévère (.75) proportionnel-
+         lement au manque de fiabilité.
+        */
+
+        const dimensionsCommunes =
+            Object.keys(vecA)
+                .filter(k=>vecB[k])
+                .length;
+
+        const tailleMin =
+            Math.min(
+                Object.keys(vecA).length,
+                Object.keys(vecB).length
+            );
+
+        const fiabilite =
+            tailleMin>0 ?
+                Math.min(1,dimensionsCommunes/3) :
+                0;
+
+        const distanceVecBrute =
             Math.max(
                 0,
                 Math.min(1,(1-sim)/2)
             );
+
+        const distanceVec =
+            distanceVecBrute*fiabilite +
+            .75*(1-fiabilite);
 
         return partageConcept ?
             Math.min(distanceVec,.3) :
@@ -5697,7 +5779,7 @@ function scoreSemantique(
                 );
 
             score -=
-                distance*1.8*echelle;
+                distance*2.2*echelle;
 
         }
 
@@ -5874,7 +5956,7 @@ function construireCandidats(
                     );
 
                 score +=
-                    attention*force*2;
+                    attention*force*2.5;
 
             }
 

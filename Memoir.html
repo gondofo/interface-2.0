@@ -2941,6 +2941,38 @@ function nettoyerExtraitWikipedia(texte){
 
 
     /*
+     Résidus de citation (nouveau, observé en test) : certains
+     articles citent une source de presse avec une URL et un
+     horodatage qui survivent dans l'extrait en texte plat, ex.
+     "Com/economie/1003001/apres-avoir-consulte-provinces..."
+     suivi de "2026-08-20 15:17". Deux signatures fiables à
+     filtrer sans risquer de casser du texte légitime :
+
+     1) Un "slug" d'URL : plusieurs segments séparés par des
+        tirets (4+ segments) — le français n'enchaîne quasiment
+        jamais plus de 2 mots liés par des tirets ("peut-être",
+        "c'est-à-dire"), donc ce seuil est sûr.
+     2) Un horodatage ISO ("AAAA-MM-JJ HH:MM") — ce format
+        n'apparaît jamais dans de la prose normale.
+    */
+
+    nettoye = nettoye.replace(
+        /\b[a-zA-Zà-ÿ0-9]+(?:-[a-zA-Zà-ÿ0-9]+){3,}\b/g,
+        " "
+    );
+
+    nettoye = nettoye.replace(
+        /\b\d{4}-\d{2}-\d{2}\s+\d{1,2}\s*:\s*\d{2}\b/g,
+        " "
+    );
+
+    nettoye = nettoye.replace(
+        /\b[A-Za-zÀ-ÿ]{2,}\/[\w\-À-ÿ]+(?:\/[\w\-À-ÿ]+)*\/?/g,
+        " "
+    );
+
+
+    /*
      Filet radical : le filtre "paires ==...==" ci-dessus rate
      les balises mal appariées ou tronquées (observé en test :
      "=== ====" orphelines en pleine phrase). Le caractère "="
@@ -4307,6 +4339,41 @@ function apprendreCasse(texteOriginal,tokens){
 
         }
 
+        if(
+            !memoire.semantique.capitalisation[mot]
+        ){
+
+            memoire.semantique.capitalisation[mot] =
+                {maj:0,min:0,toutMaj:0};
+
+        }
+
+
+        /*
+         Acronyme (NBA, ONU...) : contrairement à la simple
+         majuscule initiale, un mot ENTIÈREMENT en majuscules
+         est un signal fiable même en début de phrase — une
+         majuscule de règle grammaticale ne touche jamais que
+         la première lettre. On le vérifie donc indépendamment
+         de "debutPhrase".
+        */
+
+        const brutActuel =
+            bruts[i];
+
+        const estTotalementMajuscule =
+            brutActuel.length>1 &&
+            brutActuel===brutActuel.toUpperCase() &&
+            brutActuel!==brutActuel.toLowerCase();
+
+        if(estTotalementMajuscule){
+
+            memoire.semantique.capitalisation[mot]
+                .toutMaj++;
+
+        }
+
+
         if(!debutPhrase){
 
             const brut =
@@ -4318,15 +4385,6 @@ function apprendreCasse(texteOriginal,tokens){
                     brut.charAt(0).toUpperCase() &&
                 brut.charAt(0)!==
                     brut.charAt(0).toLowerCase();
-
-            if(
-                !memoire.semantique.capitalisation[mot]
-            ){
-
-                memoire.semantique.capitalisation[mot] =
-                    {maj:0,min:0};
-
-            }
 
             memoire.semantique.capitalisation[mot][
                 estMajuscule ? "maj" : "min"
@@ -4355,6 +4413,35 @@ function formeAffichage(mot,forcerMajuscule){
         return mot;
     }
 
+    const info =
+        memoire.semantique.capitalisation[mot];
+
+    /*
+     Acronyme (NBA, ONU...) : prioritaire sur tout le reste,
+     y compris sur la majuscule de début de phrase — un
+     acronyme reconnu s'écrit toujours pareil, peu importe sa
+     position.
+    */
+
+    if(info){
+
+        const total =
+            info.maj+info.min;
+
+        const toutMaj =
+            info.toutMaj||0;
+
+        if(
+            total>=3 &&
+            toutMaj>total*.7
+        ){
+
+            return mot.toUpperCase();
+
+        }
+
+    }
+
     if(forcerMajuscule){
 
         return (
@@ -4363,9 +4450,6 @@ function formeAffichage(mot,forcerMajuscule){
         );
 
     }
-
-    const info =
-        memoire.semantique.capitalisation[mot];
 
     if(!info){
         return mot;

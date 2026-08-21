@@ -653,6 +653,22 @@ SMALL
     margin-bottom:10px;
 }
 
+.progress-bar{
+    width:100%;
+    height:8px;
+    background:rgba(255,255,255,.08);
+    border-radius:4px;
+    overflow:hidden;
+    margin-top:8px;
+}
+
+.progress-bar-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#22c55e,#16a34a);
+    transition:width .15s ease;
+}
+
 .empty{
     text-align:center;
 
@@ -1159,7 +1175,14 @@ GENERATION
 
     <div class="panel">
 
-        <h2>🤖 Génération cognitive</h2>
+        <h2>🤖 Poste de test</h2>
+
+        <div class="hint">
+            Réglages, ciblage éclair et lot de tests regroupés
+            ici — tes préférences (longueur, influence, mode de
+            lot...) sont mémorisées automatiquement d'une visite
+            à l'autre.
+        </div>
 
         <select id="longueur">
 
@@ -1231,7 +1254,7 @@ GENERATION
 
 
         <div class="small" style="margin-top:12px">
-            🎯 Ciblage éclair (optionnel)
+            🎯 Ciblage éclair (optionnel — Entrée pour lancer)
         </div>
 
         <input
@@ -1242,11 +1265,10 @@ GENERATION
 
         <div class="hint">
             Cherche un article Wikipédia sur ce sujet précis,
-            l'apprend à la volée, puis génère avec — sans changer
-            le comportement standard du moteur pour les cycles
-            suivants. L'article reste appris dans la mémoire
-            (taggé "cible_ponctuelle"), comme n'importe quel autre
-            apprentissage.
+            l'apprend à la volée, puis génère avec. Si un lot est
+            lancé ci-dessous avec ce champ rempli, la mémoire est
+            restaurée à l'identique juste après (buffer temporaire,
+            voir le journal pour le détail).
         </div>
 
         <button
@@ -1271,7 +1293,7 @@ GENERATION
             onclick="genererPhrase()"
             disabled>
 
-            ✨ Générer
+            ✨ Générer une phrase
 
         </button>
 
@@ -1284,21 +1306,12 @@ GENERATION
 
         </div>
 
-    </div>
+
+        <hr style="margin:16px 0;opacity:.2">
 
 
-    <div class="panel">
-
-        <h2>🧪 Batch Runner</h2>
-
-        <div class="hint">
-            Enchaîne une série de générations automatiquement et
-            exporte tout en JSON (instantané mémoire + détail de
-            chaque test) pour analyse hors-ligne.
-        </div>
-
-        <div class="small" style="margin-top:8px">
-            Nombre de tests
+        <div class="small">
+            🧪 Lot de tests — nombre
         </div>
 
         <select id="batchNombre">
@@ -1338,8 +1351,28 @@ GENERATION
                 class="secondary"
                 onclick="exporterLotJSON()"
                 disabled>
-                💾 Exporter en JSON
+                💾 Exporter
             </button>
+
+            <button
+                id="btnBatchCopier"
+                class="secondary"
+                onclick="copierLotJSON()"
+                disabled>
+                📋 Copier le JSON
+            </button>
+
+        </div>
+
+        <div
+            id="batchProgression"
+            class="progress-bar"
+            style="display:none">
+
+            <div
+                id="batchProgressionRemplissage"
+                class="progress-bar-fill">
+            </div>
 
         </div>
 
@@ -7865,11 +7898,38 @@ async function lancerLotDeTests(){
     const btnExporter =
         document.getElementById("btnBatchExporter");
 
+    const btnCopier =
+        document.getElementById("btnBatchCopier");
+
     const zoneResultat =
         document.getElementById("batchResultat");
 
+    const barreProgression =
+        document.getElementById("batchProgression");
+
+    const remplissageProgression =
+        document.getElementById(
+            "batchProgressionRemplissage"
+        );
+
     btnLancer.disabled=true;
     btnExporter.disabled=true;
+
+    if(btnCopier){
+        btnCopier.disabled=true;
+    }
+
+    if(barreProgression){
+
+        barreProgression.style.display="block";
+
+    }
+
+    if(remplissageProgression){
+
+        remplissageProgression.style.width="0%";
+
+    }
 
     zoneResultat.textContent =
         "\u23f3 Lot en cours...";
@@ -7933,6 +7993,12 @@ async function lancerLotDeTests(){
                 requeteCiblage +
                 "\" -- lot annul\u00e9. Vide le champ de " +
                 "ciblage pour lancer un lot al\u00e9atoire normal.";
+
+            if(barreProgression){
+
+                barreProgression.style.display="none";
+
+            }
 
             btnLancer.disabled=false;
             btnExporter.disabled=false;
@@ -8077,6 +8143,15 @@ async function lancerLotDeTests(){
             ) +
             "Test " + (i+1) + "/" + nombre + "...";
 
+        if(remplissageProgression){
+
+            remplissageProgression.style.width =
+                Math.round(
+                    ((i+1)/nombre)*100
+                ) + "%";
+
+        }
+
         /*
          Laisse le navigateur respirer entre deux g\u00e9n\u00e9rations
          (\u00e9vite de geler l'interface sur un gros lot).
@@ -8195,8 +8270,18 @@ async function lancerLotDeTests(){
         resume.trim();
 
 
+    if(barreProgression){
+
+        barreProgression.style.display="none";
+
+    }
+
     btnLancer.disabled=false;
     btnExporter.disabled=false;
+
+    if(btnCopier){
+        btnCopier.disabled=false;
+    }
 
 }
 
@@ -8240,6 +8325,72 @@ function exporterLotJSON(){
     document.body.removeChild(lien);
 
     URL.revokeObjectURL(url);
+
+}
+
+
+/*
+ Alternative au téléchargement : copie le JSON directement
+ dans le presse-papier, pour le coller dans un message sans
+ passer par un fichier à joindre.
+*/
+
+async function copierLotJSON(){
+
+    if(!dernierLotDeTests){
+        return;
+    }
+
+    const contenu =
+        JSON.stringify(
+            dernierLotDeTests,
+            null,
+            2
+        );
+
+    const btn =
+        document.getElementById("btnBatchCopier");
+
+    try{
+
+        await navigator.clipboard.writeText(
+            contenu
+        );
+
+        if(btn){
+
+            const texteOriginal =
+                btn.textContent;
+
+            btn.textContent =
+                "✅ Copié !";
+
+            setTimeout(()=>{
+
+                btn.textContent =
+                    texteOriginal;
+
+            },1500);
+
+        }
+
+    }
+    catch(e){
+
+        /*
+         Certains navigateurs refusent l'accès au presse-papier
+         hors HTTPS/contexte sécurisé. Repli : proposer quand
+         même le téléchargement, qui fonctionne toujours.
+        */
+
+        journaliser(
+            "⚠️ Copie presse-papier indisponible, " +
+            "export en fichier à la place."
+        );
+
+        exporterLotJSON();
+
+    }
 
 }
 
@@ -11288,6 +11439,219 @@ function escapeSVG(
 /* =========================================================
 INITIALISATION
 ========================================================= */
+
+/*
+ Ergonomie du poste de test : mémorise les réglages d'une
+ visite à l'autre (localStorage — cette page tourne comme un
+ site web normal dans le navigateur, pas dans un artifact
+ Claude.ai en bac à sable, donc localStorage fonctionne
+ normalement ici). Volontairement limité aux réglages de test,
+ jamais à la mémoire elle-même (memoire) qui a son propre
+ système de sauvegarde JSON explicite.
+*/
+
+const CLE_PREFERENCES_UI = "memoirV6_preferencesTest";
+
+function sauvegarderPreferencesUI(){
+
+    try{
+
+        const prefs = {
+
+            longueur:
+                document.getElementById("longueur").value,
+
+            forceSemantique:
+                document.getElementById("forceSemantique").value,
+
+            niveauGeneration:
+                document.getElementById("niveauGeneration").value,
+
+            batchNombre:
+                document.getElementById("batchNombre").value,
+
+            batchMode:
+                document.getElementById("batchMode").value,
+
+            cibleRecherche:
+                document.getElementById("cibleRecherche").value
+
+        };
+
+        localStorage.setItem(
+            CLE_PREFERENCES_UI,
+            JSON.stringify(prefs)
+        );
+
+    }
+    catch(e){
+
+        /*
+         localStorage indisponible (navigation privée
+         restrictive, etc.) : on continue sans persister,
+         ce n'est pas une fonctionnalité critique.
+        */
+
+    }
+
+}
+
+function chargerPreferencesUI(){
+
+    try{
+
+        const brut =
+            localStorage.getItem(
+                CLE_PREFERENCES_UI
+            );
+
+        if(!brut){
+            return;
+        }
+
+        const prefs =
+            JSON.parse(brut);
+
+        const champs = [
+            "longueur","forceSemantique",
+            "niveauGeneration","batchNombre",
+            "batchMode","cibleRecherche"
+        ];
+
+        for(const champ of champs){
+
+            const el =
+                document.getElementById(champ);
+
+            if(el && prefs[champ]!==undefined){
+
+                el.value = prefs[champ];
+
+            }
+
+        }
+
+        const spanForce =
+            document.getElementById("forceValue");
+
+        if(spanForce){
+
+            spanForce.textContent =
+                document.getElementById(
+                    "forceSemantique"
+                ).value + "%";
+
+        }
+
+    }
+    catch(e){
+
+        /* idem : silencieux, non bloquant */
+
+    }
+
+}
+
+
+/*
+ Persistance automatique : un seul écouteur par champ,
+ déclenché à chaque changement plutôt qu'à intervalle régulier.
+*/
+
+[
+    "longueur","forceSemantique","niveauGeneration",
+    "batchNombre","batchMode","cibleRecherche"
+].forEach(id=>{
+
+    const el =
+        document.getElementById(id);
+
+    if(el){
+
+        el.addEventListener(
+            "change",
+            sauvegarderPreferencesUI
+        );
+
+        el.addEventListener(
+            "input",
+            sauvegarderPreferencesUI
+        );
+
+    }
+
+});
+
+
+/*
+ Mise à jour en direct du pourcentage affiché à côté du
+ curseur d'influence sémantique (absent jusque là : le
+ pourcentage ne se rafraîchissait qu'après une génération).
+*/
+
+const elForceSlider =
+    document.getElementById("forceSemantique");
+
+if(elForceSlider){
+
+    elForceSlider.addEventListener("input",()=>{
+
+        const spanForce =
+            document.getElementById("forceValue");
+
+        if(spanForce){
+
+            spanForce.textContent =
+                elForceSlider.value + "%";
+
+        }
+
+    });
+
+}
+
+
+/*
+ Touche Entrée dans les champs de texte au lieu d'obliger un
+ clic — gain de temps direct sur le poste de test.
+*/
+
+function activerEntreePourAction(idChamp,action){
+
+    const el =
+        document.getElementById(idChamp);
+
+    if(!el){
+        return;
+    }
+
+    el.addEventListener("keydown",(e)=>{
+
+        if(e.key==="Enter"){
+
+            e.preventDefault();
+
+            action();
+
+        }
+
+    });
+
+}
+
+activerEntreePourAction(
+    "cibleRecherche",
+    ()=>genererAvecCiblage()
+);
+
+activerEntreePourAction(
+    "urlRSS",
+    ()=>apercuSourcePersonnelle("rss")
+);
+
+
+chargerPreferencesUI();
+
 
 initialiserCognitive();
 

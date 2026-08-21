@@ -7598,13 +7598,103 @@ function restaurerMemoire(sauvegarde){
  apparaît réellement dans les textes générés.
 */
 
+/* =========================================================
+NETTOYEUR DE REQUETES SEMANTIQUES
+========================================================= */
+
+/*
+ Précision technique importante avant tout : contrairement à ce
+ qu'on pensait au départ, l'API Wikipédia n'exige PAS un
+ intitulé d'article strict à l'étape de RECHERCHE (list=search,
+ utilisée par rechercherTitreLie) — c'est un vrai moteur de
+ recherche plein texte qui tolère du texte libre. La contrainte
+ de titre exact ne s'applique qu'à l'étape suivante, celle qui
+ RÉCUPÈRE le contenu d'un article précis (titles=).
+
+ Le vrai problème : les mots vides et interrogatifs ("comment",
+ "pourquoi", "le", "de", "l'"...) diluent la pertinence de la
+ recherche sans lui apporter d'information utile. Cette fonction
+ les retire avant l'envoi à l'API — pas une extraction d'entités
+ nommées à proprement parler (ça demanderait un vrai outil NLP
+ qu'on n'a pas ici), juste un filtrage de mots vides ciblé sur
+ les requêtes en langage naturel. Pas de garantie de 100% de
+ correspondance : ça reste un moteur de pertinence, pas une
+ correspondance exacte — mais une nette amélioration sur les
+ phrases longues.
+*/
+
+const MOTS_INTERROGATIFS_REQUETE = [
+    "comment","pourquoi","quand","qui","quoi",
+    "quel","quelle","quels","quelles",
+    "est-ce","qu'est-ce","combien"
+];
+
+function nettoyerRequeteCiblage(texte){
+
+    const brut =
+        texte.trim();
+
+    if(!brut){
+        return "";
+    }
+
+    const motsVidesActuels =
+        getMotsVides();
+
+    const termes =
+        brut
+            .toLowerCase()
+            .replace(/[’]/g,"'")
+            .split(/\s+/)
+            .map(m=>
+                m.replace(
+                    /^(l|d|qu|c|n|s|j|m|t)'/,
+                    ""
+                )
+            )
+            .map(m=>
+                m.replace(
+                    /[,.!?;:()«»]/g,
+                    ""
+                )
+            )
+            .filter(m=>m.length>=3)
+            .filter(m=>
+                !motsVidesActuels.includes(m)
+            )
+            .filter(m=>
+                !MOTS_INTERROGATIFS_REQUETE.includes(m)
+            );
+
+    /*
+     Si tout a été filtré (requête entièrement composée de
+     mots vides), on retombe sur la requête d'origine plutôt
+     que d'envoyer une chaîne vide à l'API.
+    */
+
+    return termes.length ?
+        termes.join(" ") :
+        brut;
+
+}
+
+
 async function effectuerCiblageEclair(requete,statutEl){
+
+    const requeteNettoyee =
+        nettoyerRequeteCiblage(requete);
+
+    const requeteAffichee =
+        requeteNettoyee!==requete.trim() ?
+            requeteNettoyee + " (à partir de \"" +
+                requete + "\")" :
+            requete;
 
     if(statutEl){
 
         statutEl.textContent =
             "🎯 Recherche Wikipédia sur \"" +
-            requete + "\"...";
+            requeteAffichee + "\"...";
 
     }
 
@@ -7616,7 +7706,7 @@ async function effectuerCiblageEclair(requete,statutEl){
         );
 
     const titre =
-        await rechercherTitreLie(requete);
+        await rechercherTitreLie(requeteNettoyee);
 
     if(!titre){
 
@@ -7704,6 +7794,7 @@ async function effectuerCiblageEclair(requete,statutEl){
 
         titre,
         requete,
+        requete_nettoyee:requeteNettoyee,
         motsCles,
         nbTokensAppris,
         dureeRecherche

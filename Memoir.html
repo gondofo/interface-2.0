@@ -7443,6 +7443,159 @@ CIBLAGE ECLAIR
  lourd que ce que "chirurgical" suggère).
 */
 
+/*
+ Sauvegarde/restauration complète de la mémoire — le vrai
+ "buffer temporaire, non persistant" demandé. `memoire` est
+ déjà garantie sérialisable en JSON (c'est le principe même de
+ la sauvegarde/chargement) : on peut donc en cloner l'état
+ complet avant d'apprendre l'article ciblé, puis restaurer
+ exactement cet état après la génération — sans avoir à faire
+ transiter un magasin parallèle à travers chaque fonction de
+ score (ce qui, ça, serait effectivement un chantier bien plus
+ lourd). Le coût réel est celui du clonage lui-même, proportion-
+ nel à la taille de la mémoire ; annoncé dans le statut affiché
+ à l'utilisateur plutôt que caché.
+*/
+
+function cloneMemoire(){
+
+    return JSON.parse(
+        JSON.stringify(memoire)
+    );
+
+}
+
+function restaurerMemoire(sauvegarde){
+
+    memoire = sauvegarde;
+
+}
+
+
+/*
+ Recherche + apprentissage éclair, partagés par le bouton
+ simple et le Batch Runner. Retourne null en cas d'échec, sinon
+ {titre, motsCles, nbTokensAppris, dureeRecherche} où motsCles
+ est l'ensemble des mots significatifs de l'article (hors mots
+ vides), utilisé ensuite pour vérifier que le vocabulaire ciblé
+ apparaît réellement dans les textes générés.
+*/
+
+async function effectuerCiblageEclair(requete,statutEl){
+
+    if(statutEl){
+
+        statutEl.textContent =
+            "🎯 Recherche Wikipédia sur \"" +
+            requete + "\"...";
+
+    }
+
+    const debut =
+        (
+            typeof performance!=="undefined" ?
+                performance.now() :
+                Date.now()
+        );
+
+    const titre =
+        await rechercherTitreLie(requete);
+
+    if(!titre){
+
+        if(statutEl){
+
+            statutEl.textContent =
+                "❌ Aucun article Wikipédia trouvé " +
+                "pour ce sujet.";
+
+        }
+
+        return null;
+
+    }
+
+    if(statutEl){
+
+        statutEl.textContent =
+            "🎯 Article trouvé : \"" + titre +
+            "\". Récupération...";
+
+    }
+
+    const resultatWiki =
+        await recupererWikipedia(titre);
+
+    const dureeRecherche =
+        (
+            typeof performance!=="undefined" ?
+                performance.now() :
+                Date.now()
+        ) - debut;
+
+    if(!resultatWiki){
+
+        if(statutEl){
+
+            statutEl.textContent =
+                "❌ Impossible de récupérer " +
+                "l'article \"" + titre + "\".";
+
+        }
+
+        return null;
+
+    }
+
+    if(statutEl){
+
+        statutEl.textContent =
+            "🔬 Affinage sémantique en cours — " +
+            "apprentissage de \"" + titre + "\" (" +
+            Math.round(dureeRecherche) +
+            " ms de recherche)...";
+
+    }
+
+    /*
+     Laisse le navigateur peindre la mise à jour du statut
+     avant le calcul synchrone d'apprentissage.
+    */
+
+    await new Promise(r=>setTimeout(r,0));
+
+    const nbTokensAppris =
+        apprendreTexte(
+            resultatWiki.texte,
+            "cible_ponctuelle"
+        );
+
+    const motsVidesActuels =
+        getMotsVides();
+
+    const motsCles =
+        new Set(
+            tokenizer(resultatWiki.texte)
+                .filter(m=>
+                    !isPonctuation(m) &&
+                    !motsVidesActuels.includes(m) &&
+                    m.length>=4
+                )
+        );
+
+    return {
+
+        titre,
+        requete,
+        motsCles,
+        nbTokensAppris,
+        dureeRecherche
+
+    };
+
+}
+
+
 async function genererAvecCiblage(){
 
     const requete =
@@ -7469,83 +7622,26 @@ async function genererAvecCiblage(){
 
     btn.disabled=true;
 
-    statut.textContent =
-        "🎯 Recherche Wikipédia sur \"" +
-        requete + "\"...";
-
-    const debut =
-        (
-            typeof performance!=="undefined" ?
-                performance.now() :
-                Date.now()
+    const resultat =
+        await effectuerCiblageEclair(
+            requete,
+            statut
         );
 
-    const titre =
-        await rechercherTitreLie(requete);
-
-    if(!titre){
-
-        statut.textContent =
-            "❌ Aucun article Wikipédia trouvé " +
-            "pour ce sujet.";
+    if(!resultat){
 
         btn.disabled=false;
 
         return;
 
     }
-
-    statut.textContent =
-        "🎯 Article trouvé : \"" + titre +
-        "\". Récupération...";
-
-    const resultatWiki =
-        await recupererWikipedia(titre);
-
-    const dureeRecherche =
-        (
-            typeof performance!=="undefined" ?
-                performance.now() :
-                Date.now()
-        ) - debut;
-
-    if(!resultatWiki){
-
-        statut.textContent =
-            "❌ Impossible de récupérer " +
-            "l'article \"" + titre + "\".";
-
-        btn.disabled=false;
-
-        return;
-
-    }
-
-    statut.textContent =
-        "🎯 Apprentissage de \"" + titre +
-        "\" (" + Math.round(dureeRecherche) +
-        " ms de recherche)...";
-
-
-    /*
-     Laisse le navigateur peindre la mise à jour du statut
-     avant le calcul synchrone d'apprentissage.
-    */
-
-    await new Promise(r=>setTimeout(r,0));
-
-    const nbTokensAppris =
-        apprendreTexte(
-            resultatWiki.texte,
-            "cible_ponctuelle"
-        );
 
     journaliser(
-        "🎯 Ciblage éclair : \"" + requete +
-        "\" → \"" + titre + "\" (+" +
-        formatNombre(nbTokensAppris) +
+        "🎯 Ciblage éclair : \"" + resultat.requete +
+        "\" → \"" + resultat.titre + "\" (+" +
+        formatNombre(resultat.nbTokensAppris) +
         " tokens, " +
-        Math.round(dureeRecherche) +
+        Math.round(resultat.dureeRecherche) +
         " ms de recherche)"
     );
 
@@ -7554,9 +7650,9 @@ async function genererAvecCiblage(){
     afficherInfosMemoire();
 
     statut.textContent =
-        "✅ Généré à partir de \"" + titre +
+        "✅ Généré à partir de \"" + resultat.titre +
         "\" (recherche : " +
-        Math.round(dureeRecherche) + " ms).";
+        Math.round(resultat.dureeRecherche) + " ms).";
 
     btn.disabled=false;
 
@@ -7745,7 +7841,7 @@ async function lancerLotDeTests(){
         document
             .getElementById("batchResultat")
             .textContent =
-            "❌ Aucune mémoire à tester.";
+            "\u274c Aucune m\u00e9moire \u00e0 tester.";
 
         return;
 
@@ -7776,13 +7872,11 @@ async function lancerLotDeTests(){
     btnExporter.disabled=true;
 
     zoneResultat.textContent =
-        "⏳ Lot en cours...";
+        "\u23f3 Lot en cours...";
 
 
     /*
-     Réglages d'origine, restaurés à la fin : le batch runner
-     manipule les mêmes contrôles que l'utilisateur, donc on ne
-     doit pas les laisser dans un état différent après coup.
+     R\u00e9glages d'origine, restaur\u00e9s \u00e0 la fin.
     */
 
     const elLongueur =
@@ -7799,10 +7893,75 @@ async function lancerLotDeTests(){
     const origNiveau = elNiveau.value;
 
 
+    /*
+     Connexion Batch Runner <-> Ciblage \u00e9clair (bug signal\u00e9
+     en test : la saisie du sujet n'\u00e9tait consult\u00e9e par
+     aucune fonction du Batch Runner). Si un mot-cl\u00e9 est
+     pr\u00e9sent, on sauvegarde la m\u00e9moire compl\u00e8te AVANT
+     d'apprendre l'article, on g\u00e9n\u00e8re tout le lot avec cette
+     m\u00e9moire enrichie, puis on restaure l'\u00e9tat d'origine \u00e0
+     la fin -- un vrai buffer temporaire, purg\u00e9 apr\u00e8s usage.
+    */
+
+    const elCible =
+        document.getElementById("cibleRecherche");
+
+    const requeteCiblage =
+        elCible ? elCible.value.trim() : "";
+
+    const statutCiblage =
+        document.getElementById("statutCiblage");
+
+    let sauvegardeMemoire = null;
+    let infosCiblage = null;
+
+    if(requeteCiblage){
+
+        sauvegardeMemoire =
+            cloneMemoire();
+
+        infosCiblage =
+            await effectuerCiblageEclair(
+                requeteCiblage,
+                statutCiblage
+            );
+
+        if(!infosCiblage){
+
+            zoneResultat.textContent =
+                "\u274c Ciblage \u00e9chou\u00e9 pour \"" +
+                requeteCiblage +
+                "\" -- lot annul\u00e9. Vide le champ de " +
+                "ciblage pour lancer un lot al\u00e9atoire normal.";
+
+            btnLancer.disabled=false;
+            btnExporter.disabled=false;
+
+            return;
+
+        }
+
+        journaliser(
+            "\ud83c\udfaf Ciblage \u00e9clair (lot) : \"" +
+            infosCiblage.requete + "\" \u2192 \"" +
+            infosCiblage.titre + "\" (+" +
+            formatNombre(infosCiblage.nbTokensAppris) +
+            " tokens)"
+        );
+
+        zoneResultat.textContent =
+            "\ud83d\udd2c Affinage s\u00e9mantique en cours -- " +
+            "g\u00e9n\u00e9ration du lot avec \"" +
+            infosCiblage.titre + "\"...";
+
+    }
+
+
     const instantane =
         capturerInstantaneMemoire();
 
     const tests=[];
+    let testsAvecCorrespondance=0;
 
     for(
         let i=0;
@@ -7858,6 +8017,35 @@ async function lancerLotDeTests(){
         const alertes =
             validerTexteGenere(texte,longueur);
 
+        let correspondCiblage = null;
+
+        if(infosCiblage){
+
+            const motsTexte =
+                new Set(
+                    tokenizer(texte)
+                );
+
+            correspondCiblage =
+                [...infosCiblage.motsCles].some(
+                    m=>motsTexte.has(m)
+                );
+
+            if(correspondCiblage){
+
+                testsAvecCorrespondance++;
+
+            }
+            else{
+
+                alertes.push(
+                    "aucun mot du sujet cibl\u00e9 d\u00e9tect\u00e9"
+                );
+
+            }
+
+        }
+
         tests.push({
 
             numero:i+1,
@@ -7875,16 +8063,23 @@ async function lancerLotDeTests(){
             temps_calcul_ms:
                 Math.round((fin-debut)*10)/10,
 
+            correspond_au_ciblage:correspondCiblage,
+
             alertes
 
         });
 
         zoneResultat.textContent =
-            "⏳ Test " + (i+1) + "/" + nombre + "...";
+            (
+                infosCiblage ?
+                    "\ud83d\udd2c Affinage s\u00e9mantique -- " :
+                    "\u23f3 "
+            ) +
+            "Test " + (i+1) + "/" + nombre + "...";
 
         /*
-         Laisse le navigateur respirer entre deux générations
-         (évite de geler l'interface sur un gros lot).
+         Laisse le navigateur respirer entre deux g\u00e9n\u00e9rations
+         (\u00e9vite de geler l'interface sur un gros lot).
         */
 
         await new Promise(r=>setTimeout(r,10));
@@ -7909,6 +8104,32 @@ async function lancerLotDeTests(){
     }
 
 
+    /*
+     Reset : purge du buffer temporaire. La m\u00e9moire globale
+     retrouve exactement son \u00e9tat d'avant le ciblage -- rien
+     n'en subsiste, ni l'article appris, ni les statistiques
+     mises \u00e0 jour entre-temps.
+    */
+
+    if(sauvegardeMemoire){
+
+        restaurerMemoire(sauvegardeMemoire);
+
+        afficherInfosMemoire();
+
+        if(statutCiblage){
+
+            statutCiblage.textContent =
+                "\u2705 Lot termin\u00e9 avec \"" +
+                infosCiblage.titre +
+                "\" -- m\u00e9moire restaur\u00e9e " +
+                "\u00e0 son \u00e9tat d'origine.";
+
+        }
+
+    }
+
+
     dernierLotDeTests = {
 
         date_export:
@@ -7916,13 +8137,37 @@ async function lancerLotDeTests(){
 
         instantane_memoire:instantane,
 
+        ciblage:
+            infosCiblage ? {
+
+                actif:true,
+                requete:infosCiblage.requete,
+                titre_article:infosCiblage.titre,
+                tokens_appris:infosCiblage.nbTokensAppris,
+                tests_avec_correspondance:testsAvecCorrespondance,
+                tests_total:nombre
+
+            } : { actif:false },
+
         tests
 
     };
 
 
     let resume =
-        "✅ " + nombre + " tests terminés.\n\n";
+        "\u2705 " + nombre + " tests termin\u00e9s.";
+
+    if(infosCiblage){
+
+        resume +=
+            " (cibl\u00e9 sur \"" + infosCiblage.titre +
+            "\" -- " + testsAvecCorrespondance + "/" +
+            nombre + " textes contiennent du vocabulaire " +
+            "de ce sujet)";
+
+    }
+
+    resume += "\n\n";
 
     for(const t of tests){
 
@@ -7937,8 +8182,8 @@ async function lancerLotDeTests(){
         if(t.alertes.length){
 
             resume +=
-                "\n   ⚠️ " +
-                t.alertes.join(" · ");
+                "\n   \u26a0\ufe0f " +
+                t.alertes.join(" \u00b7 ");
 
         }
 

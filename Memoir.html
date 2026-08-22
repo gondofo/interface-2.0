@@ -669,6 +669,138 @@ SMALL
     transition:width .15s ease;
 }
 
+
+/* Studio de test — 3 colonnes */
+
+.studio-grid{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+}
+
+.studio-col{
+    background:rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:10px;
+    padding:12px;
+}
+
+.studio-chat{
+    display:flex;
+    flex-direction:column;
+    min-height:280px;
+}
+
+.studio-log{
+    flex:1;
+    overflow-y:auto;
+    max-height:420px;
+    padding-right:4px;
+    margin-bottom:10px;
+}
+
+.studio-empty{
+    text-align:center;
+    color:var(--dim);
+    font-size:.8rem;
+    padding:30px 10px;
+}
+
+.studio-message,
+.studio-response{
+    border-radius:10px;
+    padding:10px 12px;
+    margin-bottom:8px;
+    font-size:.85rem;
+    line-height:1.5;
+}
+
+.studio-message{
+    background:rgba(59,130,246,.12);
+    border:1px solid rgba(59,130,246,.25);
+}
+
+.studio-response{
+    background:rgba(34,197,94,.08);
+    border:1px solid rgba(34,197,94,.18);
+}
+
+.studio-response-meta{
+    font-size:.72rem;
+    color:var(--dim);
+    margin-top:6px;
+}
+
+.studio-input-row{
+    display:flex;
+    gap:8px;
+}
+
+.studio-input-row input{
+    flex:1;
+    margin-bottom:0;
+}
+
+.studio-send{
+    flex-shrink:0;
+    width:42px;
+    border-radius:8px;
+    border:none;
+    background:var(--accent,#22c55e);
+    color:#fff;
+    font-size:1.1rem;
+    cursor:pointer;
+}
+
+.studio-send:disabled{
+    opacity:.4;
+    cursor:not-allowed;
+}
+
+.debug-metric{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:8px;
+    padding:6px 0;
+    border-bottom:1px solid rgba(255,255,255,.05);
+    font-size:.78rem;
+}
+
+.debug-metric span{
+    color:var(--dim);
+}
+
+.debug-metric strong{
+    text-align:right;
+    word-break:break-word;
+}
+
+@media(min-width:900px){
+
+    .studio-grid{
+        flex-direction:row;
+        align-items:stretch;
+    }
+
+    .studio-params{
+        width:210px;
+        flex-shrink:0;
+    }
+
+    .studio-chat{
+        flex:1;
+        min-width:0;
+    }
+
+    .studio-debug{
+        width:230px;
+        flex-shrink:0;
+    }
+
+}
+
+
 .empty{
     text-align:center;
 
@@ -1175,137 +1307,171 @@ GENERATION
 
     <div class="panel">
 
-        <h2>🤖 Poste de test</h2>
+        <h2>🎬 Studio de test</h2>
 
         <div class="hint">
-            Réglages, ciblage éclair et lot de tests regroupés
-            ici — tes préférences (longueur, influence, mode de
-            lot...) sont mémorisées automatiquement d'une visite
-            à l'autre.
+            Interaction en direct : ajuste les paramètres à
+            gauche, pose une question ou lance une génération au
+            centre, regarde ce qui se passe sous le capot à
+            droite. Tes réglages sont mémorisés d'une visite à
+            l'autre.
         </div>
 
-        <select id="longueur">
+        <div class="studio-grid">
 
-            <option value="10">
-                Phrase courte — 10 mots
-            </option>
+            <div class="studio-col studio-params">
 
-            <option value="20" selected>
-                Phrase normale — 20 mots
-            </option>
+                <div class="small">
+                    Longueur
+                </div>
 
-            <option value="30">
-                Phrase longue — 30 mots
-            </option>
+                <select id="longueur">
 
-            <option value="50">
-                Phrase très longue — 50 mots
-            </option>
+                    <option value="10">
+                        Courte — 10 mots
+                    </option>
 
-        </select>
+                    <option value="20" selected>
+                        Normale — 20 mots
+                    </option>
+
+                    <option value="30">
+                        Longue — 30 mots
+                    </option>
+
+                    <option value="50">
+                        Très longue — 50 mots
+                    </option>
+
+                </select>
 
 
-        <div class="small">
-            Influence sémantique
+                <div class="small" style="margin-top:10px">
+                    Influence sémantique
+                </div>
+
+                <input
+                    id="forceSemantique"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="60"
+                >
+
+                <div class="small">
+                    <span id="forceValue">60%</span>
+                </div>
+
+
+                <div class="small" style="margin-top:10px">
+                    Niveau cognitif
+                </div>
+
+                <select id="niveauGeneration">
+
+                    <option value="equilibre" selected>
+                        Équilibré
+                    </option>
+
+                    <option value="fort">
+                        Connaissances fortes
+                    </option>
+
+                    <option value="exploration">
+                        Exploration faible confiance
+                    </option>
+
+                    <option value="contexte">
+                        Contexte prioritaire
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="studio-col studio-chat">
+
+                <div id="studioLog" class="studio-log">
+
+                    <div class="studio-empty">
+                        Pose une question, un sujet, ou laisse
+                        vide et lance une génération libre.
+                    </div>
+
+                </div>
+
+                <div class="studio-input-row">
+
+                    <input
+                        id="cibleRecherche"
+                        type="text"
+                        placeholder="Question ou sujet — Entrée pour lancer">
+
+                    <button
+                        id="btnGenerer"
+                        class="studio-send"
+                        onclick="genererDepuisStudio()"
+                        disabled>
+                        ➤
+                    </button>
+
+                </div>
+
+                <div
+                    id="statutCiblage"
+                    class="hint"
+                    style="margin-top:4px">
+                </div>
+
+            </div>
+
+
+            <div class="studio-col studio-debug">
+
+                <div class="small">
+                    🔬 Sous le capot
+                </div>
+
+                <div class="debug-metric">
+                    <span>Tokens mémoire</span>
+                    <strong id="debugTokens">—</strong>
+                </div>
+
+                <div class="debug-metric">
+                    <span>Article ciblé</span>
+                    <strong id="debugArticle">—</strong>
+                </div>
+
+                <div class="debug-metric">
+                    <span>Correspondance</span>
+                    <strong id="debugCorrespondance">—</strong>
+                </div>
+
+                <div class="debug-metric">
+                    <span>Temps de calcul</span>
+                    <strong id="debugTemps">—</strong>
+                </div>
+
+                <div class="debug-metric">
+                    <span>Fortes / Moy. / Faibles</span>
+                    <strong id="debugGraphe">—</strong>
+                </div>
+
+                <div class="debug-metric">
+                    <span>Hypothèses</span>
+                    <strong id="debugHypotheses">—</strong>
+                </div>
+
+            </div>
+
         </div>
-
-        <input
-            id="forceSemantique"
-            type="range"
-            min="0"
-            max="100"
-            value="60"
-        >
-
-        <div
-            class="small"
-            style="margin-bottom:10px">
-
-            <span id="forceValue">
-                60%
-            </span>
-
-        </div>
-
-
-        <div class="small">
-            Niveau cognitif
-        </div>
-
-        <select id="niveauGeneration">
-
-            <option value="equilibre" selected>
-                Équilibré
-            </option>
-
-            <option value="fort">
-                Connaissances fortes
-            </option>
-
-            <option value="exploration">
-                Exploration faible confiance
-            </option>
-
-            <option value="contexte">
-                Contexte prioritaire
-            </option>
-
-        </select>
-
-
-        <div class="small" style="margin-top:12px">
-            🎯 Ciblage éclair (optionnel — Entrée pour lancer)
-        </div>
-
-        <input
-            id="cibleRecherche"
-            type="text"
-            style="width:100%"
-            placeholder="Mot-clé ou question pour orienter cette génération">
-
-        <div class="hint">
-            Cherche un article Wikipédia sur ce sujet précis,
-            l'apprend à la volée, puis génère avec. Si un lot est
-            lancé ci-dessous avec ce champ rempli, la mémoire est
-            restaurée à l'identique juste après (buffer temporaire,
-            voir le journal pour le détail).
-        </div>
-
-        <button
-            id="btnCiblage"
-            class="secondary btn-block"
-            style="margin-top:6px"
-            onclick="genererAvecCiblage()">
-            🎯 Générer avec ce sujet
-        </button>
-
-        <div
-            id="statutCiblage"
-            class="hint"
-            style="margin-top:4px">
-        </div>
-
-
-        <button
-            id="btnGenerer"
-            class="success btn-block"
-            style="margin-top:10px"
-            onclick="genererPhrase()"
-            disabled>
-
-            ✨ Générer une phrase
-
-        </button>
 
 
         <div
             id="resultat"
-            class="output">
-
-            En attente d'apprentissage...
-
+            style="display:none">
         </div>
-
 
         <hr style="margin:16px 0;opacity:.2">
 
@@ -2821,6 +2987,121 @@ async function rechercherTitreLie(motCle){
         return null;
 
     }
+
+}
+
+
+/*
+ Repli en cascade pour les requêtes trop denses ou trop
+ spécifiques : si la recherche directe échoue (aucun article
+ trouvé), on retire progressivement des mots depuis la fin,
+ puis en dernier recours on essaie le mot le plus long (souvent
+ le plus spécifique/porteur de sens). Nombre de tentatives
+ volontairement plafonné pour ne pas enchaîner trop d'appels
+ réseau sur une requête qui ne mènera nulle part.
+*/
+
+async function rechercherTitreLieAvecRepli(
+    requeteNettoyee,
+    statutEl
+){
+
+    let titre =
+        await rechercherTitreLie(requeteNettoyee);
+
+    if(titre){
+
+        return {
+            titre,
+            requeteUtilisee:requeteNettoyee,
+            repli:false
+        };
+
+    }
+
+    const mots =
+        requeteNettoyee
+            .split(/\s+/)
+            .filter(Boolean);
+
+    if(mots.length<=1){
+        return null;
+    }
+
+    if(statutEl){
+
+        statutEl.textContent =
+            "🔍 Aucun résultat direct, découpage " +
+            "de la requête...";
+
+    }
+
+    const TENTATIVES_MAX=3;
+
+    const nbTentatives =
+        Math.min(
+            mots.length-1,
+            TENTATIVES_MAX
+        );
+
+    for(
+        let n=mots.length-1;
+        n>=mots.length-nbTentatives &&
+            n>=1;
+        n--
+    ){
+
+        const sousRequete =
+            mots.slice(0,n).join(" ");
+
+        titre =
+            await rechercherTitreLie(sousRequete);
+
+        if(titre){
+
+            return {
+                titre,
+                requeteUtilisee:sousRequete,
+                repli:true
+            };
+
+        }
+
+    }
+
+
+    /*
+     Dernier recours : les mots pris individuellement, du plus
+     long au plus court (généralement les plus spécifiques),
+     jusqu'à 3 essais. Un seul mot, même le plus long, ne
+     suffit pas toujours à retrouver le bon article — observé
+     en test.
+    */
+
+    const motsTries =
+        mots
+            .slice()
+            .sort((a,b)=>b.length-a.length)
+            .slice(0,3);
+
+    for(const mot of motsTries){
+
+        titre =
+            await rechercherTitreLie(mot);
+
+        if(titre){
+
+            return {
+                titre,
+                requeteUtilisee:mot,
+                repli:true
+            };
+
+        }
+
+    }
+
+    return null;
 
 }
 
@@ -6285,6 +6566,34 @@ function scoreSemantique(
     }
 
 
+    /*
+     Bonus vectoriel direct (embeddings légers) : jusqu'ici,
+     obtenirVecteur()/similariteCosinus() ne servaient qu'à
+     éviter une pénalité via distanceSemantique (un rôle
+     "défensif"). Ceci ajoute une vraie contribution positive
+     quand deux mots sont proches géométriquement, même sans
+     association directe ni catégorie commune — pour resserrer
+     la génération autour du sujet ciblé plutôt que de se
+     contenter de ne pas s'en éloigner.
+    */
+
+    const simDirecte =
+        similariteCosinus(
+            obtenirVecteur(precedent),
+            obtenirVecteur(candidat)
+        );
+
+    if(
+        simDirecte!==null &&
+        simDirecte>0
+    ){
+
+        score +=
+            simDirecte*3*echelle;
+
+    }
+
+
     /* catégories communes */
 
     const cat1 =
@@ -7705,16 +8014,19 @@ async function effectuerCiblageEclair(requete,statutEl){
                 Date.now()
         );
 
-    const titre =
-        await rechercherTitreLie(requeteNettoyee);
+    const resultatRecherche =
+        await rechercherTitreLieAvecRepli(
+            requeteNettoyee,
+            statutEl
+        );
 
-    if(!titre){
+    if(!resultatRecherche){
 
         if(statutEl){
 
             statutEl.textContent =
-                "❌ Aucun article Wikipédia trouvé " +
-                "pour ce sujet.";
+                "❌ Aucun article Wikipédia trouvé, " +
+                "même après découpage de la requête.";
 
         }
 
@@ -7722,10 +8034,20 @@ async function effectuerCiblageEclair(requete,statutEl){
 
     }
 
+    const titre =
+        resultatRecherche.titre;
+
     if(statutEl){
 
         statutEl.textContent =
-            "🎯 Article trouvé : \"" + titre +
+            (
+                resultatRecherche.repli ?
+                    "🎯 Article trouvé via repli (\"" +
+                        resultatRecherche.requeteUtilisee +
+                        "\") : \"" :
+                    "🎯 Article trouvé : \""
+            ) +
+            titre +
             "\". Récupération...";
 
     }
@@ -7804,67 +8126,341 @@ async function effectuerCiblageEclair(requete,statutEl){
 }
 
 
-async function genererAvecCiblage(){
+/*
+ Fonctions d'assistance du Studio : rendu du log façon "chat"
+ et mise à jour du panneau de transparence en temps réel.
+*/
 
-    const requete =
-        document
-            .getElementById("cibleRecherche")
-            .value.trim();
+function ajouterMessageStudio(texte){
 
-    const statut =
-        document.getElementById(
-            "statutCiblage"
-        );
+    const log =
+        document.getElementById("studioLog");
 
-    if(!requete){
-
-        statut.textContent =
-            "❌ Aucun mot-clé saisi.";
-
+    if(!log){
         return;
+    }
+
+    const vide =
+        log.querySelector(".studio-empty");
+
+    if(vide){
+
+        log.removeChild(vide);
 
     }
 
+    const bulle =
+        document.createElement("div");
+
+    bulle.className="studio-message";
+    bulle.textContent=texte;
+
+    log.appendChild(bulle);
+
+    log.scrollTop=log.scrollHeight;
+
+}
+
+function ajouterReponseStudio(texte,meta){
+
+    const log =
+        document.getElementById("studioLog");
+
+    if(!log){
+        return;
+    }
+
+    const bulle =
+        document.createElement("div");
+
+    bulle.className="studio-response";
+    bulle.textContent=texte;
+
+    if(meta){
+
+        const infosMeta =
+            document.createElement("div");
+
+        infosMeta.className=
+            "studio-response-meta";
+
+        let ligne="";
+
+        if(meta.article){
+
+            ligne +=
+                "📄 " + meta.article + "  ";
+
+        }
+
+        if(
+            meta.correspond!==null &&
+            meta.correspond!==undefined
+        ){
+
+            ligne +=
+                (
+                    meta.correspond ?
+                        "✅ correspond" :
+                        "⚠️ pas de correspondance"
+                ) + "  ";
+
+        }
+
+        if(meta.duree!==undefined){
+
+            ligne +=
+                "⏱️ " +
+                Math.round(meta.duree) +
+                " ms";
+
+        }
+
+        infosMeta.textContent=ligne;
+
+        bulle.appendChild(infosMeta);
+
+    }
+
+    log.appendChild(bulle);
+
+    log.scrollTop=log.scrollHeight;
+
+}
+
+function mettreAJourPanneauDebug(
+    infosCiblageLocal,
+    correspond,
+    duree
+){
+
+    const elTokens =
+        document.getElementById("debugTokens");
+
+    if(elTokens){
+
+        elTokens.textContent =
+            formatNombre(
+                memoire.statistiques.tokens
+            );
+
+    }
+
+    const elArticle =
+        document.getElementById("debugArticle");
+
+    if(elArticle){
+
+        elArticle.textContent =
+            infosCiblageLocal ?
+                infosCiblageLocal.titre :
+                "—";
+
+    }
+
+    const elCorrespondance =
+        document.getElementById(
+            "debugCorrespondance"
+        );
+
+    if(elCorrespondance){
+
+        elCorrespondance.textContent =
+            correspond===null ?
+                "—" :
+                (
+                    correspond ?
+                        "✅ Oui" :
+                        "❌ Non"
+                );
+
+    }
+
+    const elTemps =
+        document.getElementById("debugTemps");
+
+    if(elTemps){
+
+        elTemps.textContent =
+            Math.round(duree) + " ms";
+
+    }
+
+
+    /*
+     Réutilise les compteurs déjà calculés par le tableau de
+     bord principal (strongCount/mediumCount/weakCount/
+     hypothesisCount), sans dupliquer le calcul.
+    */
+
+    const strongEl =
+        document.getElementById("strongCount");
+
+    const mediumEl =
+        document.getElementById("mediumCount");
+
+    const weakEl =
+        document.getElementById("weakCount");
+
+    const hypEl =
+        document.getElementById("hypothesisCount");
+
+    const elGraphe =
+        document.getElementById("debugGraphe");
+
+    if(elGraphe && strongEl){
+
+        elGraphe.textContent =
+            strongEl.textContent + " / " +
+            mediumEl.textContent + " / " +
+            weakEl.textContent;
+
+    }
+
+    const elHyp =
+        document.getElementById("debugHypotheses");
+
+    if(elHyp && hypEl){
+
+        elHyp.textContent =
+            hypEl.textContent;
+
+    }
+
+}
+
+
+async function genererDepuisStudio(){
+
+    const inputEl =
+        document.getElementById("cibleRecherche");
+
+    const requete =
+        inputEl.value.trim();
+
+    const statut =
+        document.getElementById("statutCiblage");
+
     const btn =
-        document.getElementById("btnCiblage");
+        document.getElementById("btnGenerer");
 
     btn.disabled=true;
 
-    const resultat =
-        await effectuerCiblageEclair(
-            requete,
-            statut
+    const debut =
+        (
+            typeof performance!=="undefined" ?
+                performance.now() :
+                Date.now()
         );
 
-    if(!resultat){
+    let infosCiblageLocal=null;
 
-        btn.disabled=false;
+    if(requete){
 
-        return;
+        ajouterMessageStudio(requete);
+
+        infosCiblageLocal =
+            await effectuerCiblageEclair(
+                requete,
+                statut
+            );
+
+        if(!infosCiblageLocal){
+
+            ajouterReponseStudio(
+                "❌ Aucun article Wikipédia trouvé pour " +
+                "ce sujet, même après repli.",
+                null
+            );
+
+            rafraichirEtatGenerer();
+
+            return;
+
+        }
+
+        journaliser(
+            "🎯 Studio : \"" +
+            infosCiblageLocal.requete +
+            "\" → \"" + infosCiblageLocal.titre +
+            "\" (+" +
+            formatNombre(infosCiblageLocal.nbTokensAppris) +
+            " tokens)"
+        );
+
+    }
+    else{
+
+        ajouterMessageStudio(
+            "(génération libre)"
+        );
 
     }
 
-    journaliser(
-        "🎯 Ciblage éclair : \"" + resultat.requete +
-        "\" → \"" + resultat.titre + "\" (+" +
-        formatNombre(resultat.nbTokensAppris) +
-        " tokens, " +
-        Math.round(resultat.dureeRecherche) +
-        " ms de recherche)"
-    );
-
     genererPhrase();
+
+    const texte =
+        document
+            .getElementById("resultat")
+            .textContent;
+
+    const duree =
+        (
+            typeof performance!=="undefined" ?
+                performance.now() :
+                Date.now()
+        ) - debut;
+
+    let correspond=null;
+
+    if(infosCiblageLocal){
+
+        const motsTexte =
+            new Set(tokenizer(texte));
+
+        correspond =
+            [...infosCiblageLocal.motsCles].some(
+                m=>motsTexte.has(m)
+            );
+
+    }
+
+    ajouterReponseStudio(texte,{
+
+        article:
+            infosCiblageLocal ?
+                infosCiblageLocal.titre :
+                null,
+
+        correspond,
+        duree
+
+    });
 
     afficherInfosMemoire();
 
-    statut.textContent =
-        "✅ Généré à partir de \"" + resultat.titre +
-        "\" (recherche : " +
-        Math.round(resultat.dureeRecherche) + " ms).";
+    mettreAJourPanneauDebug(
+        infosCiblageLocal,
+        correspond,
+        duree
+    );
+
+    if(statut){
+
+        statut.textContent =
+            infosCiblageLocal ?
+                "✅ Généré à partir de \"" +
+                    infosCiblageLocal.titre + "\"." :
+                "";
+
+    }
+
+    inputEl.value="";
 
     btn.disabled=false;
 
 }
+
 
 /*
  Automatise ce que le protocole de test manuel faisait jusque
@@ -11816,7 +12412,7 @@ function activerEntreePourAction(idChamp,action){
 
 activerEntreePourAction(
     "cibleRecherche",
-    ()=>genererAvecCiblage()
+    ()=>genererDepuisStudio()
 );
 
 activerEntreePourAction(

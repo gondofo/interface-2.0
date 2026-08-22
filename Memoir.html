@@ -670,33 +670,85 @@ SMALL
 }
 
 
-/* Studio de test — 3 colonnes */
+/* Studio de test — plein écran avec tiroirs coulissants */
 
-.studio-grid{
+.studio-app{
     display:flex;
     flex-direction:column;
-    gap:14px;
+
+    /*
+     Hauteur approximative disponible entre l'en-tête sticky et
+     la barre d'onglets fixe en bas. Valeurs estimées depuis les
+     paddings/tailles de .hdr et .tabbar — à ajuster si besoin
+     une fois vu en conditions réelles.
+    */
+    height:calc(100vh - 118px);
+    min-height:420px;
+
+    margin:-4px -14px 0;
 }
 
-.studio-col{
-    background:rgba(255,255,255,.03);
-    border:1px solid rgba(255,255,255,.06);
-    border-radius:10px;
-    padding:12px;
+.studio-topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:6px 10px;
+    border-bottom:1px solid var(--line);
 }
 
-.studio-chat{
+.studio-hamburger{
+    background:none;
+    border:none;
+    color:var(--text);
+    font-size:1.3rem;
+    padding:6px 10px;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.studio-hamburger:active{
+    background:rgba(255,255,255,.08);
+}
+
+.studio-title{
+    font-weight:700;
+    font-size:.85rem;
+    color:var(--dim);
+}
+
+.studio-body{
+    position:relative;
+    flex:1;
+    min-height:0;
+    overflow:hidden;
+}
+
+.studio-backdrop{
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,.5);
+    z-index:20;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease;
+}
+
+.studio-body.drawer-ouvert .studio-backdrop{
+    opacity:1;
+    pointer-events:auto;
+}
+
+.studio-main{
+    height:100%;
     display:flex;
     flex-direction:column;
-    min-height:280px;
+    padding:10px 14px;
 }
 
 .studio-log{
     flex:1;
     overflow-y:auto;
-    max-height:420px;
     padding-right:4px;
-    margin-bottom:10px;
 }
 
 .studio-empty{
@@ -731,12 +783,14 @@ SMALL
     margin-top:6px;
 }
 
-.studio-input-row{
+.studio-input-bar{
     display:flex;
     gap:8px;
+    padding:10px 14px;
+    border-top:1px solid var(--line);
 }
 
-.studio-input-row input{
+.studio-input-bar input{
     flex:1;
     margin-bottom:0;
 }
@@ -755,6 +809,11 @@ SMALL
 .studio-send:disabled{
     opacity:.4;
     cursor:not-allowed;
+}
+
+.studio-statut{
+    padding:0 14px 8px;
+    margin:0;
 }
 
 .debug-metric{
@@ -776,29 +835,54 @@ SMALL
     word-break:break-word;
 }
 
-@media(min-width:900px){
-
-    .studio-grid{
-        flex-direction:row;
-        align-items:stretch;
-    }
-
-    .studio-params{
-        width:210px;
-        flex-shrink:0;
-    }
-
-    .studio-chat{
-        flex:1;
-        min-width:0;
-    }
-
-    .studio-debug{
-        width:230px;
-        flex-shrink:0;
-    }
-
+.studio-drawer{
+    position:absolute;
+    top:0;
+    bottom:0;
+    width:min(280px,82vw);
+    background:var(--panel,#12151c);
+    z-index:21;
+    padding:14px;
+    overflow-y:auto;
+    transition:transform .22s ease;
+    box-shadow:0 0 24px rgba(0,0,0,.4);
 }
+
+.studio-drawer-gauche{
+    left:0;
+    transform:translateX(-100%);
+    border-right:1px solid var(--line);
+}
+
+.studio-drawer-droite{
+    right:0;
+    transform:translateX(100%);
+    border-left:1px solid var(--line);
+}
+
+.studio-drawer.ouvert{
+    transform:translateX(0);
+}
+
+.studio-section{
+    margin-top:14px;
+    border-top:1px solid rgba(255,255,255,.06);
+    padding-top:10px;
+}
+
+.studio-section summary{
+    cursor:pointer;
+    font-weight:700;
+    font-size:.82rem;
+    padding:4px 0;
+}
+
+.studio-section .panel{
+    background:none;
+    border:none;
+    padding:8px 0 0;
+}
+
 
 
 .empty{
@@ -1139,6 +1223,48 @@ APPRENTISSAGE
 
         </div>
 
+        <div style="margin-top:10px">
+
+            <label style="display:flex;align-items:center;gap:8px;font-size:.82rem">
+
+                <input
+                    id="balayageThematiqueActif"
+                    type="checkbox">
+
+                🧱 Balayage thématique par blocs
+
+            </label>
+
+            <div class="hint" style="margin-top:2px">
+                Verrouille l'apprentissage sur un même thème
+                (infrastructure/technique, cadres administratifs,
+                science exacte...) pendant plusieurs cycles
+                consécutifs avant de passer au suivant, au lieu
+                de sauter de sujet en sujet à chaque cycle.
+                Objectif : des gradients de poids plus stables et
+                moins de dérives thématiques anachroniques.
+            </div>
+
+            <select
+                id="cyclesParBloc"
+                style="margin-top:4px">
+
+                <option value="3">
+                    3 cycles par bloc
+                </option>
+
+                <option value="5" selected>
+                    5 cycles par bloc
+                </option>
+
+                <option value="10">
+                    10 cycles par bloc
+                </option>
+
+            </select>
+
+        </div>
+
         <button
             class="secondary btn-block"
             style="margin-top:8px"
@@ -1305,21 +1431,42 @@ GENERATION
 
 <div class="view" id="view-generer">
 
-    <div class="panel">
+    <div class="studio-app">
 
-        <h2>🎬 Studio de test</h2>
+        <div class="studio-topbar">
 
-        <div class="hint">
-            Interaction en direct : ajuste les paramètres à
-            gauche, pose une question ou lance une génération au
-            centre, regarde ce qui se passe sous le capot à
-            droite. Tes réglages sont mémorisés d'une visite à
-            l'autre.
+            <button
+                class="studio-hamburger"
+                onclick="toggleDrawer('gauche')"
+                aria-label="Paramètres">
+                ☰
+            </button>
+
+            <div class="studio-title">
+                🎬 Studio
+            </div>
+
+            <button
+                class="studio-hamburger"
+                onclick="toggleDrawer('droite')"
+                aria-label="Sous le capot">
+                📊
+            </button>
+
         </div>
 
-        <div class="studio-grid">
+        <div class="studio-body">
 
-            <div class="studio-col studio-params">
+            <div
+                class="studio-backdrop"
+                id="studioBackdrop"
+                onclick="fermerTousLesDrawers()">
+            </div>
+
+
+            <div
+                class="studio-drawer studio-drawer-gauche"
+                id="drawerGauche">
 
                 <div class="small">
                     Longueur
@@ -1390,7 +1537,7 @@ GENERATION
             </div>
 
 
-            <div class="studio-col studio-chat">
+            <div class="studio-main">
 
                 <div id="studioLog" class="studio-log">
 
@@ -1401,33 +1548,12 @@ GENERATION
 
                 </div>
 
-                <div class="studio-input-row">
-
-                    <input
-                        id="cibleRecherche"
-                        type="text"
-                        placeholder="Question ou sujet — Entrée pour lancer">
-
-                    <button
-                        id="btnGenerer"
-                        class="studio-send"
-                        onclick="genererDepuisStudio()"
-                        disabled>
-                        ➤
-                    </button>
-
-                </div>
-
-                <div
-                    id="statutCiblage"
-                    class="hint"
-                    style="margin-top:4px">
-                </div>
-
             </div>
 
 
-            <div class="studio-col studio-debug">
+            <div
+                class="studio-drawer studio-drawer-droite"
+                id="drawerDroite">
 
                 <div class="small">
                     🔬 Sous le capot
@@ -1463,94 +1589,136 @@ GENERATION
                     <strong id="debugHypotheses">—</strong>
                 </div>
 
+
+                <details class="studio-section">
+
+                    <summary>🔎 Explorer</summary>
+
+                    <div id="slotExplorer"></div>
+
+                </details>
+
+                <details class="studio-section">
+
+                    <summary>🕸️ Graphe cognitif</summary>
+
+                    <div id="slotGraphe"></div>
+
+                </details>
+
+                <details class="studio-section">
+
+                    <summary>🧪 Batch Runner</summary>
+
+                    <div class="small" style="margin-top:8px">
+                        Nombre de tests
+                    </div>
+
+                    <select id="batchNombre">
+                        <option value="10" selected>10</option>
+                        <option value="15">15</option>
+                        <option value="20">20</option>
+                    </select>
+
+                    <div class="small" style="margin-top:8px">
+                        Mode
+                    </div>
+
+                    <select id="batchMode">
+
+                        <option value="fixe" selected>
+                            Paramètres fixes
+                        </option>
+
+                        <option value="balayage">
+                            Balayage 0% → 100%
+                        </option>
+
+                    </select>
+
+                    <div class="btn-row" style="margin-top:10px">
+
+                        <button
+                            id="btnBatchLancer"
+                            class="primary"
+                            onclick="lancerLotDeTests()">
+                            ▶ Lancer
+                        </button>
+
+                        <button
+                            id="btnBatchExporter"
+                            class="secondary"
+                            onclick="exporterLotJSON()"
+                            disabled>
+                            💾
+                        </button>
+
+                        <button
+                            id="btnBatchCopier"
+                            class="secondary"
+                            onclick="copierLotJSON()"
+                            disabled>
+                            📋
+                        </button>
+
+                    </div>
+
+                    <div
+                        id="batchProgression"
+                        class="progress-bar"
+                        style="display:none">
+
+                        <div
+                            id="batchProgressionRemplissage"
+                            class="progress-bar-fill">
+                        </div>
+
+                    </div>
+
+                    <div
+                        id="batchResultat"
+                        class="output"
+                        style="margin-top:10px;max-height:220px;overflow-y:auto">
+
+                        Aucun lot exécuté.
+
+                    </div>
+
+                </details>
+
             </div>
 
         </div>
 
 
-        <div
-            id="resultat"
-            style="display:none">
-        </div>
+        <div class="studio-input-bar">
 
-        <hr style="margin:16px 0;opacity:.2">
-
-
-        <div class="small">
-            🧪 Lot de tests — nombre
-        </div>
-
-        <select id="batchNombre">
-            <option value="10" selected>10</option>
-            <option value="15">15</option>
-            <option value="20">20</option>
-        </select>
-
-        <div class="small" style="margin-top:8px">
-            Mode
-        </div>
-
-        <select id="batchMode">
-
-            <option value="fixe" selected>
-                Paramètres fixes (réglages actuels, répétés)
-            </option>
-
-            <option value="balayage">
-                Balayage progressif de l'influence sémantique
-                (0% → 100%)
-            </option>
-
-        </select>
-
-        <div class="btn-row" style="margin-top:10px">
+            <input
+                id="cibleRecherche"
+                type="text"
+                placeholder="Question ou sujet — Entrée pour lancer">
 
             <button
-                id="btnBatchLancer"
-                class="primary"
-                onclick="lancerLotDeTests()">
-                ▶ Lancer le lot
-            </button>
-
-            <button
-                id="btnBatchExporter"
-                class="secondary"
-                onclick="exporterLotJSON()"
+                id="btnGenerer"
+                class="studio-send"
+                onclick="genererDepuisStudio()"
                 disabled>
-                💾 Exporter
-            </button>
-
-            <button
-                id="btnBatchCopier"
-                class="secondary"
-                onclick="copierLotJSON()"
-                disabled>
-                📋 Copier le JSON
+                ➤
             </button>
 
         </div>
 
         <div
-            id="batchProgression"
-            class="progress-bar"
-            style="display:none">
-
-            <div
-                id="batchProgressionRemplissage"
-                class="progress-bar-fill">
-            </div>
-
+            id="statutCiblage"
+            class="hint studio-statut">
         </div>
 
-        <div
-            id="batchResultat"
-            class="output"
-            style="margin-top:10px;max-height:300px;overflow-y:auto">
+    </div>
 
-            Aucun lot exécuté.
 
-        </div>
-
+    <div
+        id="resultat"
+        style="display:none">
     </div>
 
 </div>
@@ -1761,24 +1929,6 @@ TABBAR
 
         <span class="ic">✨</span>
         Générer
-
-    </button>
-
-    <button
-        class="tab"
-        onclick="changerOnglet('view-explorer',this)">
-
-        <span class="ic">🔎</span>
-        Explorer
-
-    </button>
-
-    <button
-        class="tab"
-        onclick="changerOnglet('view-graphe',this)">
-
-        <span class="ic">🕸️</span>
-        Graphe
 
     </button>
 
@@ -2035,8 +2185,156 @@ function changerOnglet(id,bouton){
         behavior:"instant"
     });
 
-    if(id==="view-graphe"){
-        construireGraphe();
+}
+
+
+/* =========================================================
+STUDIO — TIROIRS COULISSANTS
+========================================================= */
+
+function toggleDrawer(cote){
+
+    const gauche =
+        document.getElementById("drawerGauche");
+
+    const droite =
+        document.getElementById("drawerDroite");
+
+    const corps =
+        document.querySelector(".studio-body");
+
+    if(!gauche || !droite || !corps){
+        return;
+    }
+
+    const cible =
+        cote==="gauche" ? gauche : droite;
+
+    const autre =
+        cote==="gauche" ? droite : gauche;
+
+    const etaitOuvert =
+        cible.classList.contains("ouvert");
+
+    autre.classList.remove("ouvert");
+
+    if(etaitOuvert){
+
+        cible.classList.remove("ouvert");
+        corps.classList.remove("drawer-ouvert");
+
+    }
+    else{
+
+        cible.classList.add("ouvert");
+        corps.classList.add("drawer-ouvert");
+
+    }
+
+}
+
+function fermerTousLesDrawers(){
+
+    const gauche =
+        document.getElementById("drawerGauche");
+
+    const droite =
+        document.getElementById("drawerDroite");
+
+    const corps =
+        document.querySelector(".studio-body");
+
+    if(gauche){
+        gauche.classList.remove("ouvert");
+    }
+
+    if(droite){
+        droite.classList.remove("ouvert");
+    }
+
+    if(corps){
+        corps.classList.remove("drawer-ouvert");
+    }
+
+}
+
+
+/*
+ Déplace (réparente, ne duplique pas) le panneau Explorer et
+ les panneaux Graphe/Architecture dans le tiroir droit du
+ Studio, pour qu'ils "aient une place dans le chat même" plutôt
+ que d'être des onglets séparés. getElementById continue de
+ fonctionner normalement après un déplacement dans le DOM, donc
+ explorerMot()/construireGraphe() n'ont besoin d'aucune
+ modification.
+*/
+
+function integrerExplorerEtGrapheDansStudio(){
+
+    const slotExplorer =
+        document.getElementById("slotExplorer");
+
+    const vueExplorer =
+        document.getElementById("view-explorer");
+
+    if(slotExplorer && vueExplorer){
+
+        while(vueExplorer.firstElementChild){
+
+            slotExplorer.appendChild(
+                vueExplorer.firstElementChild
+            );
+
+        }
+
+    }
+
+
+    const slotGraphe =
+        document.getElementById("slotGraphe");
+
+    const vueGraphe =
+        document.getElementById("view-graphe");
+
+    if(slotGraphe && vueGraphe){
+
+        while(vueGraphe.firstElementChild){
+
+            slotGraphe.appendChild(
+                vueGraphe.firstElementChild
+            );
+
+        }
+
+    }
+
+
+    /*
+     Construit le graphe automatiquement à la première
+     ouverture de la section (plus de tab "Graphe" pour
+     déclencher ça autrement).
+    */
+
+    const detailsGraphe =
+        slotGraphe ?
+            slotGraphe.closest("details") :
+            null;
+
+    if(detailsGraphe){
+
+        detailsGraphe.addEventListener(
+            "toggle",
+            ()=>{
+
+                if(detailsGraphe.open){
+
+                    construireGraphe();
+
+                }
+
+            }
+        );
+
     }
 
 }
@@ -2881,6 +3179,121 @@ APPRENTISSAGE ACTIF (CURIOSITÉ)
  PROBABILITE_CURIOSITE dans lancerApprentissage) pour ne
  pas perdre en diversité.
 */
+
+/* =========================================================
+BALAYAGE THEMATIQUE PAR BLOCS
+========================================================= */
+
+/*
+ Au lieu de sauter de sujet en sujet à chaque cycle (curiosité
+ ou pur hasard), ce mode verrouille l'apprentissage sur un même
+ bloc thématique pendant plusieurs cycles consécutifs avant de
+ passer au suivant, en boucle. Objectif : des gradients de
+ poids plus stables (les associations d'un même domaine se
+ renforcent mutuellement sur plusieurs cycles au lieu d'être
+ diluées par un sujet totalement différent au cycle suivant),
+ et moins de dérives anachroniques entre domaines sans rapport.
+
+ Chaque bloc est une liste de graines de recherche (pas une
+ vraie catégorie Wikipédia — ça demanderait une API différente,
+ plus lourde à intégrer) : à chaque cycle du bloc en cours, une
+ graine est piochée aléatoirement dans sa liste et sert de point
+ de départ à la recherche Wikipédia habituelle.
+*/
+
+const BLOCS_THEMATIQUES = [
+
+    {
+        nom:"Infrastructure / technique",
+        graines:[
+            "ingénierie","réseau électrique","génie civil",
+            "télécommunications","informatique","mécanique",
+            "énergie renouvelable","transport ferroviaire",
+            "aéronautique","construction"
+        ]
+    },
+
+    {
+        nom:"Cadres administratifs",
+        graines:[
+            "administration publique","droit constitutionnel",
+            "collectivité territoriale","fonction publique",
+            "gouvernance","institution politique",
+            "organisation internationale","droit international",
+            "diplomatie","fédéralisme"
+        ]
+    },
+
+    {
+        nom:"Science exacte",
+        graines:[
+            "physique théorique","mathématiques",
+            "chimie organique","biologie moléculaire",
+            "astronomie","algorithmique","thermodynamique",
+            "génétique","mécanique quantique","géologie"
+        ]
+    }
+
+];
+
+let etatBalayageThematique = {
+    blocIndex:-1,
+    cyclesRestants:0
+};
+
+function obtenirGraineThematique(){
+
+    const cyclesParBloc =
+        Number(
+            document
+                .getElementById("cyclesParBloc")
+                .value
+        ) || 5;
+
+    if(etatBalayageThematique.cyclesRestants<=0){
+
+        etatBalayageThematique.blocIndex =
+            (
+                etatBalayageThematique.blocIndex+1
+            ) % BLOCS_THEMATIQUES.length;
+
+        etatBalayageThematique.cyclesRestants =
+            cyclesParBloc;
+
+        const blocActuel =
+            BLOCS_THEMATIQUES[
+                etatBalayageThematique.blocIndex
+            ];
+
+        journaliser(
+            "🧱 Nouveau bloc thématique : \"" +
+            blocActuel.nom + "\" (" +
+            cyclesParBloc + " cycles)"
+        );
+
+    }
+
+    etatBalayageThematique.cyclesRestants--;
+
+    const bloc =
+        BLOCS_THEMATIQUES[
+            etatBalayageThematique.blocIndex
+        ];
+
+    const graine =
+        bloc.graines[
+            Math.floor(
+                Math.random()*bloc.graines.length
+            )
+        ];
+
+    return {
+        nomBloc:bloc.nom,
+        graine
+    };
+
+}
+
 
 function choisirMotCuriosite(){
 
@@ -10474,17 +10887,52 @@ async function lancerApprentissage(){
 
             let titreCible=null;
 
-            /*
-             Apprentissage actif : une partie des cycles
-             cherche un sujet lié à un mot déjà partiellement
-             connu, plutôt que de piocher au hasard.
-            */
+            const balayageActif =
+                document
+                    .getElementById(
+                        "balayageThematiqueActif"
+                    )
+                    .checked;
 
-            const PROBABILITE_CURIOSITE=.5;
+            if(balayageActif){
 
-            if(
-                Math.random()<PROBABILITE_CURIOSITE
+                /*
+                 Balayage thématique par blocs : prioritaire
+                 sur la curiosité/hasard habituels tant que le
+                 mode est activé — le but est justement de
+                 rester verrouillé sur un thème, pas de
+                 mélanger les deux logiques.
+                */
+
+                const infoBloc =
+                    obtenirGraineThematique();
+
+                journaliser(
+                    "🧱 [" + infoBloc.nomBloc + "] \"" +
+                    infoBloc.graine + "\"..."
+                );
+
+                const resultatRecherche =
+                    await rechercherTitreLieAvecRepli(
+                        infoBloc.graine
+                    );
+
+                titreCible =
+                    resultatRecherche ?
+                        resultatRecherche.titre :
+                        null;
+
+            }
+            else if(
+                Math.random()<.5
             ){
+
+                /*
+                 Apprentissage actif (hors balayage) : une
+                 partie des cycles cherche un sujet lié à un
+                 mot déjà partiellement connu, plutôt que de
+                 piocher au hasard.
+                */
 
                 const motCurieux =
                     choisirMotCuriosite();
@@ -10618,12 +11066,10 @@ async function lancerApprentissage(){
 
         if(
             document
-                .getElementById(
-                    "view-graphe"
-                )
-                .classList.contains(
-                    "active"
-                )
+                .getElementById("graphe") &&
+            document
+                .getElementById("graphe")
+                .offsetParent!==null
         ){
 
             construireGraphe();
@@ -11925,11 +12371,10 @@ window.addEventListener(
         ()=>{
             if(
                 document
-                    .getElementById(
-                        "view-graphe"
-                    )
-                    .classList
-                    .contains("active")
+                    .getElementById("graphe") &&
+                document
+                    .getElementById("graphe")
+                    .offsetParent!==null
             ){
 
                 construireGraphe();
@@ -12422,6 +12867,8 @@ activerEntreePourAction(
 
 
 chargerPreferencesUI();
+
+integrerExplorerEtGrapheDansStudio();
 
 
 initialiserCognitive();
